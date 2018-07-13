@@ -25,10 +25,10 @@ public class Logger {
 				File file = new File("logfile"+".log"); //filepath is being passes through //ioc         //and filename through a method 
 
 				
-				if (file.exists()) 
+				/*if (file.exists()) 
 				{
 					file.delete(); //you might want to check if delete was successfull
-				}
+				}*/
 				
 				
 				
