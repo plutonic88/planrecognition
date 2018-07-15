@@ -7,6 +7,7 @@ public class Attacker {
 	public int id;
 	public HashMap<Integer, Integer> exploits = new HashMap<Integer, Integer>();
 	public HashMap<Integer, HashMap<Integer, Integer>> fixedpolicy = new HashMap<Integer, HashMap<Integer, Integer>>();
+	public HashMap<Integer, Integer> goals = new HashMap<Integer, Integer>();
 	
 	
 	public Attacker(int id) {

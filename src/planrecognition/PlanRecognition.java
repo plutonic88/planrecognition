@@ -2,6 +2,8 @@ package planrecognition;
 
 import java.util.HashMap;
 
+
+
 import agents.Attacker;
 import network.Exploits;
 import network.Network;
@@ -12,6 +14,7 @@ public class PlanRecognition {
 	public static void doExp1() {
 		
 		
+		int[] goals = {26, 23, 25, 24};
 		
 		HashMap<Integer, Node> net = new HashMap<Integer, Node>();
 		HashMap<Integer, Exploits> exploits = new HashMap<Integer, Exploits>();
@@ -24,7 +27,7 @@ public class PlanRecognition {
 		
 		
 		
-		int goals[] = PlanRecognition.constructAttackers(attackers);
+		PlanRecognition.constructAttackers(attackers);
 		
 		System.out.println("Attacker construction... \ndone");
 		
@@ -49,7 +52,7 @@ public class PlanRecognition {
 		 * choose an attacker
 		 */
 		
-		int chisenaid = 3;
+		int chisenaid = 0;
 		
 		Attacker chosenatt = attackers.get(chisenaid);
 		System.out.println("chosen attacker "+ chosenatt.id);
@@ -65,26 +68,35 @@ public class PlanRecognition {
 		
 		
 		
+		double pr = attackers.size();
 		
-		boolean goalachieved = false;
-		Node node = net.get(0);
-		int round = 0;
-		
-		
-		double pr = 1.0/attackers.size();
-		
-		double priors[] = new double[attackers.size()];
+		double priorsattackertype[] = new double[attackers.size()];
 		
 		//HashMap<Integer, Integer[]> policies = new HashMap<Integer, Integer[]>();
 		
 		for(int i=0; i<attackers.size(); i++)
 		{
-			priors[i] = 1/pr;
+			priorsattackertype[i] = 1.0/pr;
 			
 		}
 		
-		HashMap<Integer, Integer> oactions = new HashMap<Integer, Integer>();
+		double[][]priorforplang = priorForPlans(attackers, goals);
 		
+		Logger.logit("Priors for goals regarding plans...\n");
+		
+		for(int a=0; a<attackers.size(); a++)
+		{
+			Logger.logit("Attacker "+ a +": ");
+			for(int i=0; i<priorforplang[a].length; i++)
+			{
+				Logger.logit(priorforplang[a][i]+" ");
+			}
+			Logger.logit("\n");
+		}
+		
+		
+		HashMap<Integer, Integer> oactions = new HashMap<Integer, Integer>();
+		int round = 0;
 		while(true)
 		{
 			Logger.logit("****** round "+round+" ***************");
@@ -92,7 +104,7 @@ public class PlanRecognition {
 			oactions.put(round, observedaction);
 			Logger.logit("Observed action "+ observedaction);
 			
-			double posterior[] = new double[attackers.size()];
+			double posteriorattackertype[] = new double[attackers.size()];
 			
 			
 			
@@ -100,33 +112,249 @@ public class PlanRecognition {
 			
 			System.out.println("round "+ round + " observed action "+ observedaction);
 			
+			/**
+			 * posterior
+			 */
+			posteriorattackertype = computePosteriorAttackerType(oactions, attackers, net, priorsattackertype);
 			
-			posterior = computePosterior(oactions, attackers, net, priors, goals);
 			
+			
+			
+			
+			System.out.println("Determining attacker plan given the priors");
+			
+			Logger.logit("Determining attacker plan given the priors \n");
+			
+			
+			double posteriorplang[][] = new double[attackers.size()][goals.length];
+			
+			
+			posteriorplang = posteriorPlang(attackers, net, priorforplang, oactions, goals, priorsattackertype);
+			
+			
+			
+			
+			
+			/**
+			 * updating the priors with the posteriors
+			 */
 			for(int i=0; i<attackers.size(); i++)
 			{
-				System.out.println(" t "+ i + " posterior "+ posterior[i]);
-				priors[i] = posterior[i];
+				System.out.println(" t "+ i + " posterior "+ posteriorattackertype[i]);
+				priorsattackertype[i] = posteriorattackertype[i];
 			}
+			
+			
+			for(int a=0; a<attackers.size(); a++)
+			{
+				System.out.println("attacker "+ a);
+				for(int g=0; g<goals.length; g++)
+				{
+					System.out.println(" g "+ goals[g] + ", posterior: "+ posteriorplang[a][g]);
+					priorforplang[a][g] = posteriorplang[a][g];
+				}
+			}
+
+			
+			
 			
 			
 			round++;
 			
-			if(observedaction==goals[chisenaid])
+			
+			/**
+			 * if there are multiple goals, we need to check against all the possible goals
+			 */
+			if(observedaction==chosenatt.goals.get(0))
 			{
 				break;
 			}
 			
 			
 		}
-		
-		
-		
-		
+			
 	}
 
-	private static double[] computePosterior(HashMap<Integer, Integer> observedactions,
-			HashMap<Integer, Attacker> attackers, HashMap<Integer, Node> net, double[] priors, int[] goals) {
+	private static double[][] posteriorPlang(HashMap<Integer, Attacker> attackers, HashMap<Integer, Node> net,
+			double[][] priorforplang, HashMap<Integer, Integer> oactions, int[] goals, double[] priorsattackertype) {
+		
+		
+		double[][] posteriors = new double[attackers.size()][goals.length];
+		
+		
+		for(Integer attid: attackers.keySet())
+		{
+			Attacker att = attackers.get(attid);
+			double priors[] = priorforplang[attid];
+			
+			Logger.logit("Attacker "+ attid+"\n");
+			
+			double[] posterior = new double[goals.length];
+			
+			int[] policygivengoalcounts = new int[goals.length];
+			
+			int[] observationmatchescounts = new int[goals.length];
+			
+			int[] likelihoods = new int[goals.length];
+			
+			
+			
+			
+			double totallp=0;
+			/**
+			 * likelihood*prior
+			 */
+			double [] lp = new double[goals.length];
+			
+			
+			
+			
+			for(int gindex = 0; gindex<goals.length; gindex++)
+			{
+
+				Logger.logit("**********goal "+ goals[gindex]+"***********\n ");
+				for(HashMap<Integer, Integer> policy: att.fixedpolicy.values())
+				{
+					
+					Logger.logit("policy : ");
+					int plen = policy.size();
+					
+					
+					for(int p: policy.values())
+					{
+						Logger.logit(p+" ");
+						
+					}
+					Logger.logit("\n");
+					
+					if(policy.get(plen-1)==goals[gindex])
+					{
+						Logger.logit("poliicy has the goal "+ goals[gindex]+"\n");
+						policygivengoalcounts[gindex]++;
+					}
+					else
+					{
+						Logger.logit("poliicy does not have the goal "+ goals[gindex]+"\n");
+					}
+					
+					boolean seqmatches = true;
+					/**
+					 * run match for observed actions' length
+					 */
+					for(int oaindex: oactions.keySet())
+					{
+						
+						if(policy.get(oaindex) != oactions.get(oaindex))
+						{
+							seqmatches = false;
+							break;
+						}
+					}
+					
+					if(seqmatches)
+					{
+						
+						observationmatchescounts[gindex]++;
+						Logger.logit("Obsrvation matches policy, count "+ observationmatchescounts[gindex]+"\n");
+					}
+					else
+					{
+						Logger.logit("Obsrvation does not match policy, count "+ observationmatchescounts[gindex]+"\n");
+					}
+					
+				
+				}
+				
+				if(policygivengoalcounts[gindex]>0)
+				{
+					likelihoods[gindex] = observationmatchescounts[gindex]/policygivengoalcounts[gindex];
+				}
+				
+				
+				
+				Logger.logit("Likelihood : "+ likelihoods[gindex]+"\n");
+				
+				lp[gindex] += likelihoods[gindex]*priors[gindex]*priorsattackertype[attid];
+				
+				totallp += lp[gindex];
+				
+				Logger.logit("lp : "+ lp[gindex] +"\n");
+				
+				Logger.logit("total lp : "+ totallp +"\n");
+				
+			
+				
+			}
+			
+			
+			Logger.logit(" Posteriors : \n");
+			for(int gindex = 0; gindex<goals.length; gindex++)
+			{
+				
+				if(totallp>0)
+				{
+					posterior[gindex] = lp[gindex]/totallp;
+				}
+				else
+				{
+					posterior[gindex] = 0;
+				}
+					
+				Logger.logit("goal "+ goals[gindex] +": "+posterior[gindex]+"\n");
+				posteriors[attid][gindex] = posterior[gindex];
+				
+			}
+			
+		
+		}
+		
+		
+		return posteriors;
+	}
+
+	private static double[][] priorForPlans(HashMap<Integer, Attacker> attackers, int[] goals) {
+
+
+		double[][] priors = new double[attackers.size()][goals.length];
+
+
+		for(Integer attid: attackers.keySet())
+		{
+			Attacker att = attackers.get(attid);
+
+			int policysize = att.fixedpolicy.size();
+
+			for(Integer index: att.fixedpolicy.keySet())
+			{
+				HashMap<Integer, Integer> p = att.fixedpolicy.get(index);
+
+
+
+				for(int i=0; i<goals.length; i++)
+				{
+					if(p.get(p.size()-1) == goals[i])
+					{
+						priors[attid][i]++;
+					}
+				}
+
+			}
+
+			for(int i=0; i<priors[attid].length; i++)
+			{
+				priors[attid][i] = priors[attid][i]/policysize;
+			}
+
+		}
+
+
+		return priors;
+	}
+	
+	
+
+	private static double[] computePosteriorAttackerType(HashMap<Integer, Integer> observedactions,
+			HashMap<Integer, Attacker> attackers, HashMap<Integer, Node> net, double[] priors) {
 		
 		
 		
@@ -134,7 +362,7 @@ public class PlanRecognition {
 		double[] posteriors = new double[attackers.size()];
 		double[] likelihoods = new double[attackers.size()];
 		double[] observationsgiventype = new double[attackers.size()];
-		double totalobservations = 0;
+		double totalobservations = 0.0;
 		double[] probobservations = new double[attackers.size()];
 		/**
 		 *  compute in how many observations the sequence was observed
@@ -149,7 +377,7 @@ public class PlanRecognition {
 			Logger.logit("**********Attacker index "+ attindex +"*******\n");
 			Logger.logit("Attacker type "+ att.id +"\n");
 			Logger.logit("policy : ");
-			HashMap<Integer, Integer> policy = att.fixedpolicy.get(goals[att.id]);
+			HashMap<Integer, Integer> policy = att.fixedpolicy.get(0);
 			for(int fp: policy.values())
 			{
 				Logger.logit(fp+" ");
@@ -211,10 +439,6 @@ public class PlanRecognition {
 			Logger.logit("posterior "+ posteriors[att.id] + "\n");
 			
 		}
-		
-		
-		
-		
 		
 		
 		return posteriors;
@@ -303,29 +527,34 @@ public class PlanRecognition {
 		
 	}
 
-	public static int[] constructAttackers(HashMap<Integer, Attacker> attackers) {
+	public static void constructAttackers(HashMap<Integer, Attacker> attackers) {
 		
 		int id = 0;
 		
-		int goals[] = {26,23,25,24};
+		//int goals[] = {26,23,25,24};
 		
 		Attacker a0  = new Attacker(id++);
+		a0.goals.put(0, 26);
 		a0.addExploits(new int[] {0, 4});
-		a0.addPolicy(26, new int[] {0, 2, 5, 9, 15, 21, 26});
+		a0.addPolicy(0, new int[] {0, 2, 5, 9, 15, 21, 26});
+		//a0.addPolicy(1, new int[] {0, 2, 5, 9, 15, 21, 24});
 		
 		
 		Attacker a1  = new Attacker(id++);
+		a1.goals.put(0, 23);
 		a1.addExploits(new int[] {0, 1});
-		a1.addPolicy(23, new int[] {0, 2, 5, 9, 14, 19, 23});
+		a1.addPolicy(0, new int[] {0, 2, 5, 9, 14, 19, 23});
 		
 		Attacker a2  = new Attacker(id++);
+		a2.goals.put(0, 25);
 		a2.addExploits(new int[] {2, 3});
-		a2.addPolicy(25, new int[] {0, 2, 5, 10, 15, 20, 25});
+		a2.addPolicy(0, new int[] {0, 2, 5, 10, 15, 20, 25});
 		
 		
 		Attacker a3  = new Attacker(id++);
+		a3.goals.put(0, 24);
 		a3.addExploits(new int[] {0, 2, 4});
-		a3.addPolicy(24, new int[] {0, 1, 3, 8, 14, 19, 24});
+		a3.addPolicy(0, new int[] {0, 1, 3, 8, 14, 19, 24});
 		
 		attackers.put(0, a0);
 		attackers.put(1, a1);
@@ -333,7 +562,7 @@ public class PlanRecognition {
 		attackers.put(3, a3);
 		
 		
-		return goals;
+		//return goals;
 		
 		
 	}
