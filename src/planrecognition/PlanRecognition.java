@@ -27,7 +27,7 @@ public class PlanRecognition {
 		
 		
 		
-		PlanRecognition.constructAttackers(attackers);
+		PlanRecognition.constructAttackers(attackers, net, exploits);
 		
 		System.out.println("Attacker construction... \ndone");
 		
@@ -118,7 +118,14 @@ public class PlanRecognition {
 			posteriorattackertype = computePosteriorAttackerType(oactions, attackers, net, priorsattackertype);
 			
 			
-			
+			/**
+			 * updating the priors with the posteriors
+			 */
+			for(int i=0; i<attackers.size(); i++)
+			{
+				System.out.println(" t "+ i + " posterior "+ posteriorattackertype[i]);
+				priorsattackertype[i] = posteriorattackertype[i];
+			}
 			
 			
 			System.out.println("Determining attacker plan given the priors");
@@ -135,14 +142,7 @@ public class PlanRecognition {
 			
 			
 			
-			/**
-			 * updating the priors with the posteriors
-			 */
-			for(int i=0; i<attackers.size(); i++)
-			{
-				System.out.println(" t "+ i + " posterior "+ posteriorattackertype[i]);
-				priorsattackertype[i] = posteriorattackertype[i];
-			}
+			
 			
 			
 			for(int a=0; a<attackers.size(); a++)
@@ -527,7 +527,7 @@ public class PlanRecognition {
 		
 	}
 
-	public static void constructAttackers(HashMap<Integer, Attacker> attackers) {
+	public static void constructAttackers(HashMap<Integer, Attacker> attackers, HashMap<Integer,Node> net, HashMap<Integer,Exploits> exploits) {
 		
 		int id = 0;
 		
@@ -536,25 +536,29 @@ public class PlanRecognition {
 		Attacker a0  = new Attacker(id++);
 		a0.goals.put(0, 26);
 		a0.addExploits(new int[] {0, 4});
-		a0.addPolicy(0, new int[] {0, 2, 5, 9, 15, 21, 26});
+		a0.findFixedPolifyBFS(net, exploits);
+		//a0.addPolicy(0, new int[] {0, 2, 5, 9, 15, 21, 26});
 		//a0.addPolicy(1, new int[] {0, 2, 5, 9, 15, 21, 24});
 		
 		
 		Attacker a1  = new Attacker(id++);
 		a1.goals.put(0, 23);
 		a1.addExploits(new int[] {0, 1});
-		a1.addPolicy(0, new int[] {0, 2, 5, 9, 14, 19, 23});
+		a1.findFixedPolifyBFS(net, exploits);
+		//a1.addPolicy(0, new int[] {0, 2, 5, 9, 14, 19, 23});
 		
 		Attacker a2  = new Attacker(id++);
 		a2.goals.put(0, 25);
 		a2.addExploits(new int[] {2, 3});
-		a2.addPolicy(0, new int[] {0, 2, 5, 10, 15, 20, 25});
+		a2.findFixedPolifyBFS(net, exploits);
+		//a2.addPolicy(0, new int[] {0, 2, 5, 10, 15, 20, 25});
 		
 		
 		Attacker a3  = new Attacker(id++);
 		a3.goals.put(0, 24);
-		a3.addExploits(new int[] {0, 2, 4});
-		a3.addPolicy(0, new int[] {0, 1, 3, 8, 14, 19, 24});
+		a3.addExploits(new int[] {2, 4});
+		a3.findFixedPolifyBFS(net, exploits);
+		//a3.addPolicy(0, new int[] {0, 1, 3, 8, 14, 19, 24});
 		
 		attackers.put(0, a0);
 		attackers.put(1, a1);

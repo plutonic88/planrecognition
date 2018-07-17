@@ -10,6 +10,7 @@ public class Node {
 	public int cost;
 	public HashMap<Integer, Integer> nei = new HashMap<Integer, Integer>();
 	public HashMap<Integer, Integer> exploits = new HashMap<Integer, Integer>(); 
+	public Node parent;
 	
 	//initially allow every exploits
 	public ArrayList<Exploits> allowedtoexecute;
@@ -22,6 +23,13 @@ public class Node {
 	}
 
 
+	public Node(Node node)
+	{
+		super();
+		this.id = node.id;
+		this.value = node.value;
+		this.cost = node.cost;
+	}
 
 
 	public Node(int id, int value, int cost) {
@@ -48,7 +56,7 @@ public class Node {
 		int count = this.exploits.size();
 		for(int id: exploits)
 		{
-			this.nei.put(count, id);
+			this.exploits.put(count, id);
 			count++;
 		}
 		

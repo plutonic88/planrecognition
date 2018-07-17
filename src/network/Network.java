@@ -130,7 +130,7 @@ public class Network {
 		
 		
 		net.get(23).addExploits(new int[] {0, 1});
-		net.get(24).addExploits(new int[] {0, 2, 4});
+		net.get(24).addExploits(new int[] {2, 4});
 		net.get(25).addExploits(new int[] {2, 3});
 		net.get(26).addExploits(new int[] {0, 4});
 		
