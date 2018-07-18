@@ -72,13 +72,13 @@ public class Attacker {
 			for(Integer nei: orignode.nei.values())
 			{
 				//canaccess = false;
-				Logger.logit(" Node "+ nei +" exploits: \n");
+				//Logger.logit(" Node "+ nei +" exploits: \n");
 				
 				Node neinode = net.get(nei);
 				
 				for(Integer neinodeexploit: neinode.exploits.values())
 				{
-					Logger.logit("exploit:"+neinodeexploit+"\n");
+					//Logger.logit("exploit:"+neinodeexploit+"\n");
 					if(this.exploits.containsValue(neinodeexploit))
 					{
 						Node tmp = new Node(neinode);
