@@ -46,7 +46,7 @@ public class Attacker {
 		
 	}
 	
-	public void findFixedPolifyBFS(HashMap<Integer,Node> net, HashMap<Integer,Exploits> allexploits) {
+	public void findFixedPolifyBFS(HashMap<Integer,Node> net, HashMap<Integer,Exploits> allexploits, int goal) {
 		
 		Node start = new Node(net.get(0));
 		
@@ -58,7 +58,7 @@ public class Attacker {
 		{
 			Node node = fringequeue.poll();
 			
-			if(this.goals.containsValue(node.id))
+			if(node.id==goal)
 			{
 				HashMap<Integer, Integer> path = new HashMap<Integer, Integer>();
 				addToFixedPolicy(node, path);
