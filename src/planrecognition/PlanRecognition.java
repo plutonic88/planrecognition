@@ -1,8 +1,10 @@
 package planrecognition;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.util.HashMap;
-
-
 
 import agents.Attacker;
 import network.Exploits;
@@ -14,7 +16,13 @@ public class PlanRecognition {
 	public static void doFixedPolicyExp1() {
 		
 		
+		
+		
+		
 		int[] goals = {26, 23, 25, 24};
+		
+		int chosenattacker = 5;
+		
 		
 		HashMap<Integer, Node> net = new HashMap<Integer, Node>();
 		HashMap<Integer, Exploits> exploits = new HashMap<Integer, Exploits>();
@@ -36,7 +44,8 @@ public class PlanRecognition {
 		printAttackers(attackers);
 		
 		
-		playGame(net, exploits, attackers, goals);
+		
+		playGame(chosenattacker, net, exploits, attackers, goals);
 		
 		
 		
@@ -44,7 +53,7 @@ public class PlanRecognition {
 		
 	}
 
-	private static void playGame(HashMap<Integer, Node> net, HashMap<Integer, Exploits> exploits,
+	private static void playGame(int chosenattacker, HashMap<Integer, Node> net, HashMap<Integer, Exploits> exploits,
 			HashMap<Integer, Attacker> attackers, int[] goals) {
 		
 		
@@ -52,7 +61,7 @@ public class PlanRecognition {
 		 * choose an attacker
 		 */
 		
-		int chisenaid = 5;
+		int chisenaid = chosenattacker;
 		
 		Attacker chosenatt = attackers.get(chisenaid);
 		System.out.println("*************chosen attacker "+ chosenatt.id);
@@ -82,7 +91,8 @@ public class PlanRecognition {
 		
 		double[][]priorforplang = priorForPlans(attackers, goals);
 		
-		
+		writeBUpdatesForAttackerType(priorsattackertype);
+		writeBayesianUpdatesForPlan(priorforplang);
 		
 		
 		HashMap<Integer, Integer> oactions = new HashMap<Integer, Integer>();
@@ -178,7 +188,9 @@ public class PlanRecognition {
 			posteriorplang = posteriorPlang(attackers, net, priorforplang, oactions, goals, priorsattackertype);
 			
 			
-			
+			writeBUpdatesForAttackerType(posteriorattackertype);
+			writeBayesianUpdatesForPlan(posteriorplang);
+
 			
 			
 			
@@ -210,6 +222,69 @@ public class PlanRecognition {
 			
 		}
 			
+	}
+
+	private static void writeBayesianUpdatesForPlan(double[][] priorforplang) {
+
+
+
+		PrintWriter pw;
+		try 
+		{
+			pw = new PrintWriter(new FileOutputStream(new File("planrcg.csv"),true));
+			for(int i=0; i<priorforplang.length; i++)
+			{
+
+				for(int j=0; j<priorforplang[i].length; j++)
+				{
+					pw.append(priorforplang[i][j]+",");
+					/*if(i!=priorforplang.length-1)
+					{
+						pw.append(",");
+					}*/
+				}
+				pw.append(", , ,");
+
+			}
+			pw.append("\n");
+			pw.close();
+		} 
+		catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+
+
+
+	}
+
+	private static void writeBUpdatesForAttackerType(double[] priorsattackertype) {
+		
+		try 
+		{
+			PrintWriter pw = new PrintWriter(new FileOutputStream(new File("attype.csv"),true));
+			
+			for(int i=0; i<priorsattackertype.length; i++)
+			{
+				pw.append(priorsattackertype[i]+"");
+				if(i!=priorsattackertype.length-1)
+				{
+					pw.append(",");
+				}
+			}
+			pw.append("\n");
+			pw.close();
+			
+		} 
+		catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		//pw.append("deftype,cluster,#users,llv,w1,w2,w3,w4,score,mscore,nscore,pscore"+ "\n");
+
+		
 	}
 
 	private static double[][] posteriorPlang(HashMap<Integer, Attacker> attackers, HashMap<Integer, Node> net,
