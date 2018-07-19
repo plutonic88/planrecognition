@@ -19,10 +19,10 @@ public class PlanRecognition {
 
 
 
-		int[] goals = {26, 23, 25, 24};
+		int[] goals = {23, 24, 25, 26};
 
 		int chosenattacker = 0;
-		int chosenpolicy = 1;
+		int chosenpolicy = 0;
 
 
 		HashMap<Integer, Node> net = new HashMap<Integer, Node>();
@@ -184,8 +184,8 @@ public class PlanRecognition {
 				System.out.println("Attacker "+ a +": ");
 				for(int i=0; i<priorforplang[a].length; i++)
 				{
-					Logger.logit(" goal "+ i+" prior: "+priorforplang[a][i]+"\n");
-					System.out.print(" goal "+ i+" prior: "+priorforplang[a][i]+"\n");
+					Logger.logit(" goal "+ goals[i]+" prior: "+priorforplang[a][i]+"\n");
+					System.out.print(" goal "+ goals[i]+" prior: "+priorforplang[a][i]+"\n");
 				}
 				Logger.logit("\n");
 				System.out.println();
@@ -567,9 +567,9 @@ public class PlanRecognition {
 					totalobservations++;
 					observationsgiventype[attindex]++;
 
-					Logger.logit("total observations "+ totalobservations + "\n");
-					Logger.logit("observ t0 "+ observationsgiventype[0] + " observ t1 "+observationsgiventype[1]+" observ t2 "+observationsgiventype[2]
-							+" observ t3 "+observationsgiventype[3]+"\n");
+					//Logger.logit("total observations "+ totalobservations + "\n");
+					/*Logger.logit("observ t0 "+ observationsgiventype[0] + " observ t1 "+observationsgiventype[1]+" observ t2 "+observationsgiventype[2]
+							+" observ t3 "+observationsgiventype[3]+"\n");*/
 				}
 
 			}
@@ -696,39 +696,47 @@ public class PlanRecognition {
 		//int goals[] = {26,23,25,24};
 
 		Attacker a0  = new Attacker(id++);
-		a0.goals.put(0, 23);
+		//a0.goals.put(0, 23);
+		a0.goals.put(0, 26);
 		a0.goals.put(1, 24);
-		a0.goals.put(2, 26);
 		a0.addExploits(new int[] {0, 1});
-		a0.findFixedPolifyBFS(net, exploits, 23);
-		a0.findFixedPolifyBFS(net, exploits, 24);
-		a0.findFixedPolifyBFS(net, exploits, 26);
-		//a0.addPolicy(0, new int[] {0, 2, 5, 9, 15, 21, 26});
-		//a0.addPolicy(1, new int[] {0, 2, 5, 9, 15, 21, 24});
+		//a0.findFixedPolifyBFS(net, exploits, 23);
+		//a0.findFixedPolifyBFS(net, exploits, 24);
+		//a0.findFixedPolifyBFS(net, exploits, 26);
+		a0.addPolicy(0, new int[] {0, 2, 5, 10, 16, 21, 26});
+		a0.addPolicy(1, new int[] {0, 2, 6, 10, 15, 20, 24});
+		
 
 
 		Attacker a1  = new Attacker(id++);
 		a1.goals.put(0, 23);
-		a1.goals.put(1, 24);
-		a1.goals.put(2, 25);
+		//a1.goals.put(1, 24);
+		a1.goals.put(1, 25);
 		a1.addExploits(new int[] {1, 2});
-		a1.findFixedPolifyBFS(net, exploits, 23);
+		/*a1.findFixedPolifyBFS(net, exploits, 23);
 		a1.findFixedPolifyBFS(net, exploits, 24);
-		a1.findFixedPolifyBFS(net, exploits, 25);
-		//a1.addPolicy(0, new int[] {0, 2, 5, 9, 14, 19, 23});
+		a1.findFixedPolifyBFS(net, exploits, 25);*/
+		a1.addPolicy(0, new int[] {0, 1, 3, 8, 14, 19, 23});
+		a1.addPolicy(1, new int[] {0, 2, 5, 14, 20, 25});
 
 		Attacker a2  = new Attacker(id++);
-		a2.goals.put(0, 24);
-		a2.goals.put(1, 25);
-		a2.goals.put(2, 26);
+		a2.goals.put(0, 23);
+		a2.goals.put(1, 24);
+		a2.goals.put(2, 25);
+		a2.goals.put(3, 26);
+		
 		a2.addExploits(new int[] {2, 4});
-		a2.findFixedPolifyBFS(net, exploits, 24);
-		a2.findFixedPolifyBFS(net, exploits, 25);
-		a2.findFixedPolifyBFS(net, exploits, 26);
-		//a2.addPolicy(0, new int[] {0, 2, 5, 10, 15, 20, 25});
+		//a2.findFixedPolifyBFS(net, exploits, 24);
+		//a2.findFixedPolifyBFS(net, exploits, 25);
+		//a2.findFixedPolifyBFS(net, exploits, 26);
+		
+		a2.addPolicy(0, new int[] {0, 1, 3, 7, 13, 18, 23});
+		a2.addPolicy(1, new int[] {0, 2, 5, 14, 20, 24});
+		a2.addPolicy(2, new int[] {0, 2, 5, 10, 15, 20, 25});
+		a2.addPolicy(3, new int[] {0, 2, 6, 10, 16, 21, 26});
 
 
-		Attacker a3  = new Attacker(id++);
+		/*Attacker a3  = new Attacker(id++);
 		a3.goals.put(0, 23);
 		a3.goals.put(1, 24);
 		a3.addExploits(new int[] {1, 4});
@@ -753,15 +761,15 @@ public class PlanRecognition {
 		a5.addExploits(new int[] {0, 3});
 		//a5.findFixedPolifyBFS(net, exploits, 23);
 		a5.findFixedPolifyBFS(net, exploits, 26);
-
+*/
 		//a3.addPolicy(0, new int[] {0, 1, 3, 8, 14, 19, 24});
 
 		attackers.put(0, a0);
 		attackers.put(1, a1);
 		attackers.put(2, a2);
-		attackers.put(3, a3);
+		/*attackers.put(3, a3);
 		attackers.put(4, a4);
-		attackers.put(5, a5);
+		attackers.put(5, a5);*/
 
 
 		//return goals;
