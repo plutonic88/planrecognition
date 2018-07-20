@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import agents.Attacker;
@@ -21,7 +22,7 @@ public class PlanRecognition {
 
 		int[] goals = {23, 24, 25, 26};
 
-		int chosenattacker = 1;
+		int chosenattacker = 2;
 		int chosenpolicy = 1;
 
 
@@ -44,7 +45,9 @@ public class PlanRecognition {
 		System.out.println();
 		printAttackers(attackers);
 
-
+		//HashMap<Integer, HashMap<Integer, HashMap<Integer, Integer>>> policylib = new HashMap<Integer, HashMap<Integer, HashMap<Integer, Integer>>>();
+		
+		//constructPolicyLib();
 
 		playGame(chosenattacker, chosenpolicy, net, exploits, attackers, goals);
 
@@ -509,6 +512,8 @@ public class PlanRecognition {
 		/**
 		 *  compute in how many observations the sequence was observed
 		 */
+		
+		//printAttackers(attackers);
 
 		Logger.logit("\n\nComputing posteriors...\n\n");
 
@@ -519,12 +524,14 @@ public class PlanRecognition {
 			Logger.logit("**********Attacker index "+ attindex +"*******\n");
 			Logger.logit("Attacker type "+ att.id +"\n");
 			Logger.logit("policy : ");
+			
+			ArrayList<Integer> toberemovedpolicyies = new ArrayList<Integer>();
 
 
-			for(HashMap<Integer, Integer> policy : att.fixedpolicy.values())
+			for(Integer policyindex  : att.fixedpolicy.keySet())
 			{
 
-
+				HashMap<Integer, Integer> policy = att.fixedpolicy.get(policyindex);
 
 				totalobservations[attindex]++;
 				for(int fp: policy.values())
@@ -556,6 +563,7 @@ public class PlanRecognition {
 					if(oa != fp)
 					{
 						Logger.logit("does not matches...\n");
+						toberemovedpolicyies.add(policyindex);
 						matches = false;
 						break;
 					}
@@ -572,6 +580,15 @@ public class PlanRecognition {
 				}
 
 			}
+			/**
+			 * Now remove the policies
+			 */
+			for(Integer pno: toberemovedpolicyies)
+			{
+				Logger.logit("Removing attacker "+ att.id + "'s policy "+ pno+"\n");
+				//System.out
+				att.fixedpolicy.remove(pno);
+			}
 
 		}
 
@@ -580,8 +597,11 @@ public class PlanRecognition {
 		Logger.logit("\n\nComputing likelihoods...\n\n");
 		for(Attacker att: attackers.values())
 		{
-			Logger.logit("*******Attacker type "+ att.id +"*****\n");
-			likelihoods[att.id] = observationsgiventype[att.id]/totalobservations[att.id];
+			if(totalobservations[att.id]>0)
+			{
+				Logger.logit("*******Attacker type "+ att.id +"*****\n");
+				likelihoods[att.id] = observationsgiventype[att.id]/totalobservations[att.id];
+			}
 			Logger.logit("likelihood "+ likelihoods[att.id]+"\n");
 			Logger.logit("prior "+ priors[att.id]+"\n");
 			probobservations[att.id] = likelihoods[att.id]*priors[att.id];
