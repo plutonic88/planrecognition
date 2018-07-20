@@ -21,8 +21,8 @@ public class PlanRecognition {
 
 		int[] goals = {23, 24, 25, 26};
 
-		int chosenattacker = 0;
-		int chosenpolicy = 0;
+		int chosenattacker = 1;
+		int chosenpolicy = 1;
 
 
 		HashMap<Integer, Node> net = new HashMap<Integer, Node>();
@@ -493,7 +493,8 @@ public class PlanRecognition {
 	}
 
 
-
+	
+	
 	private static double[] computePosteriorAttackerType(HashMap<Integer, Integer> observedactions,
 			HashMap<Integer, Attacker> attackers, HashMap<Integer, Node> net, double[] priors) {
 
@@ -503,7 +504,7 @@ public class PlanRecognition {
 		double[] posteriors = new double[attackers.size()];
 		double[] likelihoods = new double[attackers.size()];
 		double[] observationsgiventype = new double[attackers.size()];
-		double totalobservations = 0.0;
+		double[] totalobservations = new double[attackers.size()];
 		double[] probobservations = new double[attackers.size()];
 		/**
 		 *  compute in how many observations the sequence was observed
@@ -525,7 +526,7 @@ public class PlanRecognition {
 
 
 
-
+				totalobservations[attindex]++;
 				for(int fp: policy.values())
 				{
 					Logger.logit(fp+" ");
@@ -563,8 +564,6 @@ public class PlanRecognition {
 				if(matches)
 				{
 					Logger.logit("matches...\n");
-
-					totalobservations++;
 					observationsgiventype[attindex]++;
 
 					//Logger.logit("total observations "+ totalobservations + "\n");
@@ -582,7 +581,7 @@ public class PlanRecognition {
 		for(Attacker att: attackers.values())
 		{
 			Logger.logit("*******Attacker type "+ att.id +"*****\n");
-			likelihoods[att.id] = observationsgiventype[att.id]/totalobservations;
+			likelihoods[att.id] = observationsgiventype[att.id]/totalobservations[att.id];
 			Logger.logit("likelihood "+ likelihoods[att.id]+"\n");
 			Logger.logit("prior "+ priors[att.id]+"\n");
 			probobservations[att.id] = likelihoods[att.id]*priors[att.id];
@@ -605,6 +604,7 @@ public class PlanRecognition {
 
 		return posteriors;
 	}
+
 
 	private static void printAttackers(HashMap<Integer, Attacker> attackers) {
 
