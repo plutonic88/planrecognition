@@ -23,7 +23,7 @@ public class PlanRecognition {
 		int[] goals = {23, 24, 25, 26};
 
 		int chosenattacker = 0;
-		int chosenpolicy = 0;
+		int chosenpolicy = 1;
 		boolean singlegoal = true;
 
 
@@ -817,6 +817,8 @@ public class PlanRecognition {
 		int id = 0;
 
 		//int goals[] = {26,23,25,24};
+		
+		boolean singlepath = false;
 
 		Attacker a0  = new Attacker(id++);
 		//a0.goals.put(0, 23);
@@ -825,8 +827,10 @@ public class PlanRecognition {
 		a0.addExploits(new int[] {0, 1});
 		//a0.findFixedPolifyBFS(net, exploits, 23);
 		//a0.findFixedPolifyBFS(net, exploits, 24);
-		//a0.findFixedPolifyBFS(net, exploits, 26);
-		a0.addPolicy(0, new int[] {0, 2, 5, 10, 16, 21, 26});
+		a0.findFixedPolifyBFS(net, exploits, 26, singlepath);
+		a0.removeDuplicatePolicies();
+		//a0.addPolicy(0, new int[] {0, 2, 5, 10, 16, 21, 26});
+		//a0.addPolicy(1, new int[] {0, 1, 4, 15, 21, 26});
 		//a0.addPolicy(1, new int[] {0, 2, 6, 10, 15, 20, 24});
 		
 
@@ -835,11 +839,13 @@ public class PlanRecognition {
 		a1.goals.put(0, 23);
 		//a1.goals.put(1, 24);
 		//a1.goals.put(1, 25);
-		a1.addExploits(new int[] {1, 2});
-		/*a1.findFixedPolifyBFS(net, exploits, 23);
-		a1.findFixedPolifyBFS(net, exploits, 24);
+		a1.addExploits(new int[] {2, 3});
+		a1.findFixedPolifyBFS(net, exploits, 23, singlepath);
+		a1.removeDuplicatePolicies();
+		/*
+		 * a1.findFixedPolifyBFS(net, exploits, 24);
 		a1.findFixedPolifyBFS(net, exploits, 25);*/
-		a1.addPolicy(0, new int[] {0, 1, 3, 8, 14, 19, 23});
+		//a1.addPolicy(0, new int[] {0, 1, 3, 8, 14, 19, 23});
 		//a1.addPolicy(1, new int[] {0, 2, 5, 14, 20, 25});
 
 		Attacker a2  = new Attacker(id++);
@@ -848,13 +854,14 @@ public class PlanRecognition {
 		//a2.goals.put(2, 25);
 		//a2.goals.put(3, 26);
 		
-		a2.addExploits(new int[] {0, 4});
-		//a2.findFixedPolifyBFS(net, exploits, 24);
+		a2.addExploits(new int[] {4,5});
+		a2.findFixedPolifyBFS(net, exploits, 24, singlepath);
+		a2.removeDuplicatePolicies();
 		//a2.findFixedPolifyBFS(net, exploits, 25);
 		//a2.findFixedPolifyBFS(net, exploits, 26);
 		
 		//a2.addPolicy(0, new int[] {0, 1, 3, 7, 13, 18, 23});
-		a2.addPolicy(0, new int[] {0, 2, 5, 14, 20, 24});
+		//a2.addPolicy(0, new int[] {0, 2, 5, 14, 20, 24});
 		//a2.addPolicy(2, new int[] {0, 2, 5, 10, 15, 20, 25});
 		//a2.addPolicy(3, new int[] {0, 2, 6, 10, 16, 21, 26});
 
@@ -862,10 +869,12 @@ public class PlanRecognition {
 		Attacker a3  = new Attacker(id++);
 		a3.goals.put(0, 25);
 		//a3.goals.put(1, 24);
-		a3.addExploits(new int[] {1, 3});
+		a3.addExploits(new int[] {6, 7});
 		//a3.findFixedPolifyBFS(net, exploits, 23);
 		//a3.findFixedPolifyBFS(net, exploits, 24);
-		a3.addPolicy(0, new int[] {0, 2, 5, 10, 15, 20, 25});
+		a3.findFixedPolifyBFS(net, exploits, 25, singlepath);
+		a3.removeDuplicatePolicies();
+		//a3.addPolicy(0, new int[] {0, 2, 5, 10, 15, 20, 25});
 
 
 

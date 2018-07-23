@@ -46,24 +46,30 @@ public class Attacker {
 		
 	}
 	
-	public void findFixedPolifyBFS(HashMap<Integer,Node> net, HashMap<Integer,Exploits> allexploits, int goal) {
+	public void findFixedPolifyBFS(HashMap<Integer,Node> net, HashMap<Integer,Exploits> allexploits, int goal, boolean singlepath) {
 		
 		Node start = new Node(net.get(0));
 		
 		Queue<Node> fringequeue = new LinkedList<Node>();
+		Queue<Integer> closed = new LinkedList<Integer>();
 		
 		fringequeue.add(start);
 		
 		while(!fringequeue.isEmpty())
 		{
 			Node node = fringequeue.poll();
+			closed.add(node.id);
 			
 			if(node.id==goal)
 			{
 				HashMap<Integer, Integer> path = new HashMap<Integer, Integer>();
 				addToFixedPolicy(node, path);
 				this.fixedpolicy.put(this.fixedpolicy.size(), path);
-				break;
+				if(singlepath)
+				{
+					break;
+				}
+				//break;
 			}
 			
 			Node orignode = net.get(node.id);
@@ -83,7 +89,10 @@ public class Attacker {
 					{
 						Node tmp = new Node(neinode);
 						tmp.parent = node;
-						fringequeue.add(tmp);
+						//if(!closed.contains(tmp.id))
+						{
+							fringequeue.add(tmp);
+						}
 						
 					}
 				}
@@ -210,6 +219,46 @@ public class Attacker {
 		}
 		this.fixedpolicy.put(this.fixedpolicy.size(), seq);
 		
+		
+	}
+
+	public void removeDuplicatePolicies() {
+		
+		HashMap<Integer, HashMap<Integer, Integer>> newfixpolicy = new HashMap<Integer, HashMap<Integer, Integer>>();
+		
+
+		for(int pid: this.fixedpolicy.keySet())
+		{
+			HashMap<Integer, Integer> policy = this.fixedpolicy.get(pid);
+
+			
+			boolean found = false;
+			
+			for(int pid2: newfixpolicy.keySet())
+			{
+
+				HashMap<Integer, Integer> policy2 = newfixpolicy.get(pid2);
+
+					if(policy.equals(policy2))
+					{
+						found = true;
+						break;
+					}
+				
+			}
+			if(!found)
+			{
+				newfixpolicy.put(newfixpolicy.size(), policy);
+			}
+
+		}
+		
+		this.fixedpolicy = newfixpolicy;
+		
+		
+		
+		
+		//System.out.println("hi");
 		
 	}
 	
