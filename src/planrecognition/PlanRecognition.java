@@ -22,8 +22,9 @@ public class PlanRecognition {
 
 		int[] goals = {23, 24, 25, 26};
 
-		int chosenattacker = 2;
-		int chosenpolicy = 1;
+		int chosenattacker = 0;
+		int chosenpolicy = 0;
+		boolean singlegoal = true;
 
 
 		HashMap<Integer, Node> net = new HashMap<Integer, Node>();
@@ -36,8 +37,17 @@ public class PlanRecognition {
 		System.out.println("Network construction... \ndone");
 
 
+		if(singlegoal)
+		{
+			PlanRecognition.constructAttackersSingleGoal(attackers, net, exploits);
+		}
+		else
+		{
+			PlanRecognition.constructAttackersMultGoal(attackers, net, exploits);
+		}
 
-		PlanRecognition.constructAttackers(attackers, net, exploits);
+		
+		
 
 		System.out.println("Attacker construction... \ndone");
 
@@ -225,6 +235,10 @@ public class PlanRecognition {
 
 			round++;
 
+			System.out.println("\nCurrent policies: ");
+			printAttackers(attackers);
+			System.out.println();
+			
 
 			/**
 			 * if there are multiple goals, we need to check against all the possible goals
@@ -709,7 +723,7 @@ public class PlanRecognition {
 
 	}
 
-	public static void constructAttackers(HashMap<Integer, Attacker> attackers, HashMap<Integer,Node> net, HashMap<Integer,Exploits> exploits) {
+	public static void constructAttackersMultGoal(HashMap<Integer, Attacker> attackers, HashMap<Integer,Node> net, HashMap<Integer,Exploits> exploits) {
 
 		int id = 0;
 
@@ -794,6 +808,96 @@ public class PlanRecognition {
 
 		//return goals;
 
+
+	}
+	
+	
+	public static void constructAttackersSingleGoal(HashMap<Integer, Attacker> attackers, HashMap<Integer,Node> net, HashMap<Integer,Exploits> exploits) {
+
+		int id = 0;
+
+		//int goals[] = {26,23,25,24};
+
+		Attacker a0  = new Attacker(id++);
+		//a0.goals.put(0, 23);
+		a0.goals.put(0, 26);
+	//	a0.goals.put(1, 24);
+		a0.addExploits(new int[] {0, 1});
+		//a0.findFixedPolifyBFS(net, exploits, 23);
+		//a0.findFixedPolifyBFS(net, exploits, 24);
+		//a0.findFixedPolifyBFS(net, exploits, 26);
+		a0.addPolicy(0, new int[] {0, 2, 5, 10, 16, 21, 26});
+		//a0.addPolicy(1, new int[] {0, 2, 6, 10, 15, 20, 24});
+		
+
+
+		Attacker a1  = new Attacker(id++);
+		a1.goals.put(0, 23);
+		//a1.goals.put(1, 24);
+		//a1.goals.put(1, 25);
+		a1.addExploits(new int[] {1, 2});
+		/*a1.findFixedPolifyBFS(net, exploits, 23);
+		a1.findFixedPolifyBFS(net, exploits, 24);
+		a1.findFixedPolifyBFS(net, exploits, 25);*/
+		a1.addPolicy(0, new int[] {0, 1, 3, 8, 14, 19, 23});
+		//a1.addPolicy(1, new int[] {0, 2, 5, 14, 20, 25});
+
+		Attacker a2  = new Attacker(id++);
+		//a2.goals.put(0, 23);
+		a2.goals.put(0, 24);
+		//a2.goals.put(2, 25);
+		//a2.goals.put(3, 26);
+		
+		a2.addExploits(new int[] {0, 4});
+		//a2.findFixedPolifyBFS(net, exploits, 24);
+		//a2.findFixedPolifyBFS(net, exploits, 25);
+		//a2.findFixedPolifyBFS(net, exploits, 26);
+		
+		//a2.addPolicy(0, new int[] {0, 1, 3, 7, 13, 18, 23});
+		a2.addPolicy(0, new int[] {0, 2, 5, 14, 20, 24});
+		//a2.addPolicy(2, new int[] {0, 2, 5, 10, 15, 20, 25});
+		//a2.addPolicy(3, new int[] {0, 2, 6, 10, 16, 21, 26});
+
+
+		Attacker a3  = new Attacker(id++);
+		a3.goals.put(0, 25);
+		//a3.goals.put(1, 24);
+		a3.addExploits(new int[] {1, 3});
+		//a3.findFixedPolifyBFS(net, exploits, 23);
+		//a3.findFixedPolifyBFS(net, exploits, 24);
+		a3.addPolicy(0, new int[] {0, 2, 5, 10, 15, 20, 25});
+
+
+
+
+		/*Attacker a4  = new Attacker(id++);
+		a4.goals.put(0, 24);
+		a4.goals.put(1, 25);
+		a4.addExploits(new int[] {1, 2});
+		a4.findFixedPolifyBFS(net, exploits, 24);
+		a4.findFixedPolifyBFS(net, exploits, 25);
+
+
+
+		Attacker a5  = new Attacker(id++);
+		//a5.goals.put(0, 23);
+		a5.goals.put(0, 26);
+		a5.addExploits(new int[] {0, 3});
+		//a5.findFixedPolifyBFS(net, exploits, 23);
+		a5.findFixedPolifyBFS(net, exploits, 26);*/
+
+		//a3.addPolicy(0, new int[] {0, 1, 3, 8, 14, 19, 24});
+
+		attackers.put(0, a0);
+		attackers.put(1, a1);
+		attackers.put(2, a2);
+		attackers.put(3, a3);
+		/*
+		attackers.put(4, a4);
+		attackers.put(5, a5);*/
+
+
+		//return goals;
 
 	}
 
