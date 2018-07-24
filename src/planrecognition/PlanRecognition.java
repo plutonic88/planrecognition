@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+
 import agents.Attacker;
 import network.Exploits;
 import network.Network;
@@ -22,9 +23,11 @@ public class PlanRecognition {
 
 		int[] goals = {23, 24, 25, 26};
 
-		int chosenattacker = 0;
+		int chosenattacker = 2;
 		int chosenpolicy = 1;
-		boolean singlegoal = true;
+		boolean singlegoal = false;
+		boolean singlepath = false;
+		int npath = 4;
 
 
 		HashMap<Integer, Node> net = new HashMap<Integer, Node>();
@@ -39,11 +42,11 @@ public class PlanRecognition {
 
 		if(singlegoal)
 		{
-			PlanRecognition.constructAttackersSingleGoal(attackers, net, exploits);
+			PlanRecognition.constructAttackersSingleGoal(attackers, net, exploits, singlepath, npath);
 		}
 		else
 		{
-			PlanRecognition.constructAttackersMultGoal(attackers, net, exploits);
+			PlanRecognition.constructAttackersMultGoal(attackers, net, exploits, singlepath, npath);
 		}
 
 		
@@ -217,7 +220,7 @@ public class PlanRecognition {
 			writeBayesianUpdatesForPlan(posteriorplang);
 
 
-
+			
 
 
 
@@ -235,9 +238,13 @@ public class PlanRecognition {
 
 			round++;
 
+			
+			removePolicies(attackers, oactions, net, goals);
 			System.out.println("\nCurrent policies: ");
 			printAttackers(attackers);
 			System.out.println();
+			
+			
 			
 
 			/**
@@ -251,6 +258,71 @@ public class PlanRecognition {
 
 		}
 
+	}
+
+	private static void removePolicies(HashMap<Integer, Attacker> attackers, HashMap<Integer, Integer> observedactions,
+			HashMap<Integer, Node> net, int[] goals) {
+		
+		//printAttackers(attackers);
+
+		Logger.logit("\n\nComputing posteriors...\n\n");
+
+		for(Integer attindex: attackers.keySet())
+		{
+			Attacker att = attackers.get(attindex);
+
+			
+			
+			ArrayList<Integer> toberemovedpolicyies = new ArrayList<Integer>();
+
+
+			for(Integer policyindex  : att.fixedpolicy.keySet())
+			{
+
+				HashMap<Integer, Integer> policy = att.fixedpolicy.get(policyindex);
+
+				
+				boolean matches = true;
+				for(Integer round: observedactions.keySet())
+				{
+
+					/**
+					 * 
+					 * what if the length of the oservations is more than the length of the policy???
+					 * 
+					 */
+					int oa = observedactions.get(round);
+					int fp = -19999;
+					if(round<policy.size())
+					{
+						fp = policy.get(round);
+					}
+
+					if(oa != fp)
+					{
+						Logger.logit("does not matches...\n");
+						toberemovedpolicyies.add(policyindex);
+						matches = false;
+						break;
+					}
+
+				}
+				
+
+			}
+			/**
+			 * Now remove the policies
+			 */
+			for(Integer pno: toberemovedpolicyies)
+			{
+				Logger.logit("Removing attacker "+ att.id + "'s policy "+ pno+"\n");
+				//System.out
+				att.fixedpolicy.remove(pno);
+			}
+
+		}
+
+	
 	}
 
 	private static void writeBayesianUpdatesForPlan(double[][] priorforplang) {
@@ -321,6 +393,9 @@ public class PlanRecognition {
 
 
 		double[][] posteriors = new double[attackers.size()][goals.length];
+		
+		
+		//printAttackers(attackers);
 
 
 		for(Integer attid: attackers.keySet())
@@ -332,11 +407,11 @@ public class PlanRecognition {
 
 			double[] posterior = new double[goals.length];
 
-			int[] policygivengoalcounts = new int[goals.length];
+			double[] policygivengoalcounts = new double[goals.length];
 
-			int[] observationmatchescounts = new int[goals.length];
+			double[] observationmatchescounts = new double[goals.length];
 
-			int[] likelihoods = new int[goals.length];
+			double[] likelihoods = new double[goals.length];
 
 
 
@@ -539,7 +614,7 @@ public class PlanRecognition {
 			Logger.logit("Attacker type "+ att.id +"\n");
 			Logger.logit("policy : ");
 			
-			ArrayList<Integer> toberemovedpolicyies = new ArrayList<Integer>();
+			//ArrayList<Integer> toberemovedpolicyies = new ArrayList<Integer>();
 
 
 			for(Integer policyindex  : att.fixedpolicy.keySet())
@@ -577,7 +652,7 @@ public class PlanRecognition {
 					if(oa != fp)
 					{
 						Logger.logit("does not matches...\n");
-						toberemovedpolicyies.add(policyindex);
+						//toberemovedpolicyies.add(policyindex);
 						matches = false;
 						break;
 					}
@@ -597,12 +672,12 @@ public class PlanRecognition {
 			/**
 			 * Now remove the policies
 			 */
-			for(Integer pno: toberemovedpolicyies)
+			/*for(Integer pno: toberemovedpolicyies)
 			{
 				Logger.logit("Removing attacker "+ att.id + "'s policy "+ pno+"\n");
 				//System.out
 				att.fixedpolicy.remove(pno);
-			}
+			}*/
 
 		}
 
@@ -723,64 +798,71 @@ public class PlanRecognition {
 
 	}
 
-	public static void constructAttackersMultGoal(HashMap<Integer, Attacker> attackers, HashMap<Integer,Node> net, HashMap<Integer,Exploits> exploits) {
+	public static void constructAttackersMultGoal(HashMap<Integer, Attacker> attackers, HashMap<Integer,Node> net, HashMap<Integer,Exploits> exploits, boolean singlepath, int npath) {
 
 		int id = 0;
 
 		//int goals[] = {26,23,25,24};
+		
+		
 
 		Attacker a0  = new Attacker(id++);
 		//a0.goals.put(0, 23);
 		a0.goals.put(0, 26);
-		a0.goals.put(1, 24);
+		a0.goals.put(1, 25);
 		a0.addExploits(new int[] {0, 1});
 		//a0.findFixedPolifyBFS(net, exploits, 23);
 		//a0.findFixedPolifyBFS(net, exploits, 24);
-		//a0.findFixedPolifyBFS(net, exploits, 26);
-		a0.addPolicy(0, new int[] {0, 2, 5, 10, 16, 21, 26});
-		a0.addPolicy(1, new int[] {0, 2, 6, 10, 15, 20, 24});
+		a0.findFixedPolifyBFS(net, exploits, 26, singlepath, npath);
+		a0.findFixedPolifyBFS(net, exploits, 25, singlepath, npath);
+		a0.removeDuplicatePolicies();
+		//a0.addPolicy(0, new int[] {0, 2, 5, 10, 16, 21, 26});
+		//a0.addPolicy(1, new int[] {0, 2, 6, 10, 15, 20, 24});
 		
 
 
 		Attacker a1  = new Attacker(id++);
 		a1.goals.put(0, 23);
 		//a1.goals.put(1, 24);
-		a1.goals.put(1, 25);
-		a1.addExploits(new int[] {1, 2});
-		/*a1.findFixedPolifyBFS(net, exploits, 23);
-		a1.findFixedPolifyBFS(net, exploits, 24);
-		a1.findFixedPolifyBFS(net, exploits, 25);*/
-		a1.addPolicy(0, new int[] {0, 1, 3, 8, 14, 19, 23});
-		a1.addPolicy(1, new int[] {0, 2, 5, 14, 20, 25});
+		a1.goals.put(1, 24);
+		a1.addExploits(new int[] {2,3});
+		a1.findFixedPolifyBFS(net, exploits, 23, singlepath, npath);
+		a1.findFixedPolifyBFS(net, exploits, 24, singlepath, npath);
+		a1.removeDuplicatePolicies();
+		//a1.findFixedPolifyBFS(net, exploits, 25);
+		//a1.addPolicy(0, new int[] {0, 1, 3, 8, 14, 19, 23});
+		//a1.addPolicy(1, new int[] {0, 2, 5, 14, 20, 25});
 
 		Attacker a2  = new Attacker(id++);
-		a2.goals.put(0, 23);
-		a2.goals.put(1, 24);
-		a2.goals.put(2, 25);
-		a2.goals.put(3, 26);
+		//a2.goals.put(0, 23);
+		a2.goals.put(0, 24);
+		a2.goals.put(1, 25);
+		//a2.goals.put(3, 26);
 		
-		a2.addExploits(new int[] {2, 4});
-		//a2.findFixedPolifyBFS(net, exploits, 24);
-		//a2.findFixedPolifyBFS(net, exploits, 25);
+		a2.addExploits(new int[] {4,5});
+		a2.findFixedPolifyBFS(net, exploits, 24, singlepath, npath);
+		a2.findFixedPolifyBFS(net, exploits, 25, singlepath, npath);
+		a2.removeDuplicatePolicies();
 		//a2.findFixedPolifyBFS(net, exploits, 26);
 		
-		a2.addPolicy(0, new int[] {0, 1, 3, 7, 13, 18, 23});
+		/*a2.addPolicy(0, new int[] {0, 1, 3, 7, 13, 18, 23});
 		a2.addPolicy(1, new int[] {0, 2, 5, 14, 20, 24});
 		a2.addPolicy(2, new int[] {0, 2, 5, 10, 15, 20, 25});
-		a2.addPolicy(3, new int[] {0, 2, 6, 10, 16, 21, 26});
+		a2.addPolicy(3, new int[] {0, 2, 6, 10, 16, 21, 26});*/
 
 
-		/*Attacker a3  = new Attacker(id++);
+		Attacker a3  = new Attacker(id++);
 		a3.goals.put(0, 23);
-		a3.goals.put(1, 24);
-		a3.addExploits(new int[] {1, 4});
-		a3.findFixedPolifyBFS(net, exploits, 23);
-		a3.findFixedPolifyBFS(net, exploits, 24);
+		a3.goals.put(1, 25);
+		a3.addExploits(new int[] {6, 7});
+		a3.findFixedPolifyBFS(net, exploits, 23, singlepath, npath);
+		a3.findFixedPolifyBFS(net, exploits, 25,singlepath, npath);
+		a3.removeDuplicatePolicies();
 
 
 
 
-		Attacker a4  = new Attacker(id++);
+		/*Attacker a4  = new Attacker(id++);
 		a4.goals.put(0, 24);
 		a4.goals.put(1, 25);
 		a4.addExploits(new int[] {1, 2});
@@ -794,13 +876,14 @@ public class PlanRecognition {
 		a5.goals.put(0, 26);
 		a5.addExploits(new int[] {0, 3});
 		//a5.findFixedPolifyBFS(net, exploits, 23);
-		a5.findFixedPolifyBFS(net, exploits, 26);
-*/
+		a5.findFixedPolifyBFS(net, exploits, 26);*/
+
 		//a3.addPolicy(0, new int[] {0, 1, 3, 8, 14, 19, 24});
 
 		attackers.put(0, a0);
 		attackers.put(1, a1);
 		attackers.put(2, a2);
+		attackers.put(3, a3);
 		/*attackers.put(3, a3);
 		attackers.put(4, a4);
 		attackers.put(5, a5);*/
@@ -812,13 +895,14 @@ public class PlanRecognition {
 	}
 	
 	
-	public static void constructAttackersSingleGoal(HashMap<Integer, Attacker> attackers, HashMap<Integer,Node> net, HashMap<Integer,Exploits> exploits) {
+	public static void constructAttackersSingleGoal(HashMap<Integer, Attacker> attackers, HashMap<Integer,Node> net, HashMap<Integer,Exploits> exploits, boolean singlepath, int npath) {
 
 		int id = 0;
 
 		//int goals[] = {26,23,25,24};
 		
-		boolean singlepath = false;
+		/*boolean singlepath = false;
+		int npath = 3;*/
 
 		Attacker a0  = new Attacker(id++);
 		//a0.goals.put(0, 23);
@@ -827,7 +911,7 @@ public class PlanRecognition {
 		a0.addExploits(new int[] {0, 1});
 		//a0.findFixedPolifyBFS(net, exploits, 23);
 		//a0.findFixedPolifyBFS(net, exploits, 24);
-		a0.findFixedPolifyBFS(net, exploits, 26, singlepath);
+		a0.findFixedPolifyBFS(net, exploits, 26, singlepath, npath);
 		a0.removeDuplicatePolicies();
 		//a0.addPolicy(0, new int[] {0, 2, 5, 10, 16, 21, 26});
 		//a0.addPolicy(1, new int[] {0, 1, 4, 15, 21, 26});
@@ -840,7 +924,7 @@ public class PlanRecognition {
 		//a1.goals.put(1, 24);
 		//a1.goals.put(1, 25);
 		a1.addExploits(new int[] {2, 3});
-		a1.findFixedPolifyBFS(net, exploits, 23, singlepath);
+		a1.findFixedPolifyBFS(net, exploits, 23, singlepath, npath);
 		a1.removeDuplicatePolicies();
 		/*
 		 * a1.findFixedPolifyBFS(net, exploits, 24);
@@ -855,7 +939,7 @@ public class PlanRecognition {
 		//a2.goals.put(3, 26);
 		
 		a2.addExploits(new int[] {4,5});
-		a2.findFixedPolifyBFS(net, exploits, 24, singlepath);
+		a2.findFixedPolifyBFS(net, exploits, 24, singlepath, npath);
 		a2.removeDuplicatePolicies();
 		//a2.findFixedPolifyBFS(net, exploits, 25);
 		//a2.findFixedPolifyBFS(net, exploits, 26);
@@ -872,7 +956,7 @@ public class PlanRecognition {
 		a3.addExploits(new int[] {6, 7});
 		//a3.findFixedPolifyBFS(net, exploits, 23);
 		//a3.findFixedPolifyBFS(net, exploits, 24);
-		a3.findFixedPolifyBFS(net, exploits, 25, singlepath);
+		a3.findFixedPolifyBFS(net, exploits, 25, singlepath, npath);
 		a3.removeDuplicatePolicies();
 		//a3.addPolicy(0, new int[] {0, 2, 5, 10, 15, 20, 25});
 

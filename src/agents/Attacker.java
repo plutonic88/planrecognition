@@ -46,7 +46,7 @@ public class Attacker {
 		
 	}
 	
-	public void findFixedPolifyBFS(HashMap<Integer,Node> net, HashMap<Integer,Exploits> allexploits, int goal, boolean singlepath) {
+	public void findFixedPolifyBFS(HashMap<Integer,Node> net, HashMap<Integer,Exploits> allexploits, int goal, boolean singlepath, int npath) {
 		
 		Node start = new Node(net.get(0));
 		
@@ -65,6 +65,15 @@ public class Attacker {
 				HashMap<Integer, Integer> path = new HashMap<Integer, Integer>();
 				addToFixedPolicy(node, path);
 				this.fixedpolicy.put(this.fixedpolicy.size(), path);
+				
+				
+				int numberofpaths = nPaths(this.fixedpolicy, goal);
+				
+				if(numberofpaths>npath)
+				{
+					break;
+				}
+				
 				if(singlepath)
 				{
 					break;
@@ -107,6 +116,25 @@ public class Attacker {
 	}
 	
 	
+
+	private int nPaths(HashMap<Integer, HashMap<Integer, Integer>> fixedpolicy, int goal) {
+		
+		
+		this.removeDuplicatePolicies();
+		
+		int count = 0;
+		
+		for(HashMap<Integer, Integer> policy: fixedpolicy.values())
+		{
+			if(policy.get(policy.size()-1).equals(goal))
+			{
+				count++;
+			}
+		}
+		
+		
+		return count;
+	}
 
 	private void addToFixedPolicy(Node node, HashMap<Integer,Integer> path) {
 		
