@@ -28,6 +28,11 @@ public class PlanRecognition {
 		boolean singlegoal = true;
 		boolean singlepath = true;
 		int npath = 4;
+		
+		int nnodes = 27;
+		int nhoneypots = 8;
+		int nexploits = 8;
+
 
 
 		HashMap<Integer, Node> net = new HashMap<Integer, Node>();
@@ -35,7 +40,7 @@ public class PlanRecognition {
 		HashMap<Integer, Attacker> attackers = new HashMap<Integer, Attacker>();
 
 
-		Network.constructNetwork(net, exploits);
+		Network.constructNetwork(net, exploits, nnodes, nexploits);
 
 		System.out.println("Network construction... \ndone");
 
@@ -63,6 +68,76 @@ public class PlanRecognition {
 		//constructPolicyLib();
 
 		playGame(chosenattacker, chosenpolicy, net, exploits, attackers, goals);
+
+
+
+
+
+	}
+	
+	
+	public static void doFixedPolicyWithDefenseExp1() {
+
+
+
+
+
+		int[] goals = {23, 24, 25, 26};
+		int nnodes = 27;
+		int nhoneypots = 8;
+		int hpdeploylimit = 2;
+		int hpv = 8;
+		int hpc = 2;
+		
+		int nexploits = 8;
+
+		int chosenattacker = 2;
+		int chosenpolicy = 1;
+		boolean singlegoal = true;
+		boolean singlepath = true;
+		int npath = 4;
+
+
+		HashMap<Integer, Node> net = new HashMap<Integer, Node>();
+		HashMap<Integer, Exploits> exploits = new HashMap<Integer, Exploits>();
+		HashMap<Integer, Attacker> attackers = new HashMap<Integer, Attacker>();
+		
+		
+		HashMap<Integer, Node> honeypots = new HashMap<Integer, Node>();
+
+
+		Network.constructNetwork(net, exploits, nnodes, nexploits);
+		
+		Network.constructHoneyPots(honeypots, exploits, nhoneypots, nnodes, hpv, hpc);
+
+		System.out.println("Network construction... \ndone");
+
+
+		if(singlegoal)
+		{
+			PlanRecognition.constructAttackersSingleGoal(attackers, net, exploits, singlepath, npath);
+		}
+		else
+		{
+			PlanRecognition.constructAttackersMultGoal(attackers, net, exploits, singlepath, npath);
+		}
+
+		
+		
+
+		System.out.println("Attacker construction... \ndone");
+
+		printNetwork(net);
+		System.out.println();
+		printAttackers(attackers);
+		System.out.println("*****************Honeypots******************");
+		printNetwork(honeypots);
+
+		//HashMap<Integer, HashMap<Integer, HashMap<Integer, Integer>>> policylib = new HashMap<Integer, HashMap<Integer, HashMap<Integer, Integer>>>();
+		
+		//constructPolicyLib();
+
+		playGameWithNaiveDefense(chosenattacker, chosenpolicy, net, exploits, attackers, goals, honeypots, hpdeploylimit);
 
 
 
@@ -259,6 +334,344 @@ public class PlanRecognition {
 		}
 
 	}
+	
+	
+	/**
+	 * single goal, single path, naive attacker, naive defense
+	 * @param chosenattacker
+	 * @param chosenpolicy
+	 * @param net
+	 * @param exploits
+	 * @param attackers
+	 * @param goals
+	 * @param hpdeploylimit 
+	 * @param honeypots 
+	 */
+	private static void playGameWithNaiveDefense(int chosenattacker, int chosenpolicy, HashMap<Integer, Node> net, HashMap<Integer, Exploits> exploits,
+			HashMap<Integer, Attacker> attackers, int[] goals, HashMap<Integer,Node> honeypots, int hpdeploylimit) {
+
+
+		/**
+		 * choose an attacker
+		 */
+
+		int chisenaid = chosenattacker;
+
+		Attacker chosenatt = attackers.get(chisenaid);
+		System.out.println("*************chosen attacker "+ chosenatt.id);
+		Logger.logit("*************Chosen attacker is "+ chosenatt.id+"***********\n");
+		HashMap<Integer, Integer> policy = null;
+
+		//for(HashMap<Integer, Integer> p: chosenatt.fixedpolicy.get(chosenpolicy))
+		//{
+		//policy = p;//chosenatt.fixedpolicy.get(chosenpolicy);
+		//	break;
+		//}
+
+		policy = chosenatt.fixedpolicy.get(chosenpolicy);
+
+		System.out.print("Chosen policy for the attacker: ");
+
+		for(Integer p: policy.values())
+		{
+			System.out.print(p+" ");
+			Logger.logit(p+" ");
+		}
+		System.out.println();
+		Logger.logit("\n");
+
+
+
+		double pr = attackers.size();
+
+		double priorsattackertype[] = new double[attackers.size()];
+
+		//HashMap<Integer, Integer[]> policies = new HashMap<Integer, Integer[]>();
+
+		for(int i=0; i<attackers.size(); i++)
+		{
+			priorsattackertype[i] = 1.0/pr;
+
+		}
+
+		double[][]priorforplang = priorForPlans(attackers, goals);
+
+		writeBUpdatesForAttackerType(priorsattackertype);
+		writeBayesianUpdatesForPlan(priorforplang);
+
+
+		HashMap<Integer, Integer> oactions = new HashMap<Integer, Integer>();
+		ArrayList<Integer> currenthps = new ArrayList<Integer>();
+		
+		int round = 0;
+		while(true)
+		{
+			Logger.logit("\n***************** round "+round+" **********************\n");
+			System.out.println("\n********************round "+round+"*********************");
+			
+			
+			/**
+			 * 1. defender observes the actions played by the attacker
+			 * 2. defender updates his belief about attacker type and the plan of the attacker
+			 */
+			System.out.println("defender observing the attacker actions...");
+			System.out.print("****************Observed actions: ");
+
+			for(int oa: oactions.values())
+			{
+				
+				System.out.print(oa+" ");
+			}
+			System.out.println("\n");
+			double posteriorattackertype[] = new double[attackers.size()];
+			double posteriorplang[][] = new double[attackers.size()][goals.length];
+			if(oactions.size()==0)
+			{
+				System.out.println("No observed actions\nUpdating the posteriors...");
+				posteriorattackertype = priorsattackertype;
+				posteriorplang = priorforplang;
+				for(int i=0; i<attackers.size(); i++)
+				{
+					System.out.println(" attacker "+ i + " prior "+ priorsattackertype[i]);
+				}
+				for(int i=0; i<attackers.size(); i++)
+				{
+					System.out.println(" attacker "+ i + " posterior "+ posteriorattackertype[i]);
+					//priorsattackertype[i] = posteriorattackertype[i];
+
+				}
+				for(int a=0; a<attackers.size(); a++)
+				{
+					
+					System.out.println("Attacker "+ a +": ");
+					for(int i=0; i<priorforplang[a].length; i++)
+					{
+						System.out.print(" goal "+ goals[i]+" prior: "+priorforplang[a][i]+"\n");
+					}
+					System.out.println();
+
+				}
+				for(int a=0; a<attackers.size(); a++)
+				{
+					System.out.println("\nattacker "+ a);
+					
+					for(int g=0; g<goals.length; g++)
+					{
+						System.out.println(" goal "+ goals[g] + ", posterior: "+ posteriorplang[a][g]);
+						
+						//priorforplang[a][g] = posteriorplang[a][g];
+					}
+				}
+				
+			}
+			else // there are observed actions
+			{
+				System.out.println("\nComputing Posterior probs for attacker types...\n");
+				/**
+				 * posterior
+				 */
+				posteriorattackertype = computePosteriorAttackerType(oactions, attackers, net, priorsattackertype);
+				for(int i=0; i<attackers.size(); i++)
+				{
+					System.out.println(" attacker "+ i + " prior "+ priorsattackertype[i]);
+				}
+				for(int i=0; i<attackers.size(); i++)
+				{
+					System.out.println(" attacker "+ i + " posterior "+ posteriorattackertype[i]);
+					priorsattackertype[i] = posteriorattackertype[i];
+
+				}
+				System.out.println("\nPriors for goals regarding plans...\n");
+
+				for(int a=0; a<attackers.size(); a++)
+				{
+					
+					System.out.println("Attacker "+ a +": ");
+					for(int i=0; i<priorforplang[a].length; i++)
+					{
+						System.out.print(" goal "+ goals[i]+" prior: "+priorforplang[a][i]+"\n");
+					}
+					System.out.println();
+
+				}
+				
+				System.out.println("computing posterior on attacker plan given the priors");
+				posteriorplang = posteriorPlang(attackers, net, priorforplang, oactions, goals, priorsattackertype);
+				writeBUpdatesForAttackerType(posteriorattackertype);
+				writeBayesianUpdatesForPlan(posteriorplang);
+				for(int a=0; a<attackers.size(); a++)
+				{
+					System.out.println("\nattacker "+ a);
+					
+					for(int g=0; g<goals.length; g++)
+					{
+						System.out.println(" goal "+ goals[g] + ", posterior: "+ posteriorplang[a][g]);
+						
+						priorforplang[a][g] = posteriorplang[a][g];
+					}
+				}
+				
+				
+				
+				/**
+				 * Now defender makes a defensive move naively
+				 * 1. See which slots are free
+				 * 2. see which honeypots are free
+				 * 3. compute posterior for every combination of hps and networks for each attacker
+				 * 4. Then deploy the hp where the prob for type increases most
+				 * 5. If the prob does not increase, see if the goal increases
+				 */
+
+				
+			}
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			/************************************************END****************************************************/
+			
+			
+			
+			int observedaction = policy.get(round);
+			oactions.put(round, observedaction);
+			Logger.logit("******************Observed actions: ");
+			System.out.print("****************Observed actions: ");
+
+			for(int oa: oactions.values())
+			{
+				Logger.logit(oa+" ");
+				System.out.print(oa+" ");
+			}
+			Logger.logit("\n\n");
+			System.out.println("\n");
+
+			
+
+			for(int i=0; i<attackers.size(); i++)
+			{
+				//if(priorsattackertype[i]>0)
+				{
+					System.out.println(" attacker "+ i + " prior "+ priorsattackertype[i]);
+					Logger.logit(" attacker "+ i + " prior "+ priorsattackertype[i]+"\n");
+				}
+				//priorsattackertype[i] = posteriorattackertype[i];
+			}
+
+
+			Logger.logit("\nComputing Posterior probs...\n");
+			System.out.println("\nComputing Posterior probs...\n");
+
+			//System.out.println("round "+ round + " observed action "+ observedaction);
+
+			/**
+			 * posterior
+			 */
+			posteriorattackertype = computePosteriorAttackerType(oactions, attackers, net, priorsattackertype);
+
+
+			/**
+			 * updating the priors with the posteriors
+			 */
+
+
+
+			for(int i=0; i<attackers.size(); i++)
+			{
+				//if(posteriorattackertype[i]>0)
+				{
+					System.out.println(" attacker "+ i + " posterior "+ posteriorattackertype[i]);
+					Logger.logit(" attacker "+ i + " posterior "+ posteriorattackertype[i]+"\n");
+				}
+				priorsattackertype[i] = posteriorattackertype[i];
+
+			}
+
+
+
+
+
+			//double posteriorplang[][] = new double[attackers.size()][goals.length];
+
+
+
+			Logger.logit("\nPriors for goals regarding plans...\n\n");
+			System.out.println("\nPriors for goals regarding plans...\n");
+
+			for(int a=0; a<attackers.size(); a++)
+			{
+				Logger.logit("Attacker "+ a +": "+"\n");
+				System.out.println("Attacker "+ a +": ");
+				for(int i=0; i<priorforplang[a].length; i++)
+				{
+					Logger.logit(" goal "+ goals[i]+" prior: "+priorforplang[a][i]+"\n");
+					System.out.print(" goal "+ goals[i]+" prior: "+priorforplang[a][i]+"\n");
+				}
+				Logger.logit("\n");
+				System.out.println();
+
+			}
+
+
+			System.out.println("Determining posterior on attacker plan given the priors");
+
+			Logger.logit("Determining posterior attacker plan given the priors \n\n");
+
+			posteriorplang = posteriorPlang(attackers, net, priorforplang, oactions, goals, priorsattackertype);
+
+
+			writeBUpdatesForAttackerType(posteriorattackertype);
+			writeBayesianUpdatesForPlan(posteriorplang);
+
+
+			
+
+
+
+			for(int a=0; a<attackers.size(); a++)
+			{
+				System.out.println("\nattacker "+ a);
+				Logger.logit("\nattacker "+ a+"\n");
+				for(int g=0; g<goals.length; g++)
+				{
+					System.out.println(" goal "+ goals[g] + ", posterior: "+ posteriorplang[a][g]);
+					Logger.logit(" goal "+ goals[g] + ", posterior: "+ posteriorplang[a][g]+"\n");
+					priorforplang[a][g] = posteriorplang[a][g];
+				}
+			}
+
+			round++;
+
+			
+			removePolicies(attackers, oactions, net, goals);
+			System.out.println("\nCurrent policies: ");
+			printAttackers(attackers);
+			System.out.println();
+			
+			
+			
+
+			/**
+			 * if there are multiple goals, we need to check against all the possible goals
+			 */
+			if(chosenatt.goals.containsValue(observedaction))
+			{
+				break;
+			}
+
+
+		}
+
+	}
+
 
 	private static void removePolicies(HashMap<Integer, Attacker> attackers, HashMap<Integer, Integer> observedactions,
 			HashMap<Integer, Node> net, int[] goals) {

@@ -19,7 +19,9 @@ public class Main {
 	{
 		// TODO Auto-generated method stub
 		
-		PlanRecognition.doFixedPolicyExp1();
+		//PlanRecognition.doFixedPolicyExp1();
+		
+		PlanRecognition.doFixedPolicyWithDefenseExp1();
 		
 
 	}

@@ -16,13 +16,13 @@ public class Network {
 		return randomNum;
 	}
 
-	public static void constructNetwork(HashMap<Integer,Node> net, HashMap<Integer,Exploits> exploits)
+	public static void constructNetwork(HashMap<Integer,Node> net, HashMap<Integer,Exploits> exploits, int nnodes, int nexploits)
 	{
 		/**
 		 * create 27 nodes
 		 */
 
-		for(int i=0; i<27; i++)
+		for(int i=0; i<nnodes; i++)
 		{
 			int v = randInt(5, 10);
 			int c = randInt(1,4);
@@ -84,7 +84,7 @@ public class Network {
 		/**
 		 * create exploits
 		 */
-		for(int i=0; i<8; i++)
+		for(int i=0; i<nexploits; i++)
 		{
 			int c = randInt(1,6);
 			Exploits e = new Exploits(i, c);
@@ -147,6 +147,22 @@ public class Network {
 
 
 
+	}
+
+	public static void constructHoneyPots(HashMap<Integer, Node> honeypots, HashMap<Integer, Exploits> exploits, int nhoneypots, int nnodes, int hpv, int hpc) {
+		
+		for(int i=0; i<(nhoneypots); i++)
+		{
+			int v = hpv;//randInt(5, 10);
+			int c = hpc;//randInt(1,4);
+			Node n = new Node(i+nnodes, v, c);
+			n.addExploits(new int[] {i});
+			honeypots.put(i, n);
+			
+		}
+		
+		
+		
 	}
 
 }
