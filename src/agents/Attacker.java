@@ -10,18 +10,18 @@ import network.Node;
 import planrecognition.Logger;
 
 public class Attacker {
-	
+
 	public int id;
 	public HashMap<Integer, Integer> exploits = new HashMap<Integer, Integer>();
 	public HashMap<Integer, HashMap<Integer, Integer>> fixedpolicy = new HashMap<Integer, HashMap<Integer, Integer>>();
 	public HashMap<Integer, Integer> goals = new HashMap<Integer, Integer>();
-	
-	
+
+
 	public Attacker(int id) {
 		super();
 		this.id = id;
 	}
-	
+
 	public void addExploits(int[] exploits)
 	{
 		int count = this.exploits.size();
@@ -31,66 +31,66 @@ public class Attacker {
 			count++;
 		}
 	}
-	
+
 	public void addPolicy(int goal, int[] actions)
 	{
 		HashMap<Integer, Integer> tmp = new HashMap<Integer, Integer>();
-		
+
 		int count = 0;
 		for(int a: actions)
 		{
 			tmp.put(count++, a);
-			
+
 		}
 		this.fixedpolicy.put(goal, tmp);
-		
+
 	}
-	
+
 	public void findFixedPolifyBFS(HashMap<Integer,Node> net, HashMap<Integer,Exploits> allexploits, int goal, boolean singlepath, int npath) {
-		
+
 		Node start = new Node(net.get(0));
-		
+
 		Queue<Node> fringequeue = new LinkedList<Node>();
 		Queue<Integer> closed = new LinkedList<Integer>();
-		
+
 		fringequeue.add(start);
-		
+
 		while(!fringequeue.isEmpty())
 		{
 			Node node = fringequeue.poll();
 			closed.add(node.id);
-			
+
 			if(node.id==goal)
 			{
 				HashMap<Integer, Integer> path = new HashMap<Integer, Integer>();
-				addToFixedPolicy(node, path);
+				traversePolicy(node, path);
 				this.fixedpolicy.put(this.fixedpolicy.size(), path);
-				
-				
+
+
 				int numberofpaths = nPaths(this.fixedpolicy, goal);
-				
+
 				if(numberofpaths>npath)
 				{
 					break;
 				}
-				
+
 				if(singlepath)
 				{
 					break;
 				}
 				//break;
 			}
-			
+
 			Node orignode = net.get(node.id);
-					
-			
+
+
 			for(Integer nei: orignode.nei.values())
 			{
 				//canaccess = false;
 				//Logger.logit(" Node "+ nei +" exploits: \n");
-				
+
 				Node neinode = net.get(nei);
-				
+
 				for(Integer neinodeexploit: neinode.exploits.values())
 				{
 					//Logger.logit("exploit:"+neinodeexploit+"\n");
@@ -102,28 +102,144 @@ public class Attacker {
 						{
 							fringequeue.add(tmp);
 						}
-						
+
 					}
 				}
-				
+
 			}
-				
+
+
+
+		}
+
+
+	}
+
+	public void findFixedPolifyMinCost(HashMap<Integer,Node> net, HashMap<Integer,Exploits> allexploits, int goal, boolean singlepath, int npath) {
+
+		Queue<Node> fringequeue = new LinkedList<Node>();
+		Queue<Integer> closed = new LinkedList<Integer>();
+
+		Node start = new Node(net.get(0));
+		
+
+		double exploitcost = minCostExploit(net.get(0), this.exploits, allexploits);
+		start.currentreward = start.value - start.cost - exploitcost;
+
+		fringequeue.add(start);
+
+		double maxreward = Double.NEGATIVE_INFINITY;
+		//Node maxgoalnode = null;
+
+
+		while(!fringequeue.isEmpty())
+		{
+			Node node = fringequeue.poll();
+			closed.add(node.id);
+
+			if(node.id==goal)
+			{
+
+
+				if(node.currentreward > maxreward)
+				{
+					
+					maxreward = node.currentreward;
+					//maxgoalnode = node;
+					
+					HashMap<Integer, Integer> path = new HashMap<Integer, Integer>();
+					traversePolicy(node, path);
+					System.out.println();
+					if(!this.fixedpolicy.isEmpty())
+					{
+						this.fixedpolicy.remove(0);
+					}
+					this.fixedpolicy.put(this.fixedpolicy.size(), path);
+
+
+					int numberofpaths = nPaths(this.fixedpolicy, goal);
+
+					if(numberofpaths>npath)
+					{
+						//break;
+					}
+
+					if(singlepath)
+					{
+						//break;
+					}
+				}
+				//break;
+			}
+
+			Node orignode = net.get(node.id);
+
+
+			for(Integer nei: orignode.nei.values())
+			{
+				//canaccess = false;
+				//Logger.logit(" Node "+ nei +" exploits: \n");
+
+				Node neinode = net.get(nei);
+
+				for(Integer neinodeexploit: neinode.exploits.values())
+				{
+					//Logger.logit("exploit:"+neinodeexploit+"\n");
+					if(this.exploits.containsValue(neinodeexploit))
+					{
+						Node tmp = new Node(neinode);
+						exploitcost = minCostExploit(neinode, this.exploits, allexploits);
+						tmp.currentreward = node.currentreward + tmp.value - tmp.cost - exploitcost;
+						tmp.parent = node;
+						fringequeue.add(tmp);
+
+
+					}
+				}
+
+			}
+
+
+
+		}
+
+
+	}
+
+
+
+	private double minCostExploit(Node start, HashMap<Integer, Integer> attackerexploits, HashMap<Integer,Exploits> allexploits) {
+		
+		double mincost = Double.POSITIVE_INFINITY;
+		
+		for(Integer eid: attackerexploits.values())
+		{
 			
+			if(start.exploits.containsValue(eid))
+			{
 			
+				Exploits exp = allexploits.get(eid);
+				if(mincost>exp.cost)
+				{
+					mincost = exp.cost;
+				}
+			}
 		}
 		
 		
+		
+		
+		
+		return mincost;
 	}
-	
-	
 
 	private int nPaths(HashMap<Integer, HashMap<Integer, Integer>> fixedpolicy, int goal) {
-		
-		
+
+
 		this.removeDuplicatePolicies();
-		
+
 		int count = 0;
-		
+
 		for(HashMap<Integer, Integer> policy: fixedpolicy.values())
 		{
 			if(policy.get(policy.size()-1).equals(goal))
@@ -131,23 +247,24 @@ public class Attacker {
 				count++;
 			}
 		}
-		
-		
+
+
 		return count;
 	}
 
-	private void addToFixedPolicy(Node node, HashMap<Integer,Integer> path) {
-		
-		
-		
-		
+	private void traversePolicy(Node node, HashMap<Integer,Integer> path) {
+
+
+
+
 		if(node == null)
 			return;
-		
-		addToFixedPolicy(node.parent, path);
+
+		traversePolicy(node.parent, path);
+		System.out.print(node.id+"("+node.currentreward+")"+"->");
 		path.put(path.size(), node.id);
-		
-		
+
+
 	}
 
 	/**
@@ -156,14 +273,14 @@ public class Attacker {
 	 * @param allexploits2 
 	 */
 	public void findFixedPolify(HashMap<Integer,Node> net, HashMap<Integer,Exploits> allexploits) {
-		
+
 		Node start = net.get(0);
 		Logger.logit("Start node "+ start.id+"\n");
-		
+
 		Node tmpnode = start;
-		
+
 		HashMap<Integer, Integer>  seq = new HashMap<Integer, Integer>();
-		
+
 		while(true)
 		{
 			Logger.logit("Current node "+ tmpnode.id+"\n");
@@ -173,20 +290,20 @@ public class Attacker {
 				Logger.logit(et+" ");
 			}
 			Logger.logit("\n");
-			
+
 			seq.put(this.fixedpolicy.size(), tmpnode.id);
-			
+
 			if(this.goals.containsValue(tmpnode.id))
 			{
-				
+
 				Logger.logit("found goal "+ tmpnode.id);
 				break;
-				
+
 			}
-			
-			
+
+
 			Logger.logit("Successors: \n");
-			
+
 			/**
 			 * how does the attacker decides?
 			 * First check for which nodes he has the exploits
@@ -195,19 +312,19 @@ public class Attacker {
 			int minnode = -1;
 			int minexp = -1;
 			//boolean canaccess = false;
-			
-			
-			
+
+
+
 			for(Integer nei: tmpnode.nei.values())
 			{
-				
-				
-				
+
+
+
 				//canaccess = false;
 				Logger.logit(" Node "+ nei +" exploits: \n");
-				
+
 				Node neinode = net.get(nei);
-				
+
 				for(Integer neinodeexploit: neinode.exploits.values())
 				{
 					Logger.logit("exploit:"+neinodeexploit+"\n");
@@ -232,7 +349,7 @@ public class Attacker {
 					break;
 				}
 			}
-			
+
 			if((minnode != -1) && (minexp != -1))
 			{
 				Logger.logit("Next chosen node "+ minnode+", using exploit" +minexp +"\n");
@@ -240,39 +357,39 @@ public class Attacker {
 			}
 			else
 			{
-				
+
 			}
-			
-			
+
+
 		}
 		this.fixedpolicy.put(this.fixedpolicy.size(), seq);
-		
-		
+
+
 	}
 
 	public void removeDuplicatePolicies() {
-		
+
 		HashMap<Integer, HashMap<Integer, Integer>> newfixpolicy = new HashMap<Integer, HashMap<Integer, Integer>>();
-		
+
 
 		for(int pid: this.fixedpolicy.keySet())
 		{
 			HashMap<Integer, Integer> policy = this.fixedpolicy.get(pid);
 
-			
+
 			boolean found = false;
-			
+
 			for(int pid2: newfixpolicy.keySet())
 			{
 
 				HashMap<Integer, Integer> policy2 = newfixpolicy.get(pid2);
 
-					if(policy.equals(policy2))
-					{
-						found = true;
-						break;
-					}
-				
+				if(policy.equals(policy2))
+				{
+					found = true;
+					break;
+				}
+
 			}
 			if(!found)
 			{
@@ -280,18 +397,18 @@ public class Attacker {
 			}
 
 		}
-		
+
 		this.fixedpolicy = newfixpolicy;
-		
-		
-		
-		
+
+
+
+
 		//System.out.println("hi");
-		
+
 	}
-	
-	
-	
-	
-	
+
+
+
+
+
 }

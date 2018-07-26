@@ -11,11 +11,10 @@ public class Node {
 	public HashMap<Integer, Integer> nei = new HashMap<Integer, Integer>();
 	public HashMap<Integer, Integer> exploits = new HashMap<Integer, Integer>(); 
 	public Node parent;
-	
 	//initially allow every exploits
 	public ArrayList<Exploits> allowedtoexecute;
 	
-	
+	public double currentreward = 0;
 	
 	
 	public Node() {

@@ -25,8 +25,8 @@ public class PlanRecognition {
 
 		int chosenattacker = 2;
 		int chosenpolicy = 1;
-		boolean singlegoal = false;
-		boolean singlepath = false;
+		boolean singlegoal = true;
+		boolean singlepath = true;
 		int npath = 4;
 
 
@@ -911,7 +911,7 @@ public class PlanRecognition {
 		a0.addExploits(new int[] {0, 1});
 		//a0.findFixedPolifyBFS(net, exploits, 23);
 		//a0.findFixedPolifyBFS(net, exploits, 24);
-		a0.findFixedPolifyBFS(net, exploits, 26, singlepath, npath);
+		a0.findFixedPolifyMinCost(net, exploits, 26, singlepath, npath);
 		a0.removeDuplicatePolicies();
 		//a0.addPolicy(0, new int[] {0, 2, 5, 10, 16, 21, 26});
 		//a0.addPolicy(1, new int[] {0, 1, 4, 15, 21, 26});
@@ -924,7 +924,8 @@ public class PlanRecognition {
 		//a1.goals.put(1, 24);
 		//a1.goals.put(1, 25);
 		a1.addExploits(new int[] {2, 3});
-		a1.findFixedPolifyBFS(net, exploits, 23, singlepath, npath);
+		//a1.findFixedPolifyBFS(net, exploits, 23, singlepath, npath);
+		a1.findFixedPolifyMinCost(net, exploits, 23, singlepath, npath);
 		a1.removeDuplicatePolicies();
 		/*
 		 * a1.findFixedPolifyBFS(net, exploits, 24);
@@ -939,7 +940,8 @@ public class PlanRecognition {
 		//a2.goals.put(3, 26);
 		
 		a2.addExploits(new int[] {4,5});
-		a2.findFixedPolifyBFS(net, exploits, 24, singlepath, npath);
+		//a2.findFixedPolifyBFS(net, exploits, 24, singlepath, npath);
+		a2.findFixedPolifyMinCost(net, exploits, 24, singlepath, npath);
 		a2.removeDuplicatePolicies();
 		//a2.findFixedPolifyBFS(net, exploits, 25);
 		//a2.findFixedPolifyBFS(net, exploits, 26);
@@ -956,7 +958,8 @@ public class PlanRecognition {
 		a3.addExploits(new int[] {6, 7});
 		//a3.findFixedPolifyBFS(net, exploits, 23);
 		//a3.findFixedPolifyBFS(net, exploits, 24);
-		a3.findFixedPolifyBFS(net, exploits, 25, singlepath, npath);
+		//a3.findFixedPolifyBFS(net, exploits, 25, singlepath, npath);
+		a3.findFixedPolifyMinCost(net, exploits, 25, singlepath, npath);
 		a3.removeDuplicatePolicies();
 		//a3.addPolicy(0, new int[] {0, 2, 5, 10, 15, 20, 25});
 
