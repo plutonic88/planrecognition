@@ -40,11 +40,11 @@ public class Node {
 	
 	public void addNeighbors(int[] nodeids)
 	{
-		int count = this.nei.size();
+		//int count = this.nei.size();
 		for(int id: nodeids)
 		{
-			this.nei.put(count, id);
-			count++;
+			this.nei.put(id, id);
+			//count++;
 		}
 		
 	}
@@ -52,11 +52,11 @@ public class Node {
 	
 	public void addExploits(int[] exploits)
 	{
-		int count = this.exploits.size();
+		//int count = this.exploits.size();
 		for(int id: exploits)
 		{
-			this.exploits.put(count, id);
-			count++;
+			this.exploits.put(id, id);
+			//count++;
 		}
 		
 	}

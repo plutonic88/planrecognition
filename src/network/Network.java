@@ -35,7 +35,7 @@ public class Network {
 			if(i != 9)
 			{
 				Node n = new Node(i, v, c);
-				net.put(i, n);
+				net.put(n.id, n);
 			}
 		}
 
@@ -99,7 +99,7 @@ public class Network {
 
 
 
-		net.get(0).addExploits(new int[] {0, 1, 2, 3, 4});
+		net.get(0).addExploits(new int[] {0, 1, 2, 3, 4, 5, 6, 7});
 
 		net.get(1).addExploits(new int[] {1,2,5,7});
 		net.get(2).addExploits(new int[] {0,3,4,6});
@@ -107,7 +107,7 @@ public class Network {
 		net.get(3).addExploits(new int[] {3,7});
 		net.get(4).addExploits(new int[] {1,2,5,7});
 		net.get(5).addExploits(new int[] {0,3,7});
-		net.get(6).addExploits(new int[] {0,4,6});
+		net.get(6).addExploits(new int[] {0,2,4,6});
 
 		net.get(7).addExploits(new int[] {3});
 		net.get(8).addExploits(new int[] {2,5,7});
@@ -120,7 +120,7 @@ public class Network {
 		net.get(12).addExploits(new int[] {3});
 		net.get(13).addExploits(new int[] {2,7});
 		net.get(14).addExploits(new int[] {2,3,4,5,7});
-		net.get(15).addExploits(new int[] {0, 1,4});
+		net.get(15).addExploits(new int[] {0, 1, 2, 4});
 		net.get(16).addExploits(new int[] {0,6});
 		net.get(17).addExploits(new int[] {0});
 
@@ -157,7 +157,7 @@ public class Network {
 			int c = hpc;//randInt(1,4);
 			Node n = new Node(i+nnodes, v, c);
 			n.addExploits(new int[] {i});
-			honeypots.put(i, n);
+			honeypots.put(n.id, n);
 			
 		}
 		
