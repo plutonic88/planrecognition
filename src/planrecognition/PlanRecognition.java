@@ -6,7 +6,8 @@ import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
-
+import java.util.HashSet;
+import java.util.List;
 
 import agents.Attacker;
 import network.Exploits;
@@ -493,6 +494,19 @@ public class PlanRecognition {
 			}
 			else // there are observed actions
 			{
+				Node curnode = net.get(oactions.get(oactions.size()-1));
+				System.out.println("Attacker current position node "+ curnode.id);
+
+				/**
+				 * first free the honeypots which are invalid because of the attacker actions
+				 * The honeypots are not in the paths of the attacker
+				 */
+				if(currenthps.size()>0)
+				{
+					freeInvalidHoneypots(currenthps, curnode, net);
+				}
+
+
 				System.out.println("\nComputing Posterior probs for attacker types...\n");
 				/**
 				 * posterior
@@ -574,47 +588,107 @@ public class PlanRecognition {
 			System.out.println("We can deploy "+ hplimit +" honeypots from "+ freehps.size() + " honeypots");
 
 
-			
-			
-			
+
+			int slotlimit = hplimit;
+			System.out.println("#slotslimit "+ slotlimit);
+
+
+			/**
+			 * create combinations of placestoallocatehp
+			 */
+			HashMap<Integer, int[]> slotids = new HashMap<Integer, int[]>();
+			HashMap<Integer, int[]> hpids = new HashMap<Integer, int[]>();
+
+			System.out.println("Slot ids: ");
+			createSlotCombinations(slotids, slotlimit, placestoallocatehp.size());
+			System.out.println("HP ids: ");
+			createSlotCombinations(hpids, hplimit, freehps.size());
+
+
+
+
+
 			/**
 			 * create all the settings
+			 * then iterate over them
+			 * 
+			 * Slots
+			 * Honeypots: freehps
 			 */
-			
-			
+
+
+
+
+
 			/**
 			 * For each settings we need to compute the posteriors
 			 * Then pick a setting which has the max posterior
 			 */
-			
+
 			int settingsid = 0;
-
-			int[] slot1 = placestoallocatehp.get(0);
-			int slot2[] = placestoallocatehp.get(2);
 			
-			HashMap<Integer, int[]> slots = new HashMap<Integer, int[]>();
+			for(int[] slid: slotids.values())
+			{
+
+				HashMap<Integer, int[]> slots = new HashMap<Integer, int[]>();
+				for(int i=0; i<slid.length; i++)
+				{
+					int[] slot1 = placestoallocatehp.get(slid[i]);
+					slots.put(slots.size(), slot1);
+				}
+
+
+				for(int[] hpid: hpids.values())
+				{
+
+					int hp[] = new int[hpid.length];
+					for(int i=0; i<hpid.length; i++)
+					{
+						hp[i] = freehps.get(hpid[i]);
+					}
+
+
+					
+					
+					System.out.println("\nSettings "+ settingsid +": \nslots: ");
+					for(int[] sl: slots.values())
+					{
+						System.out.print("[");
+						for(int s: sl)
+						{
+							System.out.print(s+", ");
+						}
+						System.out.println("]");
+					}
+					
+					
+					System.out.println("HP: ");
+					
+						System.out.print("[");
+						for(int s: hp)
+						{
+							System.out.print(s+", ");
+						}
+						System.out.println("]");
+					
+
+					HashMap<Integer, HashMap<Integer, double[]>> posteriorlibrary = new HashMap<Integer, HashMap<Integer, double[]>>();
+
+
+
+
+					makeDefenseMove(priorsattackertype, priorforplang, startnodeid,placestoallocatehp, freehps, 
+							honeypots, net, exploits, attackers, oactions, chosenatt, chosenattackerpolicy, singlepath, npath, round, slots, hp, posteriorlibrary, settingsid);
+
+
+					settingsid++;
+
+					//System.out.println("Hii");
+				}
+
+			}
 			
-			slots.put(0, slot1);
-			slots.put(1, slot2);
-			
-
-			int hp[] = {freehps.get(0), freehps.get(1)};
-			
-			
-			HashMap<Integer, HashMap<Integer, double[]>> posteriorlibrary = new HashMap<Integer, HashMap<Integer, double[]>>();
-			
-
-			
-
-			makeDefenseMove(priorsattackertype, priorforplang, startnodeid,placestoallocatehp, freehps, 
-					honeypots, net, exploits, attackers, oactions, chosenatt, chosenattackerpolicy, singlepath, npath, round, slots, hp, posteriorlibrary, settingsid);
-
-
-
-
 			System.out.println("Hii");
-
-
 
 
 
@@ -623,6 +697,7 @@ public class PlanRecognition {
 			{
 				break;
 			}*/
+
 
 
 
@@ -772,6 +847,212 @@ public class PlanRecognition {
 	}
 
 
+	private static void createSlotCombinations(HashMap<Integer, int[]> slotids, int slotlimit, int numberofslots) {
+
+
+		Integer[] input = new Integer[numberofslots];
+		int[] branch = new int[slotlimit];//{0,0};//new char[k];
+
+		for(int i=0; i<input.length; i++)
+		{
+			input[i] = i;
+		}
+
+		HashSet jSet=new HashSet();
+		jSet=combine(input, slotlimit, 0, branch, 0, jSet);
+		List<ArrayList<Integer>> jset = new ArrayList<ArrayList<Integer>>(jSet);
+		//printSlotIdPairs(jset);
+		/**
+		 * now insert the id pairs in hashmap
+		 */
+
+
+		for(int i=0; i<jset.size(); i++)
+		{
+			//System.out.print("[");
+			int[] slotpairs = new int[slotlimit];
+			for(int j=0; j<jset.get(i).size(); j++)
+			{
+				//System.out.print(jset.get(i).get(j)+" ");
+				slotpairs[j] = jset.get(i).get(j);
+			}
+			slotids.put(slotids.size(), slotpairs);
+			//System.out.println("]");
+		}
+
+
+
+		if(slotlimit>1)
+		{
+
+			HashMap<Integer, int[]> tmpslotids = new HashMap<Integer, int[]>();
+			for(int pair[]: slotids.values())
+			{
+				int[] rev = revArray(pair);
+				tmpslotids.put(tmpslotids.size(), rev);
+			}
+
+
+			for(int pair[]: tmpslotids.values())
+			{
+
+				slotids.put(slotids.size(), pair);
+			}
+		}
+
+		printSlotidPairs(slotids);
+
+
+
+	}
+
+	private static void printSlotidPairs(HashMap<Integer, int[]> slotids) {
+
+
+		//System.out.println("slots: ");
+		for(int pair[]: slotids.values())
+		{
+			System.out.print("[");
+			for(int i: pair)
+			{
+				System.out.print(i+" ");
+			}
+			System.out.println("]");
+		}
+
+	}
+
+
+	private static int[] revArray(int[] pair) {
+
+		int rev[] = new int[pair.length];
+
+
+		for(int i=0; i<pair.length; i++)
+		{
+			rev[i] = pair[rev.length-i-1];
+		}
+
+
+		return rev;
+	}
+
+
+	public static void printSlotIdPairs(List<ArrayList<Integer>> jset) {
+
+		System.out.println();
+		for(int i=0; i<jset.size(); i++)
+		{
+			System.out.print("[");
+			for(int j=0; j<jset.get(i).size(); j++)
+			{
+				System.out.print(jset.get(i).get(j)+",");
+			}
+			System.out.println("]");
+		}
+		System.out.println();
+
+
+	}
+
+	public static HashSet combine(Integer[] arr, int k, int startId, int[] branch, int numElem,HashSet arrSet)
+	{
+		if (numElem == k)
+		{
+			//System.out.println("k: "+k+(Arrays.toString(branch)));
+			ArrayList<Integer> mySet = new ArrayList<Integer>();
+			for(int i=0;i<branch.length;i++)
+			{
+				mySet.add(branch[i]);
+			}
+			arrSet.add(mySet);
+			return arrSet;
+		}
+
+		for (int i = startId; i < arr.length; ++i)
+		{
+			branch[numElem++]=arr[i];
+			combine(arr, k, ++startId, branch, numElem, arrSet);
+			--numElem;
+		}
+		return arrSet;
+	}
+
+
+	private static void freeInvalidHoneypots(ArrayList<Integer> currenthps, Node curnode, HashMap<Integer,Node> net) {
+
+
+
+		//Node curnode = net.get(curnode2);
+		//System.out.println("Attacker current position node "+ attcurposid);
+		System.out.println("Current using HP: ");
+		for(Integer hpid: currenthps)
+		{
+			System.out.print(hpid+" ");
+		}
+		System.out.println();
+
+		ArrayList<Integer> unreachablehp = new ArrayList<Integer>();
+
+		for(Integer hpid: currenthps)
+		{
+			Node hp = net.get(hpid);
+			System.out.println("Honeypot "+ hpid);
+			/**
+			 * now check whether it's possible to reach the honeypot from the current node
+			 * within 2 steps
+			 */
+			boolean reach = false;
+
+
+
+			for(Integer neiid: curnode.nei.values())
+			{
+				if(neiid.equals(hp.id))
+				{
+					reach = true;
+					break;
+				}
+				Node neinode = net.get(neiid);
+				for(Integer nextnei: neinode.nei.values())
+				{
+					if(nextnei.equals(hp.id))
+					{
+						reach = true;
+						break;
+					}
+				}
+			}
+
+
+
+			if(reach)
+			{
+				System.out.println("Honeypot "+ hpid +" is reachable from attacker current position node "+ curnode.id);
+			}
+			else
+			{
+				System.out.println("Honeypot "+ hpid +" is not reachable from attacker current position node "+ curnode.id);
+				unreachablehp.add(hpid);
+
+			}
+		}
+
+		for(Integer hpid: unreachablehp)
+		{
+			System.out.println("removing invalid HP: "+ hpid);
+			currenthps.remove(hpid);
+		}
+		System.out.println("After removing invalid, current using HP: ");
+		for(Integer hpid: currenthps)
+		{
+			System.out.print(hpid+" ");
+		}
+		System.out.println();
+
+	}
+
+
 	/**
 	 * this method iterates over all the possible actions and choose the action which increases the probability of revealing the type of the attacker
 	 * @param priorsattackertype
@@ -824,9 +1105,9 @@ public class PlanRecognition {
 			insertHoneyPot(nodepair, hp, net, honeypots);
 			//insertHoneyPot(slot2, hp2, net, honeypots);
 
-			
+
 		}
-		
+
 		printNetwork(net);
 
 
@@ -884,9 +1165,9 @@ public class PlanRecognition {
 			tmpoactions.put(tmpoactions.size(), tmppolicy.get(round+1));
 			System.out.println("Considering attacker "+ attid +" as the attacker to compute posteriors...");
 			System.out.println("Attacker "+ attid +" next round "+(round+1)+" move: "+ tmppolicy.get(round+1));
-			
+
 			System.out.print("observed action seq: ");
-			
+
 			for(int a: tmpoactions.values())
 			{
 				System.out.print(a+" ");
@@ -897,9 +1178,9 @@ public class PlanRecognition {
 			 * this method supports only single policy per attacker
 			 */
 			HashMap<Integer, Double> tmpposteriors = computePosteriorAttTypeWithPolicy(tmpoactions, attackers, net, priorsattackertype, attackpolicies);
-			
-			
-			
+
+
+
 			double[] tmppost = new double[tmpposteriors.size()];
 
 			System.out.println("Posteriors: ");
@@ -910,12 +1191,12 @@ public class PlanRecognition {
 				System.out.println("Att "+ in + " posterior : "+ tmppost[in]);
 			}
 			posteriors.put(attid, tmppost);
-			
-			
+
+
 			//Integer key = settingsid;
-			
+
 			posteriorlibrary.put(settingsid, posteriors);
-			
+
 
 		}
 
