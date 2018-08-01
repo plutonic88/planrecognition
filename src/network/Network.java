@@ -47,7 +47,7 @@ public class Network {
 		 * create neighbors
 		 */
 
-		net.get(0).addNeighbors(new int[] {1, 2});
+		net.get(0).addNeighbors(new int[] {1,2});
 
 		net.get(1).addNeighbors(new int[] {3, 4});
 		net.get(2).addNeighbors(new int[] {5, 6});
@@ -101,13 +101,13 @@ public class Network {
 
 		net.get(0).addExploits(new int[] {0, 1, 2, 3, 4, 5, 6, 7});
 
-		net.get(1).addExploits(new int[] {1,2,5,7});
-		net.get(2).addExploits(new int[] {0,3,4,6});
+		net.get(1).addExploits(new int[] {0,3,4,6,1,2,5,7});
+		net.get(2).addExploits(new int[] {0,3,4,6,1,2,5,7});
 
-		net.get(3).addExploits(new int[] {3,7});
-		net.get(4).addExploits(new int[] {1,2,5,7});
-		net.get(5).addExploits(new int[] {0,3,7});
-		net.get(6).addExploits(new int[] {0,2,4,6});
+		net.get(3).addExploits(new int[] {0,3,4,6,1,2,5,7});
+		net.get(4).addExploits(new int[] {0,3,4,6,1,2,5,7});
+		net.get(5).addExploits(new int[] {0,3,4,6,1,2,5,7});
+		net.get(6).addExploits(new int[] {0,3,4,6,1,2,5,7});
 
 		net.get(7).addExploits(new int[] {3});
 		net.get(8).addExploits(new int[] {2,5,7});

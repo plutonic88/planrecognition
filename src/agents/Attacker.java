@@ -246,7 +246,7 @@ public class Attacker {
 					
 					path = new HashMap<Integer, Integer>();
 					traversePolicy(node, path);
-					System.out.println();
+					//System.out.println();
 					/*if(!this.fixedpolicy.isEmpty())
 					{
 						this.fixedpolicy.remove(0);
@@ -361,7 +361,7 @@ public class Attacker {
 			return;
 
 		traversePolicy(node.parent, path);
-		System.out.print(node.id+"("+node.currentreward+")"+"->");
+		//System.out.print(node.id+"("+node.currentreward+")"+"->");
 		path.put(path.size(), node.id);
 
 

@@ -79,7 +79,7 @@ public class PlanRecognition {
 	}
 
 
-	public static void doFixedPolicyWithDefenseExp1() {
+	public static void doFixedPolicyWithDefenseExp1() throws Exception {
 
 
 
@@ -352,9 +352,10 @@ public class PlanRecognition {
 	 * @param goals
 	 * @param hpdeploylimit 
 	 * @param honeypots 
+	 * @throws Exception 
 	 */
 	private static void playGameWithNaiveDefense(int chosenattacker, int chosenpolicy, HashMap<Integer, Node> net, HashMap<Integer, Exploits> exploits,
-			HashMap<Integer, Attacker> attackers, int[] goals, HashMap<Integer,Node> honeypots, int hpdeploylimit, boolean singlepath, int npath, int startnode) {
+			HashMap<Integer, Attacker> attackers, int[] goals, HashMap<Integer,Node> honeypots, int hpdeploylimit, boolean singlepath, int npath, int startnode) throws Exception {
 
 
 		/**
@@ -397,7 +398,7 @@ public class PlanRecognition {
 
 
 		HashMap<Integer, Double> priorsattackertype = new HashMap<Integer, Double>();
-		HashMap<Integer, double[]> priorforplang = new HashMap<Integer, double[]>();
+		HashMap<Integer, HashMap<Integer, Double>> priorforplang = new HashMap<Integer, HashMap<Integer, Double>>();
 
 
 		//HashMap<Integer, Integer[]> policies = new HashMap<Integer, Integer[]>();
@@ -407,7 +408,15 @@ public class PlanRecognition {
 			double p = 1.0/pr;
 
 			priorsattackertype.put(att.id, p);
-			priorforplang.put(att.id, priorsplans[att.id]);
+			
+			
+			HashMap<Integer, Double> tmp = new HashMap<Integer, Double>();
+			
+			for(int i=0; i<goals.length; i++)
+			{
+				tmp.put(i, p);
+			}
+			priorforplang.put(att.id, tmp);
 
 		}
 
@@ -449,7 +458,7 @@ public class PlanRecognition {
 
 
 			HashMap<Integer, Double> posteriorattackertype = new HashMap<Integer, Double>();
-			HashMap<Integer, double[]> posteriorplang = new HashMap<Integer, double[]>();
+			HashMap<Integer, HashMap<Integer, Double>> posteriorplang = new HashMap<Integer, HashMap<Integer, Double>>();
 
 
 			if(oactions.size()==0)
@@ -470,9 +479,17 @@ public class PlanRecognition {
 				{
 
 					System.out.println("Attacker "+ att.id +": ");
-					for(double prob: priorforplang.get(att.id))
+					for(HashMap<Integer, Double> prob: priorforplang.values())
 					{
-						System.out.print(" goal "+ att.goals.get(0)+" prior: "+prob+"\n");
+						
+						for(double d: prob.values())
+						{
+						
+							System.out.print(" goal "+ att.goals.get(0)+" prior: "+d+"\n");
+						}
+						
+						
+						
 						posteriorplang.put(att.id, priorforplang.get(att.id));
 					}
 					System.out.println();
@@ -482,10 +499,16 @@ public class PlanRecognition {
 				{
 
 					System.out.println("Attacker "+ att.id +": ");
-					for(double prob: posteriorplang.get(att.id))
+					for(HashMap<Integer, Double> prob: posteriorplang.values())
 					{
-						System.out.print(" goal "+ att.goals.get(0)+" posterior: "+prob+"\n");
-
+						
+						for(double d: prob.values())
+						{
+						
+							System.out.print(" goal "+ att.goals.get(0)+" posterior: "+d+"\n");
+						}
+						
+						
 					}
 					System.out.println();
 
@@ -528,10 +551,18 @@ public class PlanRecognition {
 				{
 
 					System.out.println("Attacker "+ att.id +": ");
-					for(double prob: priorforplang.get(att.id))
+					for(HashMap<Integer, Double> prob: priorforplang.values())
 					{
-						System.out.print(" goal "+ att.goals.get(0)+" prior: "+prob+"\n");
-
+						
+						for(double d: prob.values())
+						{
+						
+							System.out.print(" goal "+ att.goals.get(0)+" prior: "+d+"\n");
+						}
+						
+						
+						
+						//posteriorplang.put(att.id, priorforplang.get(att.id));
 					}
 					System.out.println();
 
@@ -547,164 +578,137 @@ public class PlanRecognition {
 				{
 
 					System.out.println("Attacker "+ att.id +": ");
-					for(double prob: priorforplang.get(att.id))
+					for(HashMap<Integer, Double> prob: posteriorplang.values())
 					{
-
-						System.out.print(" goal "+ att.goals.get(0)+" posterior: "+prob+"\n");
-						priorforplang.put(att.id, posteriorplang.get(att.id));
-
+						
+						for(double d: prob.values())
+						{
+						
+							System.out.print(" goal "+ att.goals.get(0)+" prior: "+d+"\n");
+						}
+						
+						
+						
+						posteriorplang.put(att.id, priorforplang.get(att.id));
 					}
 					System.out.println();
 
 				}
 
 
-
 			}// end of else
-
-			/**
-			 * Now defender makes a defensive move naively
-			 * 1. See which slots are free
-			 * 2. see which honeypots are free
-			 * 3. compute posterior for every combination of hps and networks for each attacker
-			 * 4. Then deploy the hp where the prob for type increases most
-			 * 5. If the prob does not increase, see if the goal increases
-			 */
-
-			System.out.println("Finding placecs where honetpots can be placed");
-
-			HashMap<Integer, int[]> placestoallocatehp = computePlacesToAllocateHP(net, honeypots, currenthps, oactions);
-
-
-			/**
-			 * Now compute which honeypots are free
-			 * Which are currently not being used
-			 */
-
-			ArrayList<Integer> freehps = findFreeHP(currenthps, honeypots);
-
-			int hplimit = hpdeploylimit - currenthps.size();
-
-			System.out.println("We can deploy "+ hplimit +" honeypots from "+ freehps.size() + " honeypots");
-
-
-
-			int slotlimit = hplimit;
-			System.out.println("#slotslimit "+ slotlimit);
-
-
-			/**
-			 * create combinations of placestoallocatehp
-			 */
-			HashMap<Integer, int[]> slotids = new HashMap<Integer, int[]>();
-			HashMap<Integer, int[]> hpids = new HashMap<Integer, int[]>();
-
-			System.out.println("Slot ids: ");
-			createSlotCombinations(slotids, slotlimit, placestoallocatehp.size());
-			System.out.println("HP ids: ");
-			createSlotCombinations(hpids, hplimit, freehps.size());
-
-
-
-
-
-			/**
-			 * create all the settings
-			 * then iterate over them
-			 * 
-			 * Slots
-			 * Honeypots: freehps
-			 */
-
-
-
-
-
-			/**
-			 * For each settings we need to compute the posteriors
-			 * Then pick a setting which has the max posterior
-			 */
-
-			int settingsid = 0;
 			
-			for(int[] slid: slotids.values())
-			{
-
-				HashMap<Integer, int[]> slots = new HashMap<Integer, int[]>();
-				for(int i=0; i<slid.length; i++)
-				{
-					int[] slot1 = placestoallocatehp.get(slid[i]);
-					slots.put(slots.size(), slot1);
-				}
-
-
-				for(int[] hpid: hpids.values())
-				{
-
-					int hp[] = new int[hpid.length];
-					for(int i=0; i<hpid.length; i++)
-					{
-						hp[i] = freehps.get(hpid[i]);
-					}
-
-
-					
-					
-					System.out.println("\nSettings "+ settingsid +": \nslots: ");
-					for(int[] sl: slots.values())
-					{
-						System.out.print("[");
-						for(int s: sl)
-						{
-							System.out.print(s+", ");
-						}
-						System.out.println("]");
-					}
-					
-					
-					System.out.println("HP: ");
-					
-						System.out.print("[");
-						for(int s: hp)
-						{
-							System.out.print(s+", ");
-						}
-						System.out.println("]");
-					
-
-					HashMap<Integer, HashMap<Integer, double[]>> posteriorlibrary = new HashMap<Integer, HashMap<Integer, double[]>>();
-
-
-
-
-					makeDefenseMove(priorsattackertype, priorforplang, startnodeid,placestoallocatehp, freehps, 
-							honeypots, net, exploits, attackers, oactions, chosenatt, chosenattackerpolicy, singlepath, npath, round, slots, hp, posteriorlibrary, settingsid);
-
-
-					settingsid++;
-
-					//System.out.println("Hii");
-				}
-
+			
+			
+			try {
+				deployHP(net, honeypots, currenthps, oactions, attackers, chosenatt, chosenattackerpolicy, singlepath, 
+						npath, priorsattackertype, priorforplang, round, hpdeploylimit, startnodeid, exploits );
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
+			
+
+			//System.out.println("Network after honeypot deployment: ");
+			
+			//printNetwork(net);
+			
+			
+
+			/**
+			 * make attacker move
+			 */
+			
+			int currentnodeid = oactions.get(oactions.size()-1);
+			
+
+			
+			
+			for(Attacker att: attackers.values())
+			{
+			
+				HashMap<Integer,HashMap<Integer,Integer>> policy = computeSingleAttackPolicy(net, exploits, att, currentnodeid, singlepath, npath);
+				att.fixedpolicy.clear();
+				
+				for(HashMap<Integer,Integer> po: policy.values())
+				{
+					att.fixedpolicy.put(att.fixedpolicy.size(), po);
+				}
+			}
+			
+			System.out.println("Attackers after deploying HPs");
+			
+			printAttackers(attackers);
+			
+			int attaction = chosenatt.fixedpolicy.get(chosenpolicy).get(1);
+			
+			System.out.println("round "+round+", chosen attacker action "+ attaction);
+			
+			
+			
+			oactions.clear();
+			oactions.put(oactions.size(), currentnodeid);
+			oactions.put(oactions.size(), attaction);
+			
+			
+			
+			
+			
+			/**
+			 * We have to remove policy and remove the attackers with 0 posteriors or priors
+			 */
+			
+			if(chosenatt.goals.containsValue(attaction))
+			{
+				break;
+			}
+			
+			
+			ArrayList<Integer> tobermvedatt = new ArrayList<Integer>();
+			
+			
+			for(Integer attid: priorsattackertype.keySet())
+			{
+				double p = priorsattackertype.get(attid);
+				if(p==0)
+				{
+					tobermvedatt.add(attid);
+					if(attid == chisenaid)
+					{
+						throw new Exception("Attacker "+ attid +" will be removed which is the chosen attacker");
+					}
+					
+				}
+			}
+			
+			
+			for(Integer a: tobermvedatt)
+			{
+				
+				attackers.remove(a);
+				priorsattackertype.remove(a);
+				priorforplang.remove(a);
+				
+				System.out.println("Attacker "+ a +" is removed...");
+				
+				
+			}
+			
+			printAttackers(attackers);
+			
+			
+			round++;
 			
 			System.out.println("Hii");
 
 
-
-
-			/*if(chosenatt.goals.containsValue(observedaction))
-			{
-				break;
-			}*/
+			
 
 
 
 
 
-			/**
-			 * We have to remove policy and remove the attackers with 0 posteriors or priors
-			 */
+			
 
 			/************************************************END****************************************************/
 
@@ -847,6 +851,301 @@ public class PlanRecognition {
 	}
 
 
+	private static void deployHP(HashMap<Integer, Node> net, HashMap<Integer, Node> honeypots,
+			ArrayList<Integer> currenthps, HashMap<Integer, Integer> oactions, HashMap<Integer, Attacker> attackers, Attacker chosenatt, 
+			HashMap<Integer,Integer> chosenattackerpolicy, boolean singlepath, int npath,
+			HashMap<Integer, Double> priorsattackertype, HashMap<Integer,HashMap<Integer,Double>> priorforplang, int round, int hpdeploylimit, int startnodeid, HashMap<Integer,Exploits> exploits) throws Exception {
+		
+		
+		
+		/**
+		 * Now defender makes a defensive move naively
+		 * 1. See which slots are free
+		 * 2. see which honeypots are free
+		 * 3. compute posterior for every combination of hps and networks for each attacker
+		 * 4. Then deploy the hp where the prob for type increases most
+		 * 5. If the prob does not increase, see if the goal increases
+		 */
+
+		System.out.println("Finding placecs where honetpots can be placed");
+
+		HashMap<Integer, int[]> placestoallocatehp = computePlacesToAllocateHP(net, honeypots, currenthps, oactions);
+
+
+		/**
+		 * Now compute which honeypots are free
+		 * Which are currently not being used
+		 */
+
+		ArrayList<Integer> freehps = findFreeHP(currenthps, honeypots);
+
+		int hplimit = hpdeploylimit - currenthps.size();
+
+		System.out.println("We can deploy "+ hplimit +" honeypots from "+ freehps.size() + " honeypots");
+
+
+
+		int slotlimit = hplimit;
+		System.out.println("#slotslimit "+ slotlimit);
+
+
+		/**
+		 * create combinations of placestoallocatehp
+		 */
+		HashMap<Integer, int[]> slotids = new HashMap<Integer, int[]>();
+		HashMap<Integer, int[]> hpids = new HashMap<Integer, int[]>();
+
+		System.out.println("Slot ids: ");
+		createSlotCombinations(slotids, slotlimit, placestoallocatehp.size());
+		System.out.println("HP ids: ");
+		createHPCombinations(hpids, hplimit, freehps.size());
+
+
+
+
+
+		/**
+		 * create all the settings
+		 * then iterate over them
+		 * 
+		 * Slots
+		 * Honeypots: freehps
+		 */
+
+
+
+
+
+		/**
+		 * For each settings we need to compute the posteriors
+		 * Then pick a setting which has the max posterior
+		 */
+
+		int settingsid = 0;
+		HashMap<Integer, HashMap<Integer, double[]>> posteriorlibrary = new HashMap<Integer, HashMap<Integer, double[]>>();
+		double minentropy = Double.POSITIVE_INFINITY;
+		double minsettings = -1;
+		int minslotid = -1;
+		int minhpid = -1;
+		for(int s1: slotids.keySet())
+		{
+
+			
+			int[] slid = slotids.get(s1);
+			
+			HashMap<Integer, int[]> slots = new HashMap<Integer, int[]>();
+			for(int i=0; i<slid.length; i++)
+			{
+				int[] slot1 = placestoallocatehp.get(slid[i]);
+				slots.put(slots.size(), slot1);
+			}
+
+
+			for(int h1: hpids.keySet())
+			{
+
+				
+				
+				int[] hpid = hpids.get(h1);
+				
+				int hp[] = new int[hpid.length];
+				for(int i=0; i<hpid.length; i++)
+				{
+					hp[i] = freehps.get(hpid[i]);
+				}
+
+
+				
+				
+				System.out.println("\nSettings "+ settingsid +": \nslots: ");
+				for(int[] sl: slots.values())
+				{
+					System.out.print("[");
+					for(int s: sl)
+					{
+						System.out.print(s+", ");
+					}
+					System.out.println("]");
+				}
+				
+				
+				System.out.println("HP: ");
+				
+					System.out.print("[");
+					for(int s: hp)
+					{
+						System.out.print(s+", ");
+					}
+					System.out.println("]");
+				
+
+				
+
+
+
+
+				makeDefenseMove(priorsattackertype, priorforplang, startnodeid,placestoallocatehp, freehps, 
+						honeypots, net, exploits, attackers, oactions, chosenatt, chosenattackerpolicy, singlepath, npath, round, slots, hp, posteriorlibrary, settingsid);
+
+				
+				
+				for(Integer atid: attackers.keySet())
+				{
+				
+					double entropy = computeEntropy(posteriorlibrary.get(settingsid), atid);
+					
+					if(entropy==Double.NaN)
+					{
+						System.out.println("Found entropy NaN");
+					}
+					else if(entropy==0)
+					{
+						System.out.println("Found entopy 0");
+					}
+					
+					System.out.println("Considering Attacker "+ atid + " entropy "+ entropy);
+					if(minentropy>entropy)
+					{
+						minentropy = entropy;
+						minsettings = settingsid;
+						minslotid = s1;
+						minhpid = h1;
+						
+					}
+					System.out.println("Min entropy "+ minentropy + ", minsettings "+ minsettings);
+				}
+				
+				//printPosteriors(posteriorlibrary, settingsid);
+
+				settingsid++;
+
+				//System.out.println("Hii");
+				
+				
+			}
+
+		}// end of for loop
+		
+		
+		//printNetwork(net);
+		
+		/**
+		 * deploy the HP with min entropy
+		 * update the currenthps
+		 */
+
+		int sltid[] = slotids.get(minslotid);
+		int hpid[] = hpids.get(minhpid);
+		
+		
+		System.out.println("Selected slots: ");
+		
+
+		HashMap<Integer, int[]> slots = new HashMap<Integer, int[]>();
+		for(int i=0; i<sltid.length; i++)
+		{
+			int[] slot1 = placestoallocatehp.get(sltid[i]);
+			slots.put(slots.size(), slot1);
+			
+			System.out.print("[");
+			for(int s: slot1)
+			{
+				System.out.print(s+" ");
+			}
+			System.out.print("]");
+			
+		}
+
+
+
+
+		System.out.println("Selected HPs: ");
+
+		int hp[] = new int[hpid.length];
+		for(int i=0; i<hpid.length; i++)
+		{
+			hp[i] = freehps.get(hpid[i]);
+		}
+
+		
+		for(int s: hp)
+		{
+			System.out.print(s+" ");
+		}
+		System.out.println("");
+
+		for(Integer slid: slots.keySet())
+		{
+			int[] nodepair = slots.get(slid);
+			int h = hp[slid];
+
+			insertHoneyPot(nodepair, h, net, honeypots);
+			currenthps.add(h);
+			//insertHoneyPot(slot2, hp2, net, honeypots);
+
+
+		}
+		
+		//printNetwork(net);
+		
+		
+		
+		
+	}
+
+
+	/**
+	 * posteriors considering different attacker id for the settings
+	 * @param atid 
+	 * @param hashMap
+	 * @return
+	 */
+	private static double computeEntropy(HashMap<Integer, double[]> posteriors, Integer atid) {
+		
+		
+		double sum = 0;
+		
+		if(posteriors.containsKey(atid))
+		{
+
+			double[] p = posteriors.get(atid);
+
+			for(double d: p)
+			{
+				if(d==0)
+				{
+					sum +=0;
+					//break;
+				}
+				else
+				{
+					sum += -(d*(Math.log(d)/Math.log(2.0)));
+					System.out.println("entropy sum "+ sum);
+				}
+			}
+		}
+		else
+		{
+			return 5;
+		}
+		
+		//sum = -sum;
+		
+		return sum;
+	}
+
+
+	private static void printPosteriors(HashMap<Integer, HashMap<Integer, double[]>> posteriorlibrary, int settingsid) {
+		
+		
+		System.out.println("Posteriors: "+ settingsid);
+		
+		
+		
+		
+	}
+
+
 	private static void createSlotCombinations(HashMap<Integer, int[]> slotids, int slotlimit, int numberofslots) {
 
 
@@ -899,6 +1198,66 @@ public class PlanRecognition {
 				slotids.put(slotids.size(), pair);
 			}
 		}
+
+		printSlotidPairs(slotids);
+
+
+
+	}
+	
+	
+	private static void createHPCombinations(HashMap<Integer, int[]> slotids, int slotlimit, int numberofslots) {
+
+
+		Integer[] input = new Integer[numberofslots];
+		int[] branch = new int[slotlimit];//{0,0};//new char[k];
+
+		for(int i=0; i<input.length; i++)
+		{
+			input[i] = i;
+		}
+
+		HashSet jSet=new HashSet();
+		jSet=combine(input, slotlimit, 0, branch, 0, jSet);
+		List<ArrayList<Integer>> jset = new ArrayList<ArrayList<Integer>>(jSet);
+		//printSlotIdPairs(jset);
+		/**
+		 * now insert the id pairs in hashmap
+		 */
+
+
+		for(int i=0; i<jset.size(); i++)
+		{
+			//System.out.print("[");
+			int[] slotpairs = new int[slotlimit];
+			for(int j=0; j<jset.get(i).size(); j++)
+			{
+				//System.out.print(jset.get(i).get(j)+" ");
+				slotpairs[j] = jset.get(i).get(j);
+			}
+			slotids.put(slotids.size(), slotpairs);
+			//System.out.println("]");
+		}
+
+
+
+		/*if(slotlimit>1)
+		{
+
+			HashMap<Integer, int[]> tmpslotids = new HashMap<Integer, int[]>();
+			for(int pair[]: slotids.values())
+			{
+				int[] rev = revArray(pair);
+				tmpslotids.put(tmpslotids.size(), rev);
+			}
+
+
+			for(int pair[]: tmpslotids.values())
+			{
+
+				slotids.put(slotids.size(), pair);
+			}
+		}*/
 
 		printSlotidPairs(slotids);
 
@@ -1071,14 +1430,15 @@ public class PlanRecognition {
 	 * @param npath
 	 * @param posteriorlibrary 
 	 * @param settingsid 
+	 * @throws Exception 
 	 */
 
-	private static void makeDefenseMove(HashMap<Integer,Double> priorsattackertype, HashMap<Integer,double[]> priorforplang, int startnodeid, 
+	private static void makeDefenseMove(HashMap<Integer,Double> priorsattackertype, HashMap<Integer,HashMap<Integer,Double>> priorforplang, int startnodeid, 
 			HashMap<Integer, int[]> placestoallocatehp, ArrayList<Integer> freehps,
 			HashMap<Integer, Node> honeypots, HashMap<Integer, Node> net, HashMap<Integer, Exploits> exploits,
 			HashMap<Integer, Attacker> attackers, HashMap<Integer, Integer> oactions, Attacker chosenatt,
 			HashMap<Integer, Integer> chosenattackerpolicy, boolean singlepath, int npath, int round,
-			HashMap<Integer, int[]> slots, int[] hps, HashMap<Integer,HashMap<Integer,double[]>> posteriorlibrary, int settingsid) {
+			HashMap<Integer, int[]> slots, int[] hps, HashMap<Integer,HashMap<Integer,double[]>> posteriorlibrary, int settingsid) throws Exception {
 
 
 		/**
@@ -1107,8 +1467,11 @@ public class PlanRecognition {
 
 
 		}
+		
+		
+		
 
-		printNetwork(net);
+		//printNetwork(net);
 
 
 
@@ -1134,8 +1497,8 @@ public class PlanRecognition {
 		 * attackpolicies for each attacker for a particular settings of honeypot
 		 * attids--> polcicies
 		 */
-		System.out.println("*********Attacker policies before adding honeypots*********");
-		printAttackers(attackers);
+		//System.out.println("*********Attacker policies before adding honeypots*********");
+		//printAttackers(attackers);
 
 
 		/**
@@ -1143,9 +1506,9 @@ public class PlanRecognition {
 		 */
 		HashMap<Integer, HashMap<Integer, HashMap<Integer, Integer>>> attackpolicies = new HashMap<Integer, HashMap<Integer, HashMap<Integer, Integer>>>();
 		computeSingleAttackPolicies(attackpolicies, net, exploits, attackers, currentnodeid, singlepath, npath);
-		System.out.println("********Attacker policies after adding honeypots*********");
+		//System.out.println("********Attacker policies after adding honeypots*********");
 		//printAttackers(attackers);
-		printAttackersPolicy(attackpolicies);
+		//printAttackersPolicy(attackpolicies);
 
 		/**
 		 * For all the settings: all slots, all honeypots and for all the attackers
@@ -1154,57 +1517,95 @@ public class PlanRecognition {
 		 */
 
 		HashMap<Integer, double[]> posteriors = new HashMap<Integer, double[]>();
-		HashMap<Integer, Integer> tmpoactions = new HashMap<Integer, Integer>(oactions);
+		HashMap<Integer, Integer> tmpoactions = new HashMap<Integer, Integer>();
 
 
 
 		for(Integer attid: attackpolicies.keySet())
 		{
+			System.out.println("Considering attacker "+ attid +" as the attacker to compute posteriors.\npolicy:..");
 			HashMap<Integer, Integer> tmppolicy = attackpolicies.get(attid).get(0);
-			tmpoactions = new HashMap<Integer, Integer>(oactions);
-			tmpoactions.put(tmpoactions.size(), tmppolicy.get(round+1));
-			System.out.println("Considering attacker "+ attid +" as the attacker to compute posteriors...");
-			System.out.println("Attacker "+ attid +" next round "+(round+1)+" move: "+ tmppolicy.get(round+1));
+			
+			if(tmppolicy.size()>0)
+			{
 
-			System.out.print("observed action seq: ");
+				for(Integer p: tmppolicy.values())
+				{
+					System.out.print(p+" ");
+				}
+
+				System.out.println();
+
+				tmpoactions = new HashMap<Integer, Integer>();
+				tmpoactions.put(tmpoactions.size(), currentnodeid);
+
+				if(tmppolicy.get(1)==null)
+				{
+					throw new Exception("Found null in policy");
+				}
+
+				tmpoactions.put(tmpoactions.size(), tmppolicy.get(1));
+
+				System.out.println("Attacker "+ attid +" next round "+(1)+" move: "+ tmppolicy.get(1));
+
+				/*//System.out.print("observed action seq: ");
 
 			for(int a: tmpoactions.values())
 			{
 				System.out.print(a+" ");
 			}
-			System.out.println();
+			System.out.println();*/
 
-			/**
-			 * this method supports only single policy per attacker
-			 */
-			HashMap<Integer, Double> tmpposteriors = computePosteriorAttTypeWithPolicy(tmpoactions, attackers, net, priorsattackertype, attackpolicies);
+				/**
+				 * this method supports only single policy per attacker
+				 */
+				HashMap<Integer, Double> tmpposteriors = computePosteriorAttTypeWithPolicy(tmpoactions, attackers, net, priorsattackertype, attackpolicies);
 
 
 
-			double[] tmppost = new double[tmpposteriors.size()];
+				double[] tmppost = new double[tmpposteriors.size()];
 
-			System.out.println("Posteriors: ");
-			for(Integer in: tmpposteriors.keySet())
-			{
+				System.out.println("Posteriors: ");
+				for(Integer in: tmpposteriors.keySet())
+				{
 
-				tmppost[in] = tmpposteriors.get(in);
-				System.out.println("Att "+ in + " posterior : "+ tmppost[in]);
+					tmppost[in] = tmpposteriors.get(in);
+					System.out.println("Att "+ in + " posterior : "+ tmppost[in]);
+				}
+				posteriors.put(attid, tmppost);
+
+
+				//Integer key = settingsid;
+
+				posteriorlibrary.put(settingsid, posteriors);
 			}
-			posteriors.put(attid, tmppost);
-
-
-			//Integer key = settingsid;
-
-			posteriorlibrary.put(settingsid, posteriors);
 
 
 		}
 
 
+		/**
+		 * remove the inserted honeypots
+		 * update the net
+		 */
+		
+		
+		for(Integer slid: slots.keySet())
+		{
+			int[] nodepair = slots.get(slid);
+			int hp = hps[slid];
+
+			removeHoneyPot(nodepair, hp, net, honeypots);
+			//insertHoneyPot(slot2, hp2, net, honeypots);
+
+
+		}
+		
+		//printNetwork(net);
 
 
 
-		System.out.println("hp");
+		//System.out.println("hp");
 
 
 
@@ -1221,10 +1622,30 @@ public class PlanRecognition {
 		{
 			int goal = att.goals.get(0);
 			HashMap<Integer,HashMap<Integer,Integer>> p = att.findOneFixedPolifyMaxReward(currentnodeid, net, exploits, goal, singlepath, npath);
-			attackpolicies.put(att.id, p);
+			
+			/**
+			 * keep the existing policy if there is no new policy
+			 */
+			if(p.size()>0)
+			{
+				attackpolicies.put(att.id, p);
+			}
 
 		}
 
+
+	}
+	
+	
+	
+	private static HashMap<Integer,HashMap<Integer,Integer>> computeSingleAttackPolicy(HashMap<Integer, Node> net, 
+			HashMap<Integer, Exploits> exploits, Attacker att, int currentnodeid, boolean singlepath, int npath) 
+	
+	{
+
+		int goal = att.goals.get(0);
+		HashMap<Integer,HashMap<Integer,Integer>> p = att.findOneFixedPolifyMaxReward(currentnodeid, net, exploits, goal, singlepath, npath);
+		return p;
 
 	}
 
@@ -1242,7 +1663,7 @@ public class PlanRecognition {
 		Node node2 = net.get(slot[1]);
 		Node hpnode = honeypots.get(hp);
 
-		System.out.println("inserting hp "+ hp + " in the middle of slot ["+node1.id + ","+node2.id+"]");
+		//System.out.println("inserting hp "+ hp + " in the middle of slot ["+node1.id + ","+node2.id+"]");
 
 		/**
 		 * 1. remove 2 from 1's nei
@@ -1258,6 +1679,29 @@ public class PlanRecognition {
 		hpnode.parent = node1;
 		hpnode.nei.put(node2.id, node2.id);
 		net.put(hpnode.id, hpnode);
+
+
+
+	}
+	
+	
+	private static void removeHoneyPot(int[] slot, int hp, HashMap<Integer, Node> net, HashMap<Integer,Node> honeypots) {
+
+		Node node1 = net.get(slot[0]);
+		Node node2 = net.get(slot[1]);
+		Node hpnode = honeypots.get(hp);
+
+		
+		
+		node1.nei.put(node2.id, node2.id);
+		node1.nei.remove(hpnode.id);
+		
+		node2.parent = node1;
+		
+		hpnode.parent = null;
+		hpnode.nei.clear();
+		
+		net.remove(hpnode.id);
 
 
 
@@ -1636,11 +2080,11 @@ public class PlanRecognition {
 	}
 
 
-	private static HashMap<Integer, double[]> posteriorPlangWithHashMap(HashMap<Integer, Attacker> attackers, HashMap<Integer, Node> net,
-			HashMap<Integer,double[]> priorforplang, HashMap<Integer, Integer> oactions, int[] goals, HashMap<Integer,Double> priorsattackertype) {
+	private static HashMap<Integer, HashMap<Integer, Double>> posteriorPlangWithHashMap(HashMap<Integer, Attacker> attackers, HashMap<Integer, Node> net,
+			HashMap<Integer, HashMap<Integer, Double>> priorforplang, HashMap<Integer, Integer> oactions, int[] goals, HashMap<Integer,Double> priorsattackertype) {
 
 
-		HashMap<Integer, double[]> posteriors = new HashMap<Integer, double[]>();
+		HashMap<Integer, HashMap<Integer, Double>> posteriors = new HashMap<Integer, HashMap<Integer, Double>>();
 
 
 		//printAttackers(attackers);
@@ -1649,17 +2093,30 @@ public class PlanRecognition {
 		for(Integer attid: attackers.keySet())
 		{
 			Attacker att = attackers.get(attid);
-			double priors[] = priorforplang.get(attid);
+			HashMap<Integer, Double> priors = priorforplang.get(attid);
 
 			Logger.logit("Attacker "+ attid+"\n");
 
-			double[] posterior = new double[goals.length];
+			HashMap<Integer, Double> posterior = new HashMap<Integer, Double>();
 
-			double[] policygivengoalcounts = new double[goals.length];
+			HashMap<Integer, Double> policygivengoalcounts = new HashMap<Integer, Double>();
 
-			double[] observationmatchescounts = new double[goals.length];
+			HashMap<Integer, Double> observationmatchescounts = new HashMap<Integer, Double>();
 
-			double[] likelihoods = new double[goals.length];
+			HashMap<Integer, Double> likelihoods = new HashMap<Integer, Double>();
+			
+			HashMap<Integer, Double> lp = new HashMap<Integer, Double>();
+			
+			
+			for(int i=0; i<goals.length; i++)
+			{
+				posterior.put(i, 0.0);
+				policygivengoalcounts.put(i, 0.0);
+				observationmatchescounts.put(i, 0.0);
+				likelihoods.put(i, 0.0);
+				lp.put(i, 0.0);
+				
+			}
 
 
 
@@ -1668,7 +2125,7 @@ public class PlanRecognition {
 			/**
 			 * likelihood*prior
 			 */
-			double [] lp = new double[goals.length];
+			
 
 
 
@@ -1700,7 +2157,9 @@ public class PlanRecognition {
 					if(policy.get(plen-1).equals(goals[gindex])) 
 					{
 						Logger.logit("poliicy has the goal "+ goals[gindex]+"\n");
-						policygivengoalcounts[gindex]++;
+						
+						double pgc = policygivengoalcounts.get(gindex);
+						policygivengoalcounts.put(gindex, pgc+1);
 
 
 						boolean seqmatches = true;
@@ -1727,12 +2186,17 @@ public class PlanRecognition {
 						if(seqmatches)
 						{
 
-							observationmatchescounts[gindex]++;
-							Logger.logit("Obsrvation matches policy, count "+ observationmatchescounts[gindex]+"\n");
+							//observationmatchescounts[gindex]++;
+							
+							
+							double oc = observationmatchescounts.get(gindex);
+							observationmatchescounts.put(gindex, oc+1);
+							
+							//Logger.logit("Obsrvation matches policy, count "+ observationmatchescounts[gindex]+"\n");
 						}
 						else
 						{
-							Logger.logit("Obsrvation does not match policy, count "+ observationmatchescounts[gindex]+"\n");
+							//Logger.logit("Obsrvation does not match policy, count "+ observationmatchescounts[gindex]+"\n");
 						}
 
 					}
@@ -1746,22 +2210,28 @@ public class PlanRecognition {
 
 				}
 
-				if(policygivengoalcounts[gindex]>0)
+				if(policygivengoalcounts.get(gindex)>0)
 				{
-					likelihoods[gindex] = observationmatchescounts[gindex]/policygivengoalcounts[gindex];
+					double lh = observationmatchescounts.get(gindex)/policygivengoalcounts.get(gindex);
+					likelihoods.put(gindex, lh);
+					
 				}
 
 
 
-				Logger.logit("Likelihood : "+ likelihoods[gindex]+"\n");
+				//Logger.logit("Likelihood : "+ likelihoods[gindex]+"\n");
 
-				lp[gindex] += likelihoods[gindex]*priors[gindex]*priorsattackertype.get(attid);
+				double tp= likelihoods.get(gindex)*priors.get(gindex)*priorsattackertype.get(attid);
+				
+				lp.put(gindex, lp.get(gindex)+tp);
 
-				totallp += lp[gindex];
+				totallp += lp.get(gindex);
 
-				Logger.logit("lp : "+ lp[gindex] +"\n");
-
-				Logger.logit("total lp : "+ totallp +"\n");
+				
+				/*double lh = observationmatchescounts.get(gindex)/policygivengoalcounts.get(gindex);
+				likelihoods.put(gindex, lh);*/
+				
+				
 
 
 
@@ -1774,11 +2244,15 @@ public class PlanRecognition {
 
 				if(totallp>0)
 				{
-					posterior[gindex] = lp[gindex]/totallp;
+					//posterior[gindex] = lp[gindex]/totallp;
+					
+					posterior.put(gindex, lp.get(gindex)/totallp);
+					
+					
 				}
 				else
 				{
-					posterior[gindex] = 0;
+					posterior.put(gindex, 0.0);
 				}
 
 				//Logger.logit("goal "+ goals[gindex] +": "+posterior[gindex]+"\n");
@@ -1974,10 +2448,22 @@ public class PlanRecognition {
 
 		HashMap<Integer, Double> posteriors = new HashMap<Integer, Double>();
 
-		double[] likelihoods = new double[attackers.size()];
-		double[] observationsgiventype = new double[attackers.size()];
-		double[] totalobservations = new double[attackers.size()];
-		double[] probobservations = new double[attackers.size()];
+		HashMap<Integer,Double> likelihoods = new HashMap<Integer,Double>();
+		HashMap<Integer,Double> observationsgiventype = new HashMap<Integer,Double>();
+		HashMap<Integer,Double> totalobservations = new HashMap<Integer,Double>();
+		HashMap<Integer,Double> probobservations = new HashMap<Integer,Double>();
+		
+		
+		for(Attacker att: attackers.values())
+		{
+			likelihoods.put(att.id, 0.0);
+			observationsgiventype.put(att.id, 0.0);
+			totalobservations.put(att.id, 0.0);
+			probobservations.put(att.id, 0.0);
+		}
+		
+		
+		
 		/**
 		 *  compute in how many observations the sequence was observed
 		 */
@@ -2002,7 +2488,10 @@ public class PlanRecognition {
 
 				HashMap<Integer, Integer> policy = att.fixedpolicy.get(policyindex);
 
-				totalobservations[attindex]++;
+				double to = totalobservations.get(attindex);
+				totalobservations.put(attindex, to+1);
+				
+				//totalobservations[attindex]++;
 				for(int fp: policy.values())
 				{
 					Logger.logit(fp+" ");
@@ -2041,7 +2530,11 @@ public class PlanRecognition {
 				if(matches)
 				{
 					Logger.logit("matches...\n");
-					observationsgiventype[attindex]++;
+					//observationsgiventype[attindex]++;
+					
+					
+					to = observationsgiventype.get(attindex);
+					observationsgiventype.put(attindex, to+1);
 
 					//Logger.logit("total observations "+ totalobservations + "\n");
 					/*Logger.logit("observ t0 "+ observationsgiventype[0] + " observ t1 "+observationsgiventype[1]+" observ t2 "+observationsgiventype[2]
@@ -2066,18 +2559,22 @@ public class PlanRecognition {
 		Logger.logit("\n\nComputing likelihoods...\n\n");
 		for(Attacker att: attackers.values())
 		{
-			if(totalobservations[att.id]>0)
+			if(totalobservations.get(att.id)>0)
 			{
 				Logger.logit("*******Attacker type "+ att.id +"*****\n");
-				likelihoods[att.id] = observationsgiventype[att.id]/totalobservations[att.id];
+				double tmplh = observationsgiventype.get(att.id)/totalobservations.get(att.id);
+				likelihoods.put(att.id, tmplh);
 			}
 			//Logger.logit("likelihood "+ likelihoods[att.id]+"\n");
 			//Logger.logit("prior "+ priorsattackertype[att.id]+"\n");
-			probobservations[att.id] = likelihoods[att.id]*priorsattackertype.get(att.id);
-			sumprobtotalobservations += probobservations[att.id];
-			Logger.logit("att "+ att.id + ", probovservations "+ probobservations[att.id]+"\n");
+			
+			 double po = likelihoods.get(att.id)*priorsattackertype.get(att.id);
+			 probobservations.put(att.id, po);
+			 
+			sumprobtotalobservations += probobservations.get(att.id);
+			/*Logger.logit("att "+ att.id + ", probovservations "+ probobservations[att.id]+"\n");
 			Logger.logit("sum total observations "+ sumprobtotalobservations+"\n");
-
+*/
 		}
 
 		Logger.logit("\nposteriors...\n\n");
@@ -2085,7 +2582,7 @@ public class PlanRecognition {
 		for(Attacker att: attackers.values())
 		{
 			Logger.logit("********Attacker type "+ att.id +"*********\n");
-			double d = probobservations[att.id]/ sumprobtotalobservations;
+			double d = probobservations.get(att.id)/ sumprobtotalobservations;
 			posteriors.put(att.id, d);
 			//Logger.logit("posterior "+ posteriors[att.id] + "\n");
 
@@ -2115,25 +2612,48 @@ public class PlanRecognition {
 
 		HashMap<Integer, Double> posteriors = new HashMap<Integer, Double>();
 
-		double[] likelihoods = new double[attackers.size()];
+		/*double[] likelihoods = new double[attackers.size()];
 		double[] observationsgiventype = new double[attackers.size()];
 		double[] totalobservations = new double[attackers.size()];
-		double[] probobservations = new double[attackers.size()];
+		double[] probobservations = new double[attackers.size()];*/
+		
+		
+		
+		//HashMap<Integer, Double> posteriors = new HashMap<Integer, Double>();
+
+		HashMap<Integer,Double> likelihoods = new HashMap<Integer,Double>();
+		HashMap<Integer,Double> observationsgiventype = new HashMap<Integer,Double>();
+		HashMap<Integer,Double> totalobservations = new HashMap<Integer,Double>();
+		HashMap<Integer,Double> probobservations = new HashMap<Integer,Double>();
+		
+		
+		for(Attacker att: attackers.values())
+		{
+			likelihoods.put(att.id, 0.0);
+			observationsgiventype.put(att.id, 0.0);
+			totalobservations.put(att.id, 0.0);
+			probobservations.put(att.id, 0.0);
+		}
+		
+		
+		
+		
+		
 		/**
 		 *  compute in how many observations the sequence was observed
 		 */
 
 		//printAttackers(attackers);
 
-		Logger.logit("\n\nComputing posteriors...\n\n");
+		//Logger.logit("\n\nComputing posteriors...\n\n");
 
 		for(Integer attindex: attackers.keySet())
 		{
 			Attacker att = attackers.get(attindex);
 
-			Logger.logit("**********Attacker index "+ attindex +"*******\n");
+			/*Logger.logit("**********Attacker index "+ attindex +"*******\n");
 			Logger.logit("Attacker type "+ att.id +"\n");
-			Logger.logit("policy : ");
+			Logger.logit("policy : ");*/
 
 			//ArrayList<Integer> toberemovedpolicyies = new ArrayList<Integer>();
 
@@ -2145,8 +2665,16 @@ public class PlanRecognition {
 
 				HashMap<Integer, Integer> policy = policies.get(policyindex);
 
-				totalobservations[attindex]++;
-				for(int fp: policy.values())
+				//totalobservations[attindex]++;
+				
+				double tmp = totalobservations.get(attindex);
+				
+				totalobservations.put(attindex, tmp+1);
+				
+				
+				
+				
+				/*for(int fp: policy.values())
 				{
 					Logger.logit(fp+" ");
 				}
@@ -2155,7 +2683,7 @@ public class PlanRecognition {
 				{
 					Logger.logit(oa+" ");
 				}
-				Logger.logit("\n");
+				Logger.logit("\n");*/
 				boolean matches = true;
 				for(Integer round: observedactions.keySet())
 				{
@@ -2174,7 +2702,7 @@ public class PlanRecognition {
 
 					if(oa != fp)
 					{
-						Logger.logit("does not matches...\n");
+						//Logger.logit("does not matches...\n");
 						//toberemovedpolicyies.add(policyindex);
 						matches = false;
 						break;
@@ -2183,8 +2711,13 @@ public class PlanRecognition {
 				}
 				if(matches)
 				{
-					Logger.logit("matches...\n");
-					observationsgiventype[attindex]++;
+					//Logger.logit("matches...\n");
+					//observationsgiventype[attindex]++;
+					
+					
+					tmp = observationsgiventype.get(attindex);
+					
+					observationsgiventype.put(attindex, tmp+1);
 
 					//Logger.logit("total observations "+ totalobservations + "\n");
 					/*Logger.logit("observ t0 "+ observationsgiventype[0] + " observ t1 "+observationsgiventype[1]+" observ t2 "+observationsgiventype[2]
@@ -2206,29 +2739,39 @@ public class PlanRecognition {
 
 
 		double sumprobtotalobservations = 0;
-		Logger.logit("\n\nComputing likelihoods...\n\n");
+		//Logger.logit("\n\nComputing likelihoods...\n\n");
 		for(Attacker att: attackers.values())
 		{
-			if(totalobservations[att.id]>0)
+			if(totalobservations.get(att.id)>0)
 			{
-				Logger.logit("*******Attacker type "+ att.id +"*****\n");
-				likelihoods[att.id] = observationsgiventype[att.id]/totalobservations[att.id];
+				//Logger.logit("*******Attacker type "+ att.id +"*****\n");
+				//likelihoods[att.id] = observationsgiventype[att.id]/totalobservations[att.id];
+				
+				double lh = observationsgiventype.get(att.id)/totalobservations.get(att.id);
+				likelihoods.put(att.id, lh);
+				
+				
 			}
 			//Logger.logit("likelihood "+ likelihoods[att.id]+"\n");
 			//Logger.logit("prior "+ priorsattackertype[att.id]+"\n");
-			probobservations[att.id] = likelihoods[att.id]*priorsattackertype.get(att.id);
-			sumprobtotalobservations += probobservations[att.id];
-			Logger.logit("att "+ att.id + ", probovservations "+ probobservations[att.id]+"\n");
-			Logger.logit("sum total observations "+ sumprobtotalobservations+"\n");
+			probobservations.put(att.id, likelihoods.get(att.id)*priorsattackertype.get(att.id));
+			sumprobtotalobservations += probobservations.get(att.id);
+			
+			
+			
+			
+			
+			//Logger.logit("att "+ att.id + ", probovservations "+ probobservations[att.id]+"\n");
+			//Logger.logit("sum total observations "+ sumprobtotalobservations+"\n");
 
 		}
 
-		Logger.logit("\nposteriors...\n\n");
+		//Logger.logit("\nposteriors...\n\n");
 
 		for(Attacker att: attackers.values())
 		{
-			Logger.logit("********Attacker type "+ att.id +"*********\n");
-			double d = probobservations[att.id]/ sumprobtotalobservations;
+			//Logger.logit("********Attacker type "+ att.id +"*********\n");
+			double d = probobservations.get(att.id)/ sumprobtotalobservations;
 			posteriors.put(att.id, d);
 			//Logger.logit("posterior "+ posteriors[att.id] + "\n");
 
