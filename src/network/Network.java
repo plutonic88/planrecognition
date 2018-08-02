@@ -156,7 +156,7 @@ public class Network {
 			int v = hpv;//randInt(5, 10);
 			int c = hpc;//randInt(1,4);
 			Node n = new Node(i+nnodes, v, c);
-			n.addExploits(new int[] {i});
+			n.addExploits(new int[] {0,1,2,3,4,5,6,7});
 			honeypots.put(n.id, n);
 			
 		}

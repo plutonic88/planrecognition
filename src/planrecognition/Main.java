@@ -22,6 +22,8 @@ public class Main {
 		
 		//PlanRecognition.doFixedPolicyExp1();
 		
+		
+		
 		PlanRecognition.doFixedPolicyWithDefenseExp1();
 		
 
