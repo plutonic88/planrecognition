@@ -85,6 +85,11 @@ public class PlanRecognition {
 
 
 		boolean withdefense = true;
+		
+		
+		boolean minentropy = false;
+		boolean mincommonoverlap = true;
+		
 
 		int[] goals = {23, 24, 25, 26};
 		int startnode = 0;
@@ -93,6 +98,9 @@ public class PlanRecognition {
 		int hpdeploylimit = 2;
 		int hpv = 8;
 		int hpc = 2;
+		
+		boolean samevalhp = false;
+		boolean allexphp = true;
 
 		int nexploits = 8;
 
@@ -115,7 +123,7 @@ public class PlanRecognition {
 
 		Network.constructNetwork(net, exploits, nnodes, nexploits);
 
-		Network.constructHoneyPots(honeypots, exploits, nhoneypots, nnodes, hpv, hpc);
+		Network.constructHoneyPots(honeypots, exploits, nhoneypots, nnodes, hpv, hpc, samevalhp, allexphp);
 
 		System.out.println("Network construction... \ndone");
 
@@ -145,7 +153,9 @@ public class PlanRecognition {
 		//constructPolicyLib();
 
 		
-		playGameWithNaiveDefense(chosenattacker, chosenpolicy, net, exploits, attackers, goals, honeypots, hpdeploylimit, singlepath, npath, startnode, withdefense);
+		
+		playGameWithNaiveDefense(chosenattacker, chosenpolicy, net, exploits, attackers, goals, 
+				honeypots, hpdeploylimit, singlepath, npath, startnode, withdefense, minentropy, mincommonoverlap);
 
 
 
@@ -355,11 +365,13 @@ public class PlanRecognition {
 	 * @param hpdeploylimit 
 	 * @param honeypots 
 	 * @param withdefense 
+	 * @param mincommonoverlap 
+	 * @param minentropy 
 	 * @throws Exception 
 	 */
 	private static void playGameWithNaiveDefense(int chosenattacker, int chosenpolicy, HashMap<Integer, Node> net, HashMap<Integer, Exploits> exploits,
 			HashMap<Integer, Attacker> attackers, int[] goals, HashMap<Integer,Node> honeypots, int hpdeploylimit, 
-			boolean singlepath, int npath, int startnode, boolean withdefense) throws Exception {
+			boolean singlepath, int npath, int startnode, boolean withdefense, boolean minentropy, boolean mincommonoverlap) throws Exception {
 
 
 		/**
@@ -459,7 +471,7 @@ public class PlanRecognition {
 			
 			int currentnodeid = oactions.get(oactions.size()-1);
 			
-			System.out.print("****************Attacker current position node: "+ currentnodeid);
+			System.out.println("****************Attacker current position node: "+ currentnodeid);
 
 			//double posteriorattackertype[] = new double[attackers.size()];
 			//double posteriorplang[][] = new double[attackers.size()][goals.length];
@@ -469,53 +481,7 @@ public class PlanRecognition {
 			HashMap<Integer, HashMap<Integer, Double>> posteriorplang = new HashMap<Integer, HashMap<Integer, Double>>();
 
 
-			if(oactions.size()==0)
-			{
-				/*System.out.println("No observed actions\nUpdating the posteriors...");
-				//posteriorattackertype = priorsattackertype;
-				//posteriorplang = priorforplang;
-				for(Attacker att: attackers.values())
-				{
-					System.out.println(" attacker "+ att.id + " prior "+ priorsattackertype.get(att.id));
-					posteriorattackertype.put(att.id, priorsattackertype.get(att.id));
-				}
-				for(Attacker att: attackers.values())
-				{
-					System.out.println(" attacker "+ att.id + " posterior "+ posteriorattackertype.get(att.id));
-				}
-				for(Attacker att: attackers.values())
-				{
-					System.out.println("Attacker "+ att.id +": ");
-					HashMap<Integer, Double> prob = priorforplang.get(att.id);
-					for(double d: prob.values())
-					{
-
-						System.out.print(" goal "+ att.goals.get(0)+" prior: "+d+"\n");
-					}
-					System.out.println();
-
-				}
-				for(Attacker att: attackers.values())
-				{
-
-					System.out.println("Attacker "+ att.id +": ");
-					for(HashMap<Integer, Double> prob: posteriorplang.values())
-					{
-
-						for(double d: prob.values())
-						{
-
-							System.out.print(" goal "+ att.goals.get(0)+" posterior: "+d+"\n");
-						}
-
-
-					}
-					System.out.println();
-
-				}*/
-
-			}
-			else // there are observed actions
+			if(oactions.size()!=0)
 			{
 				Node curnode = net.get(currentnodeid);
 				//System.out.println("*******Attacker current position node "+ curnode.id + " round "+ round);
@@ -528,7 +494,7 @@ public class PlanRecognition {
 				 */
 				if(currenthps.size()>0)
 				{
-					freeInvalidHoneypots(currenthps, curnode, net, honeypots);
+					freeInvalidHoneypots(currenthps, curnode, net, honeypots, currentnodeid);
 					//printNetwork(honeypots);
 				}
 
@@ -627,14 +593,20 @@ public class PlanRecognition {
 
 
 
-				try {
-					deployHP(net, honeypots, currenthps, oactions, attackers, chosenatt, chosenattackerpolicy, singlepath, 
+				if(minentropy)
+				{
+					System.out.println("***********Using deployHPMinEntropy******************************");
+					deployHPMinEntropy(net, honeypots, currenthps, oactions, attackers, chosenatt, chosenattackerpolicy, singlepath, 
 							npath, priorsattackertype, priorforplang, round, hpdeploylimit, startnodeid, exploits );
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				}
-
+				else if(mincommonoverlap)
+				{
+					System.out.println("***********Using deployHPMinCommonOverlap******************************");
+					deployHPMinCommonOverlap(net, honeypots, currenthps, oactions, attackers, chosenatt, chosenattackerpolicy, singlepath, 
+							npath, priorsattackertype, priorforplang, round, hpdeploylimit, startnodeid, exploits );
+				}
+				
+				
 
 				//System.out.println("Network after honeypot deployment: ");
 
@@ -671,6 +643,15 @@ public class PlanRecognition {
 
 
 			}
+			
+			
+			if(chosenatt.fixedpolicy.get(chosenpolicy).size()==0)
+			{
+				System.out.println("***********Attacker got stuck no vulnerabilities to exploit********************");
+				//System.out.println("***********Determined attacker type "+ chosenattacker+"********************");
+				System.out.println("***********round "+ round+"********************");
+				return;
+			}
 
 
 			int attaction = chosenatt.fixedpolicy.get(chosenpolicy).get(round+1);
@@ -691,7 +672,13 @@ public class PlanRecognition {
 
 
 
-			
+			if(currenthps.contains(attaction))
+			{
+				System.out.println("***********Attacker got caught in honeypot "+ attaction+"********************");
+				System.out.println("***********Determined attacker type "+ chosenattacker+"********************");
+				System.out.println("***********round "+ round+"********************");
+				return;
+			}
 
 
 
@@ -918,7 +905,7 @@ public class PlanRecognition {
 	}
 
 
-	private static void deployHP(HashMap<Integer, Node> net, HashMap<Integer, Node> honeypots,
+	private static void deployHPMinEntropy(HashMap<Integer, Node> net, HashMap<Integer, Node> honeypots,
 			ArrayList<Integer> currenthps, HashMap<Integer, Integer> oactions, HashMap<Integer, Attacker> attackers, Attacker chosenatt, 
 			HashMap<Integer,Integer> chosenattackerpolicy, boolean singlepath, int npath,
 			HashMap<Integer, Double> priorsattackertype, HashMap<Integer,HashMap<Integer,Double>> priorforplang, int round, int hpdeploylimit, int startnodeid, HashMap<Integer,Exploits> exploits) throws Exception {
@@ -1066,7 +1053,7 @@ public class PlanRecognition {
 				 */
 
 
-				makeDefenseMove(priorsattackertype, priorforplang, startnodeid,placestoallocatehp, freehps, 
+				measureDefenseMovesForEntropy(priorsattackertype, priorforplang, startnodeid,placestoallocatehp, freehps, 
 						honeypots, net, exploits, attackers, oactions, chosenatt, chosenattackerpolicy, singlepath, npath, round, slots, hp, posteriorlibrary, settingsid);
 
 
@@ -1174,6 +1161,258 @@ public class PlanRecognition {
 
 
 	}
+	
+	
+	
+	private static void deployHPMinCommonOverlap(HashMap<Integer, Node> net, HashMap<Integer, Node> honeypots,
+			ArrayList<Integer> currenthps, HashMap<Integer, Integer> oactions, HashMap<Integer, Attacker> attackers, Attacker chosenatt, 
+			HashMap<Integer,Integer> chosenattackerpolicy, boolean singlepath, int npath,
+			HashMap<Integer, Double> priorsattackertype, HashMap<Integer,HashMap<Integer,Double>> priorforplang, int round, int hpdeploylimit, int startnodeid, HashMap<Integer,Exploits> exploits) throws Exception {
+
+
+
+		/**
+		 * Now defender makes a defensive move naively
+		 * 1. See which slots are free
+		 * 2. see which honeypots are free
+		 * 3. compute posterior for every combination of hps and networks for each attacker
+		 * 4. Then deploy the hp where the prob for type increases most
+		 * 5. If the prob does not increase, see if the goal increases
+		 */
+
+		System.out.println("Finding placecs where honetpots can be placed");
+
+		HashMap<Integer, int[]> placestoallocatehp = computePlacesToAllocateHP(net, honeypots, currenthps, oactions);
+
+		if(placestoallocatehp.size()==1)
+		{
+			System.out.println("One slot only");
+		}
+
+
+		/**
+		 * Now compute which honeypots are free
+		 * Which are currently not being used
+		 */
+
+		ArrayList<Integer> freehps = findFreeHP(currenthps, honeypots);
+
+		int hplimit = hpdeploylimit - currenthps.size();
+
+		if(hplimit>placestoallocatehp.size())
+		{
+			hplimit = placestoallocatehp.size();
+		}
+
+		System.out.println("We can deploy "+ hplimit +" honeypots from "+ freehps.size() + " honeypots");
+
+
+
+		int slotlimit = hplimit;
+		System.out.println("#slotslimit "+ slotlimit);
+
+
+		/**
+		 * create combinations of placestoallocatehp
+		 */
+		HashMap<Integer, int[]> slotids = new HashMap<Integer, int[]>();
+		HashMap<Integer, int[]> hpids = new HashMap<Integer, int[]>();
+
+		System.out.println("Slot ids: ");
+		createSlotCombinations(slotids, slotlimit, placestoallocatehp.size());
+		System.out.println("HP ids: ");
+		createHPCombinations(hpids, hplimit, freehps.size());
+
+
+
+
+
+		/**
+		 * create all the settings
+		 * then iterate over them
+		 * 
+		 * Slots
+		 * Honeypots: freehps
+		 */
+
+
+
+
+
+		/**
+		 * For each settings we need to compute the posteriors
+		 * Then pick a setting which has the max posterior
+		 */
+
+		int settingsid = 0;
+		HashMap<Integer, HashMap<Integer, HashMap<Integer, Double>>> posteriorlibrary = new HashMap<Integer, HashMap<Integer, HashMap<Integer, Double>>>();
+		double minoverlap = Double.POSITIVE_INFINITY;
+		double minsettings = -1;
+		int minslotid = -1;
+		int minhpid = -1;
+		for(int s1: slotids.keySet())
+		{
+
+
+			int[] slid = slotids.get(s1);
+
+			HashMap<Integer, int[]> slots = new HashMap<Integer, int[]>();
+			for(int i=0; i<slid.length; i++)
+			{
+				int[] slot1 = placestoallocatehp.get(slid[i]);
+				slots.put(slots.size(), slot1);
+			}
+
+
+			for(int h1: hpids.keySet())
+			{
+
+
+
+				int[] hpid = hpids.get(h1);
+
+				int hp[] = new int[hpid.length];
+				for(int i=0; i<hpid.length; i++)
+				{
+					hp[i] = freehps.get(hpid[i]);
+				}
+
+
+
+
+				System.out.println("\nSettings "+ settingsid +": \nslots: ");
+				for(int[] sl: slots.values())
+				{
+					System.out.print("[");
+					for(int s: sl)
+					{
+						System.out.print(s+", ");
+					}
+					System.out.println("]");
+				}
+
+
+				System.out.println("HP: ");
+
+				System.out.print("[");
+				for(int s: hp)
+				{
+					System.out.print(s+", ");
+				}
+				System.out.println("]");
+
+
+
+				/*if(settingsid==1)
+			{
+
+				printNetwork(net);
+				printNetwork(honeypots);
+			}
+				 */
+
+
+				double overlaplength = measureDefenseMovesForOverlap(priorsattackertype, priorforplang, startnodeid,placestoallocatehp, freehps, 
+						honeypots, net, exploits, attackers, oactions, chosenatt, chosenattackerpolicy, singlepath, npath, round, slots, hp, posteriorlibrary, settingsid);
+
+
+
+
+
+
+
+				
+				System.out.println("overlap length "+ overlaplength);
+				
+				if(minoverlap>overlaplength)
+				{
+					minoverlap = overlaplength;
+					minsettings = settingsid;
+					minslotid = s1;
+					minhpid = h1;
+
+				}
+				System.out.println("Min overlap "+ minoverlap + ", minsettings "+ minsettings);
+
+
+				//printPosteriors(posteriorlibrary, settingsid);
+
+				settingsid++;
+
+				//System.out.println("Hii");
+
+
+			}
+
+		}// end of for loop
+
+
+		//printNetwork(net);
+
+		/**
+		 * deploy the HP with min entropy
+		 * update the currenthps
+		 */
+
+		int sltid[] = slotids.get(minslotid);
+		int hpid[] = hpids.get(minhpid);
+
+
+		System.out.println("Selected slots: ");
+
+
+		HashMap<Integer, int[]> slots = new HashMap<Integer, int[]>();
+		for(int i=0; i<sltid.length; i++)
+		{
+			int[] slot1 = placestoallocatehp.get(sltid[i]);
+			slots.put(slots.size(), slot1);
+
+			System.out.print("[");
+			for(int s: slot1)
+			{
+				System.out.print(s+" ");
+			}
+			System.out.print("]");
+
+		}
+
+
+
+
+		System.out.println("Selected HPs: ");
+
+		int hp[] = new int[hpid.length];
+		for(int i=0; i<hpid.length; i++)
+		{
+			hp[i] = freehps.get(hpid[i]);
+		}
+
+
+		for(int s: hp)
+		{
+			System.out.print(s+" ");
+		}
+		System.out.println("");
+
+		for(Integer slid: slots.keySet())
+		{
+			int[] nodepair = slots.get(slid);
+			int h = hp[slid];
+
+			insertHoneyPot(nodepair, h, net, honeypots);
+			currenthps.add(h);
+			//insertHoneyPot(slot2, hp2, net, honeypots);
+
+
+		}
+
+		//printNetwork(net);
+
+
+
+
+	}
+	
 
 
 	/**
@@ -1420,7 +1659,7 @@ public class PlanRecognition {
 	}
 
 
-	private static void freeInvalidHoneypots(ArrayList<Integer> currenthps, Node curnode, HashMap<Integer,Node> net, HashMap<Integer,Node> honeypots) throws Exception {
+	private static void freeInvalidHoneypots(ArrayList<Integer> currenthps, Node curnode, HashMap<Integer,Node> net, HashMap<Integer,Node> honeypots, int currentnodeid) throws Exception {
 
 
 
@@ -1536,7 +1775,7 @@ public class PlanRecognition {
 	 * @throws Exception 
 	 */
 
-	private static void makeDefenseMove(HashMap<Integer,Double> priorsattackertype, HashMap<Integer,HashMap<Integer,Double>> priorforplang, int startnodeid, 
+	private static void measureDefenseMovesForEntropy(HashMap<Integer,Double> priorsattackertype, HashMap<Integer,HashMap<Integer,Double>> priorforplang, int startnodeid, 
 			HashMap<Integer, int[]> placestoallocatehp, ArrayList<Integer> freehps,
 			HashMap<Integer, Node> honeypots, HashMap<Integer, Node> net, HashMap<Integer, Exploits> exploits,
 			HashMap<Integer, Attacker> attackers, HashMap<Integer, Integer> oactions, Attacker chosenatt,
@@ -1559,9 +1798,12 @@ public class PlanRecognition {
 		/**
 		 * insert hp1 into slot1 and so on...
 		 */
-
-		/*printNetwork(net);
-	printNetwork(honeypots);*/
+		
+		if(round==2)
+		{
+			printNetwork(net);
+			printNetwork(honeypots);
+		}
 
 		for(Integer slid: slots.keySet())
 		{
@@ -1575,10 +1817,12 @@ public class PlanRecognition {
 		}
 
 
+		if(round==2)
+		{
+			printNetwork(net);
+			printNetwork(honeypots);
+		}
 
-
-		/*printNetwork(net);
-	printNetwork(honeypots);*/
 
 
 
@@ -1721,6 +1965,236 @@ public class PlanRecognition {
 
 
 
+	}
+	
+	
+	
+	private static double measureDefenseMovesForOverlap(HashMap<Integer,Double> priorsattackertype, HashMap<Integer,HashMap<Integer,Double>> priorforplang, int startnodeid, 
+			HashMap<Integer, int[]> placestoallocatehp, ArrayList<Integer> freehps,
+			HashMap<Integer, Node> honeypots, HashMap<Integer, Node> net, HashMap<Integer, Exploits> exploits,
+			HashMap<Integer, Attacker> attackers, HashMap<Integer, Integer> oactions, Attacker chosenatt,
+			HashMap<Integer, Integer> chosenattackerpolicy, boolean singlepath, int npath, int round,
+			HashMap<Integer, int[]> slots, int[] hps, HashMap<Integer,HashMap<Integer,HashMap<Integer, Double>>> posteriorlibrary, int settingsid) throws Exception {
+
+
+		/**
+		 * For a single slot find the policies of each attacker from current 
+		 * position and using the previous history
+		 * and previous cost
+		 */
+
+		/*int[] slot1 = placestoallocatehp.get(0);
+		int slot2[] = placestoallocatehp.get(2);
+
+		int hp1 = freehps.get(0);
+		int hp2 = freehps.get(1);*/
+
+		/**
+		 * insert hp1 into slot1 and so on...
+		 */
+		
+		/*if(round==2)
+		{
+			printNetwork(net);
+			printNetwork(honeypots);
+		}*/
+
+		for(Integer slid: slots.keySet())
+		{
+			int[] nodepair = slots.get(slid);
+			int hp = hps[slid];
+
+			insertHoneyPot(nodepair, hp, net, honeypots);
+			//insertHoneyPot(slot2, hp2, net, honeypots);
+
+
+		}
+
+
+		/*if(round==2)
+		{
+			printNetwork(net);
+			printNetwork(honeypots);
+		}*/
+
+
+
+
+		/**
+		 * now find each attacker's policy from current node
+		 * Need current cost for each attacker
+		 * ACtually we don't need current cost.
+		 * All we need is to minimize the future cost and maximize rewards
+		 * 
+		 */
+
+
+		int currentnodeid = startnodeid;
+		if(oactions.size()>0)
+		{
+			currentnodeid = oactions.get(oactions.size()-1);
+		}
+
+		System.out.println("Attacker current position "+ currentnodeid);
+
+
+		/**
+		 * attackpolicies for each attacker for a particular settings of honeypot
+		 * attids--> polcicies
+		 */
+		//System.out.println("*********Attacker policies before adding honeypots*********");
+		//printAttackers(attackers);
+
+
+		/**
+		 * Need to change the attackpolicies if  we want to adapt multiple policies by the attacker
+		 */
+		HashMap<Integer, HashMap<Integer, HashMap<Integer, Integer>>> attackpolicies = new HashMap<Integer, HashMap<Integer, HashMap<Integer, Integer>>>();
+		computeSingleAttackPolicies(attackpolicies, net, exploits, attackers, currentnodeid, singlepath, npath);
+		
+		
+		double overlaplength = maxOverlapLength(attackpolicies);
+		
+		
+		/**
+		 * remove the inserted honeypots
+		 * update the net
+		 */
+		
+		for(Integer slid: slots.keySet())
+		{
+			int[] nodepair = slots.get(slid);
+			int hp = hps[slid];
+
+			removeHoneyPot(nodepair, hp, net, honeypots);
+			//insertHoneyPot(slot2, hp2, net, honeypots);
+
+
+		}
+
+		/*printNetwork(net);
+	printNetwork(honeypots);
+		 */
+
+
+		//System.out.println("hp");
+
+
+		return overlaplength;
+
+	}
+	
+	
+
+
+	/**
+	 * copmutes max overlap length between strategies
+	 * @param attackpolicies
+	 * @return
+	 */
+	private static double maxOverlapLength(HashMap<Integer, HashMap<Integer, HashMap<Integer, Integer>>> attackpolicies) {
+		
+		
+		
+		double maxlen = Double.NEGATIVE_INFINITY;
+		
+		
+		ArrayList<int[]> donepair = new ArrayList<int[]>();
+		
+		for(Integer atid: attackpolicies.keySet())
+		{
+			for(Integer atid2: attackpolicies.keySet())
+			{
+				if(atid != atid2)
+				{
+					
+					
+					boolean isdone = isDone(atid, atid2, donepair);
+					
+					
+					if(!isdone)
+					{
+						int pair [] = {atid, atid2};
+						donepair.add(pair);
+
+						for(Integer pid: attackpolicies.get(atid).keySet())
+						{
+							for(Integer pid2: attackpolicies.get(atid2).keySet())
+							{
+								HashMap<Integer, Integer> p1 = attackpolicies.get(atid).get(pid);
+								HashMap<Integer, Integer> p2 = attackpolicies.get(atid2).get(pid2);
+
+								System.out.print("p1: ");
+
+								for(int i: p1.values())
+								{
+									System.out.print(i+" ");
+								}
+
+								System.out.print("\np2: ");
+
+								for(int i: p2.values())
+								{
+									System.out.print(i+" ");
+								}
+								System.out.println();
+
+								int len = commonLen(p1, p2);
+
+								System.out.println("common len "+ len);
+
+								if(maxlen<len)
+								{
+									maxlen = len;
+								}
+								System.out.println("max common len "+ maxlen);
+
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		
+		
+		return maxlen;
+	}
+
+
+	private static boolean isDone(Integer atid, Integer atid2, ArrayList<int[]> donepair) {
+		
+		
+		
+		for(int pair[]: donepair)
+		{
+			if((atid==pair[0] && atid2==pair[1]) || (atid==pair[1] && atid2==pair[0]))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+
+	private static int commonLen(HashMap<Integer, Integer> p1, HashMap<Integer, Integer> p2) {
+		
+		int count = 0;
+		
+		int l1 = p1.size();
+		int l2 = p2.size();
+		
+		int limit = (l1<l2)?l1:l2;
+		
+		for(int i=0; i<limit; i++)
+		{
+			if(p1.get(i) != p2.get(i))
+			{
+				return count;
+			}
+			count++;
+		}
+		return count;
 	}
 
 
@@ -2988,31 +3462,38 @@ public class PlanRecognition {
 		{
 			Node n = net.get(nodeid);
 			System.out.println("******************** Node "+n.id+ " ***********************");
-			Logger.logit("******************** Node "+n.id+ " ***********************\n");
+			//Logger.logit("******************** Node "+n.id+ " ***********************\n");
 			System.out.println("value: "+ n.value);
-			Logger.logit("value: "+ n.value+"\n");
+			//Logger.logit("value: "+ n.value+"\n");
 			System.out.println("cost: "+ n.cost);
-			Logger.logit("cost: "+ n.cost+"\n");
+			//Logger.logit("cost: "+ n.cost+"\n");
+			
+			
+			System.out.print("parent: ");
+			if(n.parent!=null)
+			{
+				System.out.print(n.parent.id);
+			}
 
-			System.out.print("neighbors: ");
-			Logger.logit("neighbors: ");
+			System.out.print("\nneighbors: ");
+			//Logger.logit("neighbors: ");
 			for(Integer nei: n.nei.values())
 			{
 				System.out.print(nei+" ");
-				Logger.logit(nei+" ");
+				//Logger.logit(nei+" ");
 			}
 			System.out.println();
-			Logger.logit(" "+"\n");
+			//Logger.logit(" "+"\n");
 
 			System.out.print("exploits: "+"");
-			Logger.logit("exploits: ");
+			//Logger.logit("exploits: ");
 			for(Integer exp: n.exploits.values())
 			{
 				System.out.print(exp+" ");
-				Logger.logit(exp+" ");
+				//Logger.logit(exp+" ");
 			}
 			System.out.println();
-			Logger.logit(" "+"\n");
+			//Logger.logit(" "+"\n");
 
 		}
 

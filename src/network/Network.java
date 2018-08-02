@@ -149,14 +149,30 @@ public class Network {
 
 	}
 
-	public static void constructHoneyPots(HashMap<Integer, Node> honeypots, HashMap<Integer, Exploits> exploits, int nhoneypots, int nnodes, int hpv, int hpc) {
+	public static void constructHoneyPots(HashMap<Integer, Node> honeypots, HashMap<Integer, Exploits> exploits, int nhoneypots, int nnodes, int hpv, int hpc, boolean sameval, boolean allexploit) {
 		
 		for(int i=0; i<(nhoneypots); i++)
 		{
-			int v = hpv;//randInt(5, 10);
-			int c = hpc;//randInt(1,4);
+			int v = randInt(5, 10);
+			int c = randInt(1,4);
+			
+			if(sameval)
+			{
+				v = 7;
+				c = 3;
+			}
+			
 			Node n = new Node(i+nnodes, v, c);
-			n.addExploits(new int[] {0,1,2,3,4,5,6,7});
+			
+			if(allexploit)
+			{
+				n.addExploits(new int[] {0,1,2,3,4,5,6,7});
+			}
+			else
+			{
+				n.addExploits(new int[] {i});
+			}
+			
 			honeypots.put(n.id, n);
 			
 		}
