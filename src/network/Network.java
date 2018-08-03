@@ -49,27 +49,27 @@ public class Network {
 
 		net.get(0).addNeighbors(new int[] {1,2});
 
-		net.get(1).addNeighbors(new int[] {3, 4});
-		net.get(2).addNeighbors(new int[] {5, 6});
+		net.get(1).addNeighbors(new int[] {3, 4, 5, 8});
+		net.get(2).addNeighbors(new int[] {4, 5, 6, 10});
 
-		net.get(3).addNeighbors(new int[] {7, 8});
-		net.get(4).addNeighbors(new int[] {8, 15});
-		net.get(5).addNeighbors(new int[] {10, 14});
-		net.get(6).addNeighbors(new int[] {10, 11});
+		net.get(3).addNeighbors(new int[] {7, 8, 13});
+		net.get(4).addNeighbors(new int[] {8, 10, 14, 15});
+		net.get(5).addNeighbors(new int[] {8, 10, 14, 15});
+		net.get(6).addNeighbors(new int[] {10, 11, 16});
 
-		net.get(7).addNeighbors(new int[] {12, 13});
-		net.get(8).addNeighbors(new int[] {13, 14});
+		net.get(7).addNeighbors(new int[] {12, 13, 18});
+		net.get(8).addNeighbors(new int[] {13, 14, 19});
 		//net.get(9).addNeighbors(new int[] {14, 15});
-		net.get(10).addNeighbors(new int[] {14, 15, 16});
-		net.get(11).addNeighbors(new int[] {16, 17});
+		net.get(10).addNeighbors(new int[] {14, 15, 16, 21});
+		net.get(11).addNeighbors(new int[] {16, 17, 22});
 
 
 
 		net.get(12).addNeighbors(new int[] {18});
-		net.get(13).addNeighbors(new int[] {18, 19});
-		net.get(14).addNeighbors(new int[] {19, 20});
-		net.get(15).addNeighbors(new int[] {20, 21});
-		net.get(16).addNeighbors(new int[] {21, 22});
+		net.get(13).addNeighbors(new int[] {18, 19, 23});
+		net.get(14).addNeighbors(new int[] {19, 20, 24});
+		net.get(15).addNeighbors(new int[] {20, 21, 25});
+		net.get(16).addNeighbors(new int[] {21, 22, 26});
 		net.get(17).addNeighbors(new int[] {22});
 
 
@@ -109,23 +109,23 @@ public class Network {
 		net.get(5).addExploits(new int[] {0,3,4,6,1,2,5,7});
 		net.get(6).addExploits(new int[] {0,3,4,6,1,2,5,7});
 
-		net.get(7).addExploits(new int[] {3});
-		net.get(8).addExploits(new int[] {2,5,7});
+		net.get(7).addExploits(new int[] {3,5});
+		net.get(8).addExploits(new int[] {1, 2,5,7});
 		//net.get(9).addExploits(new int[] {0, 1, 3});
 		net.get(10).addExploits(new int[] {0,2,4,7});
 		net.get(11).addExploits(new int[] {0,6});
 
 
 
-		net.get(12).addExploits(new int[] {3});
-		net.get(13).addExploits(new int[] {2,7});
+		net.get(12).addExploits(new int[] {3,5});
+		net.get(13).addExploits(new int[] {2,7, 0, 3, 5});
 		net.get(14).addExploits(new int[] {2,3,4,5,7});
 		net.get(15).addExploits(new int[] {0, 1, 2, 4});
 		net.get(16).addExploits(new int[] {0,6});
 		net.get(17).addExploits(new int[] {0});
 
 
-		net.get(18).addExploits(new int[] {3,7});
+		net.get(18).addExploits(new int[] {3,5,7});
 		net.get(19).addExploits(new int[] {2,3,5,7});
 		net.get(20).addExploits(new int[] {4});
 		net.get(21).addExploits(new int[] {1,6});

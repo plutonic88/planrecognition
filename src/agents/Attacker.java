@@ -16,6 +16,12 @@ public class Attacker {
 	public HashMap<Integer, HashMap<Integer, Integer>> fixedpolicy = new HashMap<Integer, HashMap<Integer, Integer>>();
 	public HashMap<Integer, Integer> goals = new HashMap<Integer, Integer>();
 
+	
+	public Attacker() {
+		super();
+		
+	}
+	
 
 	public Attacker(int id) {
 		super();
@@ -115,8 +121,13 @@ public class Attacker {
 
 	}
 
-	public void findFixedPolifyMinCost(int startnodeid, HashMap<Integer,Node> net, HashMap<Integer,Exploits> allexploits, int goal, boolean singlepath, int npath) {
+	public double findFixedPolicyMaxRewardMinCost(int startnodeid, HashMap<Integer,Node> net, 
+			HashMap<Integer,Exploits> allexploits, int goal, boolean singlepath, int npath) 
+	{
 
+		
+		
+		
 		Queue<Node> fringequeue = new LinkedList<Node>();
 		Queue<Integer> closed = new LinkedList<Integer>();
 
@@ -152,7 +163,7 @@ public class Attacker {
 					System.out.println();
 					if(!this.fixedpolicy.isEmpty())
 					{
-						this.fixedpolicy.remove(0);
+						this.fixedpolicy.clear();;
 					}
 					this.fixedpolicy.put(this.fixedpolicy.size(), path);
 
@@ -168,6 +179,17 @@ public class Attacker {
 					{
 						//break;
 					}
+				}
+				else if(node.currentreward==maxreward)
+				{
+					HashMap<Integer, Integer> path = new HashMap<Integer, Integer>();
+					traversePolicy(node, path);
+					System.out.println();
+					if(!this.fixedpolicy.isEmpty())
+					{
+						//this.fixedpolicy.clear();;
+					}
+					this.fixedpolicy.put(this.fixedpolicy.size(), path);
 				}
 				//break;
 			}
@@ -202,6 +224,7 @@ public class Attacker {
 
 
 		}
+		return maxreward;
 
 
 	}
@@ -250,6 +273,10 @@ public class Attacker {
 					path = new HashMap<Integer, Integer>();
 					traversePolicy(node, path);
 					System.out.println();
+					
+					paths.clear();
+					paths.put(paths.size(), path);
+					
 					/*if(!this.fixedpolicy.isEmpty())
 					{
 						this.fixedpolicy.remove(0);
@@ -268,6 +295,10 @@ public class Attacker {
 					{
 						//break;
 					}*/
+				}
+				else if(node.currentreward==maxreward)
+				{
+					paths.put(paths.size(), path);
 				}
 				//break;
 			}
@@ -303,7 +334,7 @@ public class Attacker {
 
 		}
 		
-		paths.put(paths.size(), path);
+		
 		return paths;
 
 
@@ -509,6 +540,9 @@ public class Attacker {
 		//System.out.println("hi");
 
 	}
+	
+	
+	
 
 
 

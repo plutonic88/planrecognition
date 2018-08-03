@@ -86,9 +86,14 @@ public class PlanRecognition {
 
 		boolean withdefense = true;
 		
-		
 		boolean minentropy = false;
 		boolean mincommonoverlap = true;
+		
+		boolean samevalhp = false;
+		boolean allexphp = true;
+		
+		int chosenattacker = 0;
+		int chosenpolicy = 0;
 		
 
 		int[] goals = {23, 24, 25, 26};
@@ -99,13 +104,11 @@ public class PlanRecognition {
 		int hpv = 8;
 		int hpc = 2;
 		
-		boolean samevalhp = false;
-		boolean allexphp = true;
+		
 
 		int nexploits = 8;
 
-		int chosenattacker = 0;
-		int chosenpolicy = 0;
+		
 
 		boolean singlegoal = true;
 		boolean singlepath = true;
@@ -144,13 +147,15 @@ public class PlanRecognition {
 
 		printNetwork(net);
 		System.out.println();
-		printAttackers(attackers);
+		
 		System.out.println("*****************Honeypots******************");
 		printNetwork(honeypots);
 
 		//HashMap<Integer, HashMap<Integer, HashMap<Integer, Integer>>> policylib = new HashMap<Integer, HashMap<Integer, HashMap<Integer, Integer>>>();
 
 		//constructPolicyLib();
+		
+		printAttackers(attackers);
 
 		
 		
@@ -470,6 +475,7 @@ public class PlanRecognition {
 			System.out.println("\n");
 			
 			int currentnodeid = oactions.get(oactions.size()-1);
+			printAttackers(attackers);
 			
 			System.out.println("****************Attacker current position node: "+ currentnodeid);
 
@@ -633,7 +639,13 @@ public class PlanRecognition {
 					{
 						att.fixedpolicy.put(att.fixedpolicy.size(), po);
 					}
+					
+					//att.removeDuplicatePolicies();
 				}
+				
+				refinePoliciesInit(attackers);
+				
+				
 
 				System.out.println("Attackers after deploying HPs");
 
@@ -724,14 +736,14 @@ public class PlanRecognition {
 
 			}
 
-			printAttackers(attackers);
+			//printAttackers(attackers);
 
 
 			round++;
 
 			System.out.println("Hii");
 
-			printNetwork(net);
+			//printNetwork(net);
 
 
 
@@ -1799,11 +1811,11 @@ public class PlanRecognition {
 		 * insert hp1 into slot1 and so on...
 		 */
 		
-		if(round==2)
+		/*if(round==2)
 		{
 			printNetwork(net);
 			printNetwork(honeypots);
-		}
+		}*/
 
 		for(Integer slid: slots.keySet())
 		{
@@ -1817,12 +1829,12 @@ public class PlanRecognition {
 		}
 
 
-		if(round==2)
+		/*if(round==2)
 		{
 			printNetwork(net);
 			printNetwork(honeypots);
 		}
-
+*/
 
 
 
@@ -1857,6 +1869,8 @@ public class PlanRecognition {
 		 */
 		HashMap<Integer, HashMap<Integer, HashMap<Integer, Integer>>> attackpolicies = new HashMap<Integer, HashMap<Integer, HashMap<Integer, Integer>>>();
 		computeSingleAttackPolicies(attackpolicies, net, exploits, attackers, currentnodeid, singlepath, npath);
+		attackpolicies = refinePoliciesMeasure(attackpolicies);
+		
 		//System.out.println("********Attacker policies after adding honeypots*********");
 		//printAttackers(attackers);
 		//printAttackersPolicy(attackpolicies);
@@ -2051,7 +2065,7 @@ public class PlanRecognition {
 		 */
 		HashMap<Integer, HashMap<Integer, HashMap<Integer, Integer>>> attackpolicies = new HashMap<Integer, HashMap<Integer, HashMap<Integer, Integer>>>();
 		computeSingleAttackPolicies(attackpolicies, net, exploits, attackers, currentnodeid, singlepath, npath);
-		
+		attackpolicies = refinePoliciesMeasure(attackpolicies);
 		
 		double overlaplength = maxOverlapLength(attackpolicies);
 		
@@ -2213,7 +2227,8 @@ public class PlanRecognition {
 			//printNetwork(net);
 
 			HashMap<Integer,HashMap<Integer,Integer>> p = att.findOneFixedPolifyMaxReward(currentnodeid, net, exploits, goal, singlepath, npath);
-
+			p= removeDuplicatePoliciesMeasure(p);
+			
 			/**
 			 * keep the existing policy if there is no new policy
 			 */
@@ -2228,6 +2243,46 @@ public class PlanRecognition {
 	}
 
 
+	
+	public static HashMap<Integer, HashMap<Integer, Integer>> removeDuplicatePoliciesMeasure(HashMap<Integer, HashMap<Integer, Integer>> policies) {
+
+		HashMap<Integer, HashMap<Integer, Integer>> newfixpolicy = new HashMap<Integer, HashMap<Integer, Integer>>();
+
+
+		for(int pid: policies.keySet())
+		{
+			HashMap<Integer, Integer> policy = policies.get(pid);
+
+
+			boolean found = false;
+
+			for(int pid2: newfixpolicy.keySet())
+			{
+
+				HashMap<Integer, Integer> policy2 = newfixpolicy.get(pid2);
+
+				if(policy.equals(policy2))
+				{
+					found = true;
+					break;
+				}
+
+			}
+			if(!found)
+			{
+				newfixpolicy.put(newfixpolicy.size(), policy);
+			}
+
+		}
+
+		return newfixpolicy;
+
+
+
+
+		//System.out.println("hi");
+
+	}
 
 	private static HashMap<Integer,HashMap<Integer,Integer>> computeSingleAttackPolicy(HashMap<Integer, Node> net, 
 			HashMap<Integer, Exploits> exploits, Attacker att, int currentnodeid, boolean singlepath, int npath) 
@@ -2236,6 +2291,7 @@ public class PlanRecognition {
 
 		int goal = att.goals.get(0);
 		HashMap<Integer,HashMap<Integer,Integer>> p = att.findOneFixedPolifyMaxReward(currentnodeid, net, exploits, goal, singlepath, npath);
+		p = removeDuplicatePoliciesMeasure(p);
 		return p;
 
 	}
@@ -3618,7 +3674,7 @@ public class PlanRecognition {
 		a0.addExploits(new int[] {0, 1});
 		//a0.findFixedPolifyBFS(net, exploits, 23);
 		//a0.findFixedPolifyBFS(net, exploits, 24);
-		a0.findFixedPolifyMinCost(startnodeid, net, exploits, 26, singlepath, npath);
+		a0.findFixedPolicyMaxRewardMinCost(startnodeid, net, exploits, 26, singlepath, npath);
 		a0.removeDuplicatePolicies();
 		//a0.addPolicy(0, new int[] {0, 2, 5, 10, 16, 21, 26});
 		//a0.addPolicy(1, new int[] {0, 1, 4, 15, 21, 26});
@@ -3632,7 +3688,7 @@ public class PlanRecognition {
 		//a1.goals.put(1, 25);
 		a1.addExploits(new int[] {2, 3});
 		//a1.findFixedPolifyBFS(net, exploits, 23, singlepath, npath);
-		a1.findFixedPolifyMinCost(startnodeid, net, exploits, 23, singlepath, npath);
+		a1.findFixedPolicyMaxRewardMinCost(startnodeid, net, exploits, 23, singlepath, npath);
 		a1.removeDuplicatePolicies();
 		/*
 		 * a1.findFixedPolifyBFS(net, exploits, 24);
@@ -3648,7 +3704,7 @@ public class PlanRecognition {
 
 		a2.addExploits(new int[] {4,5});
 		//a2.findFixedPolifyBFS(net, exploits, 24, singlepath, npath);
-		a2.findFixedPolifyMinCost(startnodeid, net, exploits, 24, singlepath, npath);
+		a2.findFixedPolicyMaxRewardMinCost(startnodeid, net, exploits, 24, singlepath, npath);
 		a2.removeDuplicatePolicies();
 		//a2.findFixedPolifyBFS(net, exploits, 25);
 		//a2.findFixedPolifyBFS(net, exploits, 26);
@@ -3666,7 +3722,7 @@ public class PlanRecognition {
 		//a3.findFixedPolifyBFS(net, exploits, 23);
 		//a3.findFixedPolifyBFS(net, exploits, 24);
 		//a3.findFixedPolifyBFS(net, exploits, 25, singlepath, npath);
-		a3.findFixedPolifyMinCost(startnodeid, net, exploits, 25, singlepath, npath);
+		a3.findFixedPolicyMaxRewardMinCost(startnodeid, net, exploits, 25, singlepath, npath);
 		a3.removeDuplicatePolicies();
 		//a3.addPolicy(0, new int[] {0, 2, 5, 10, 15, 20, 25});
 
@@ -3690,11 +3746,30 @@ public class PlanRecognition {
 		a5.findFixedPolifyBFS(net, exploits, 26);*/
 
 		//a3.addPolicy(0, new int[] {0, 1, 3, 8, 14, 19, 24});
+		
+		
+		
+		
 
 		attackers.put(a0.id, a0);
 		attackers.put(a1.id, a1);
 		attackers.put(a2.id, a2);
 		attackers.put(a3.id, a3);
+		
+		
+		HashMap<Integer,HashMap<Integer,HashMap<Integer,Integer>>> attackpolicies = new HashMap<Integer,HashMap<Integer,HashMap<Integer,Integer>>>();
+		
+		
+		
+		
+		refinePoliciesInit(attackers);
+		
+		refinePoliciesMeasure(attackpolicies);
+		
+		System.out.println("here I am ");
+		
+		
+		
 		/*
 		attackers.put(4, a4);
 		attackers.put(5, a5);*/
@@ -3702,6 +3777,194 @@ public class PlanRecognition {
 
 		//return goals;
 
+	}
+
+
+	private static void refinePoliciesInit(HashMap<Integer, Attacker> attackers) {
+		
+		
+		HashMap<Integer, HashMap<Integer, Integer>> attpolicies = new HashMap<Integer, HashMap<Integer, Integer>>();
+		
+		ArrayList<int[]> done = new ArrayList<int[]>();
+		
+		HashMap<Integer, Integer> maxindex= new HashMap<Integer, Integer>();
+		
+		int maxlen = -1;
+		
+		
+		for(Attacker a0: attackers.values())
+		{
+
+			maxlen = -1;
+			for(Attacker a1: attackers.values())
+			{
+
+				if(a0.id != a1.id)
+				{
+					int[] arr = {a0.id, a1.id};
+					boolean isdone = isDoneIt(done, arr);
+					if(!isdone)
+					{
+
+						done.add(arr);
+						for(Integer pid0: a0.fixedpolicy.keySet())
+						{
+							for(Integer pid1: a1.fixedpolicy.keySet())
+							{
+
+								
+
+								HashMap<Integer, Integer> p0 = a0.fixedpolicy.get(pid0);
+								HashMap<Integer, Integer> p1 = a1.fixedpolicy.get(pid1);
+
+
+
+								int len = commonLen(p0, p1);
+
+								if(maxlen<len)
+								{
+									maxlen = len;
+									maxindex.put(a0.id, pid0);
+									attpolicies.put(a0.id, p0);
+								}
+
+								
+
+							}
+
+						}
+
+					}
+				}
+			}
+			System.out.println("Max len for attacker "+ a0.id + " is "+ maxlen + ", maxindex "+ maxindex.get(a0.id));
+		}
+		
+		
+		for(Attacker att: attackers.values())
+		{
+			att.fixedpolicy.clear();
+			att.fixedpolicy.put(att.fixedpolicy.size(), attpolicies.get(att.id));
+		}
+
+
+
+		
+		
+	}
+	
+	
+	
+private static HashMap<Integer,HashMap<Integer,HashMap<Integer,Integer>>> refinePoliciesMeasure(HashMap<Integer,HashMap<Integer,HashMap<Integer,Integer>>> attackpolicies) {
+		
+		
+		
+	HashMap<Integer,HashMap<Integer,HashMap<Integer,Integer>>> newattackpolicies = new HashMap<Integer,HashMap<Integer,HashMap<Integer,Integer>>>();
+
+	HashMap<Integer, HashMap<Integer, Integer>> attpolicies = new HashMap<Integer, HashMap<Integer, Integer>>();
+
+	ArrayList<int[]> done = new ArrayList<int[]>();
+
+	HashMap<Integer, Integer> maxindex= new HashMap<Integer, Integer>();
+
+	int maxlen = -1;
+
+
+	for(Integer a0: attackpolicies.keySet())
+	{
+
+		maxlen = -1;
+
+		for(Integer a1: attackpolicies.keySet())
+		{
+
+			if(a0 != a1)
+			{
+				int[] arr = {a0, a1};
+				boolean isdone = isDoneIt(done, arr);
+				if(!isdone)
+				{
+
+					done.add(arr);
+					for(Integer pid0: attackpolicies.get(a0).keySet())
+					{
+						for(Integer pid1: attackpolicies.get(a1).keySet())
+						{
+
+
+
+							HashMap<Integer, Integer> p0 = attackpolicies.get(a0).get(pid0);
+							HashMap<Integer, Integer> p1 = attackpolicies.get(a1).get(pid1);
+
+
+
+							int len = commonLen(p0, p1);
+
+							if(maxlen<len)
+							{
+								maxlen = len;
+								maxindex.put(a0, pid0);
+								attpolicies.put(a0, p0);
+
+							}
+
+
+
+						}
+
+					}
+
+
+				}
+
+			}
+		}
+		System.out.println("Max len for attacker "+ a0 + " is "+ maxlen + ", maxindex "+ maxindex.get(a0));
+
+		HashMap<Integer, HashMap<Integer, Integer>> tmp = new HashMap<Integer, HashMap<Integer, Integer>>();
+		tmp.put(tmp.size(), attpolicies.get(a0));
+		newattackpolicies.put(a0, tmp);
+	}
+	
+	
+	return newattackpolicies;
+
+		
+		
+
+
+		
+		
+	}
+
+
+
+	
+
+
+	private static boolean isDoneIt(ArrayList<int[]> done, int[] arr) {
+		
+		
+		boolean d = true;
+		
+		for(int[] a: done)
+		{
+			d = true;
+			for(int i=0; i<a.length; i++)
+			{
+				if(a[i] != arr[i])
+				{
+					d = false;
+					break;
+				}
+			}
+			if(d)
+			{
+				return true;
+			}
+			
+		}
+		return false;
 	}
 
 }
