@@ -16,6 +16,8 @@ public class Node {
 	
 	public double currentreward = 0;
 	
+	public boolean ishoneypot = false;
+	
 	
 	public Node() {
 		super();

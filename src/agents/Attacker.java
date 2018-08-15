@@ -38,7 +38,7 @@ public class Attacker {
 		}
 	}
 
-	public void addPolicy(int goal, int[] actions)
+	public void addPolicy(int[] actions)
 	{
 		HashMap<Integer, Integer> tmp = new HashMap<Integer, Integer>();
 
@@ -48,7 +48,7 @@ public class Attacker {
 			tmp.put(count++, a);
 
 		}
-		this.fixedpolicy.put(goal, tmp);
+		this.fixedpolicy.put(this.fixedpolicy.size(), tmp);
 
 	}
 
@@ -161,9 +161,14 @@ public class Attacker {
 					HashMap<Integer, Integer> path = new HashMap<Integer, Integer>();
 					traversePolicy(node, path);
 					System.out.println();
+					
+					if(singlepath)
+					{
+						this.fixedpolicy.clear();
+					}
 					if(!this.fixedpolicy.isEmpty())
 					{
-						this.fixedpolicy.clear();;
+						
 					}
 					this.fixedpolicy.put(this.fixedpolicy.size(), path);
 
@@ -175,12 +180,9 @@ public class Attacker {
 						//break;
 					}
 
-					if(singlepath)
-					{
-						//break;
-					}
+					
 				}
-				else if(node.currentreward==maxreward)
+				else if(node.currentreward==maxreward && singlepath==false)
 				{
 					HashMap<Integer, Integer> path = new HashMap<Integer, Integer>();
 					traversePolicy(node, path);
@@ -272,9 +274,14 @@ public class Attacker {
 					
 					path = new HashMap<Integer, Integer>();
 					traversePolicy(node, path);
-					System.out.println();
+					//System.out.println();
 					
-					paths.clear();
+					
+					
+					if(singlepath)
+					{
+						paths.clear();
+					}
 					paths.put(paths.size(), path);
 					
 					/*if(!this.fixedpolicy.isEmpty())
@@ -296,8 +303,10 @@ public class Attacker {
 						//break;
 					}*/
 				}
-				else if(node.currentreward==maxreward)
+				else if(node.currentreward==maxreward && singlepath==false)
 				{
+					path = new HashMap<Integer, Integer>();
+					traversePolicy(node, path);
 					paths.put(paths.size(), path);
 				}
 				//break;
@@ -395,7 +404,7 @@ public class Attacker {
 			return;
 
 		traversePolicy(node.parent, path);
-		System.out.print(node.id+"("+node.currentreward+")"+"->");
+		//System.out.print(node.id+"("+node.currentreward+")"+"->");
 		path.put(path.size(), node.id);
 
 
