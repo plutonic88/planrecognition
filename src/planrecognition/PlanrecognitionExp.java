@@ -49,6 +49,7 @@ public class PlanrecognitionExp {
 		int hpdeploylimit = 2;
 		int hpv = 8;
 		int hpc = 2;
+		boolean pickfromnet = true;
 		
 		
 
@@ -72,7 +73,12 @@ public class PlanrecognitionExp {
 
 		Network.constructNetwork(net, exploits, nnodes, nexploits);
 
-		Network.constructHoneyPots(honeypots, exploits, nhoneypots, nnodes, hpv, hpc, samevalhp, allexphp);
+		
+		/**
+		 * construct honeypots from real node configurations
+		 * Imagine that attacker is naive
+		 */
+		Network.constructHoneyPots(honeypots, exploits, nhoneypots, nnodes, hpv, hpc, samevalhp, allexphp, net, pickfromnet, goals);
 
 		System.out.println("Network construction... \ndone");
 		

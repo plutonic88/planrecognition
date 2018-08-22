@@ -29,10 +29,13 @@ public class Main {
 		
 		
 		boolean withdefense = true;
-		boolean minentropy = false;
 		
-		boolean expoverlap = true;
+		boolean minentropy = true;
+		
+		//boolean expoverlap = false;
 		boolean maxoverlap = false;
+		
+		boolean expoverlap = !maxoverlap;
 		
 		
 		int chosenattacker = 0;

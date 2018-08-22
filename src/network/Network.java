@@ -1,5 +1,6 @@
 package network;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -149,33 +150,77 @@ public class Network {
 
 	}
 
-	public static void constructHoneyPots(HashMap<Integer, Node> honeypots, HashMap<Integer, Exploits> exploits, int nhoneypots, int nnodes, int hpv, int hpc, boolean sameval, boolean allexploit) {
+	public static void constructHoneyPots(HashMap<Integer, Node> honeypots, HashMap<Integer, Exploits> exploits, 
+			int nhoneypots, int nnodes, int hpv, int hpc, boolean sameval, boolean allexploit, HashMap<Integer,Node> net, boolean pickfromnet, int[] goals) {
 		
-		for(int i=0; i<(nhoneypots); i++)
-		{
-			int v = randInt(5, 10);
-			int c = randInt(1,4);
-			
-			if(sameval)
+		
+		
+		
+		
+
+			if(pickfromnet)
 			{
-				v = 7;
-				c = 3;
-			}
-			
-			Node n = new Node(i+nnodes, v, c);
-			n.ishoneypot = true;
-			
-			if(allexploit)
-			{
-				n.addExploits(new int[] {0,1,2,3,4,5,6,7});
+				ArrayList<Node> left =new ArrayList<Node>();
+				
+				for(Node n: net.values())
+				{
+					if(n.id != 23 && n.id != 24 && n.id != 25 && n.id != 26)
+					{
+						left.add(n);
+					}
+				}
+				
+				for(int i=0; i<(nhoneypots); i++)
+				{
+					
+					int r = randInt(0, left.size()-1);
+					
+					Node pn = left.get(r);
+					left.remove(r);
+					
+					Node n = new Node(i+nnodes, pn.value, pn.cost);
+					n.ishoneypot = true;
+					
+					for(Integer e: pn.exploits.values())
+					{
+						n.exploits.put(e, e);
+					}
+					
+					honeypots.put(n.id, n);
+					
+				}
+				
+				
 			}
 			else
 			{
-				n.addExploits(new int[] {i});
+				for(int i=0; i<(nhoneypots); i++)
+				{
+
+				int v = randInt(5, 10);
+				int c = randInt(1,4);
+
+				if(sameval)
+				{
+					v = 7;
+					c = 3;
+				}
+
+				Node n = new Node(i+nnodes, v, c);
+				n.ishoneypot = true;
+
+				if(allexploit)
+				{
+					n.addExploits(new int[] {0,1,2,3,4,5,6,7});
+				}
+				else
+				{
+					n.addExploits(new int[] {i});
+				}
+
+				honeypots.put(n.id, n);
 			}
-			
-			honeypots.put(n.id, n);
-			
+
 		}
 		
 		
