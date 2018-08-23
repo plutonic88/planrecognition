@@ -14,6 +14,8 @@ public class Attacker {
 	public int id;
 	public HashMap<Integer, Integer> exploits = new HashMap<Integer, Integer>();
 	public HashMap<Integer, HashMap<Integer, Integer>> fixedpolicy = new HashMap<Integer, HashMap<Integer, Integer>>();
+	public HashMap<Integer, HashMap<Integer, int[]>> fixedexploitpolicy = new HashMap<Integer, HashMap<Integer, int[]>>();
+	
 	public HashMap<Integer, Integer> goals = new HashMap<Integer, Integer>();
 
 	
@@ -232,6 +234,124 @@ public class Attacker {
 	}
 	
 	
+	public double findFixedExploitPolicyMaxRewardMinCost(int startnodeid, HashMap<Integer,Node> net, 
+			HashMap<Integer,Exploits> allexploits, int goal, boolean singlepath, int npath) 
+	{
+
+		
+		
+		
+		Queue<Node> fringequeue = new LinkedList<Node>();
+		Queue<Integer> closed = new LinkedList<Integer>();
+
+		Node start = new Node(net.get(startnodeid));
+		
+
+		double[] exploitcost = maxUtilityWithExploit(net.get(startnodeid), this.exploits, allexploits);
+		start.currentreward = start.value - start.cost - exploitcost[1];
+		start.usedexploit = (int)exploitcost[0];
+
+		fringequeue.add(start);
+
+		double maxreward = Double.NEGATIVE_INFINITY;
+		//Node maxgoalnode = null;
+
+
+		while(!fringequeue.isEmpty())
+		{
+			Node node = fringequeue.poll();
+			closed.add(node.id);
+
+			if(node.id==goal)
+			{
+
+
+				if(node.currentreward > maxreward)
+				{
+					
+					maxreward = node.currentreward;
+					//maxgoalnode = node;
+					
+					HashMap<Integer, int[]> path = new HashMap<Integer, int[]>();
+					traversePolicyExploit(node, path);
+					System.out.println();
+					
+					if(singlepath)
+					{
+						this.fixedexploitpolicy.clear();
+					}
+					if(!this.fixedexploitpolicy.isEmpty())
+					{
+						
+					}
+					this.fixedexploitpolicy.put(this.fixedexploitpolicy.size(), path);
+
+
+					int numberofpaths = nExpltPaths(this.fixedexploitpolicy, goal);
+
+					if(numberofpaths>npath)
+					{
+						//break;
+					}
+
+					
+				}
+				else if(node.currentreward==maxreward && singlepath==false)
+				{
+					HashMap<Integer, int[]> path = new HashMap<Integer, int[]>();
+					traversePolicyExploit(node, path);
+					System.out.println();
+					if(!this.fixedexploitpolicy.isEmpty())
+					{
+						//this.fixedpolicy.clear();;
+					}
+					this.fixedexploitpolicy.put(this.fixedexploitpolicy.size(), path);
+				}
+				//break;
+			}
+
+			Node orignode = net.get(node.id);
+
+
+			for(int neibor[]: orignode.neiwithexploits.values())
+			{
+				
+				int nei = neibor[0];
+				int neinodeexploit = neibor[1];
+				//canaccess = false;
+				//Logger.logit(" Node "+ nei +" exploits: \n");
+
+				Node neinode = net.get(nei);
+
+				//for(Integer neinodeexploit: neinode.exploits.values())
+				
+					//Logger.logit("exploit:"+neinodeexploit+"\n");
+					if(this.exploits.containsValue(neinodeexploit))
+					{
+						Node tmp = new Node(neinode);
+						//exploitcost = minCostExploit(neinode, this.exploits, allexploits);
+						int expcost = allexploits.get(neinodeexploit).cost;
+						tmp.currentreward = node.currentreward + tmp.value - tmp.cost - expcost;
+						tmp.parent = node;
+						tmp.usedexploit = neinodeexploit;
+						fringequeue.add(tmp);
+
+
+					}
+				
+
+			}
+
+
+
+		}
+		return maxreward;
+
+
+	}
+	
+	
+	
 	public HashMap<Integer, HashMap<Integer, Integer>> findOneFixedPolifyMaxReward(int startnodeid, HashMap<Integer,Node> net, 
 			HashMap<Integer,Exploits> allexploits, int goal, boolean singlepath, int npath) 
 	{
@@ -375,6 +495,34 @@ public class Attacker {
 		
 		return mincost;
 	}
+	
+	
+private double[] maxUtilityWithExploit(Node start, HashMap<Integer, Integer> attackerexploits, HashMap<Integer,Exploits> allexploits) {
+		
+		double mincost = Double.POSITIVE_INFINITY;
+		double minex = -1;
+		
+		for(Integer eid: attackerexploits.values())
+		{
+			
+			if(start.exploits.containsValue(eid))
+			{
+			
+				Exploits exp = allexploits.get(eid);
+				if(mincost>exp.cost)
+				{
+					mincost = exp.cost;
+					minex = exp.id;
+				}
+			}
+		}
+		
+		
+		
+		
+		
+		return new double[] {minex, mincost};
+	}
 
 	private int nPaths(HashMap<Integer, HashMap<Integer, Integer>> fixedpolicy, int goal) {
 
@@ -386,6 +534,27 @@ public class Attacker {
 		for(HashMap<Integer, Integer> policy: fixedpolicy.values())
 		{
 			if(policy.get(policy.size()-1).equals(goal))
+			{
+				count++;
+			}
+		}
+
+
+		return count;
+	}
+	
+	
+	private int nExpltPaths(HashMap<Integer, HashMap<Integer, int[]>> fixedpolicy, int goal) {
+
+
+		this.removeDuplicatePolicies();
+
+		int count = 0;
+
+		for(HashMap<Integer, int[]> policy: fixedpolicy.values())
+		{
+			int[] p = policy.get(policy.size()-1);
+			if(p[0]==goal)
 			{
 				count++;
 			}
@@ -409,6 +578,20 @@ public class Attacker {
 
 
 	}
+	
+	private void traversePolicyExploit(Node node, HashMap<Integer,int[]> path) {
+
+		if(node == null)
+			return;
+
+		traversePolicyExploit(node.parent, path);
+		//System.out.print(node.id+"("+node.currentreward+")"+"->");
+		int[] p = {node.id, node.usedexploit};
+		path.put(path.size(), p);
+
+
+	}
+	
 
 	/**
 	 * using simple traversing algo to find a fixed policy
@@ -549,6 +732,78 @@ public class Attacker {
 		//System.out.println("hi");
 
 	}
+	
+	
+	public void removeDuplicateExpltPolicies() {
+
+		HashMap<Integer, HashMap<Integer, int[]>> newfixpolicy = new HashMap<Integer, HashMap<Integer, int[]>>();
+
+
+		for(int pid: this.fixedexploitpolicy.keySet())
+		{
+			HashMap<Integer, int[]> policy = this.fixedexploitpolicy.get(pid);
+
+
+			boolean found = false;
+
+			for(int pid2: newfixpolicy.keySet())
+			{
+
+				HashMap<Integer, int[]> policy2 = newfixpolicy.get(pid2);
+
+				
+				boolean isequal = isEqual(policy, policy2);
+				
+				if(isequal)
+				{
+					found = true;
+					break;
+				}
+
+			}
+			if(!found)
+			{
+				newfixpolicy.put(newfixpolicy.size(), policy);
+			}
+
+		}
+
+		this.fixedexploitpolicy = newfixpolicy;
+
+
+
+
+		//System.out.println("hi");
+
+	}
+
+
+	private boolean isEqual(HashMap<Integer, int[]> policy, HashMap<Integer, int[]> policy2) {
+		
+		if(policy.size() == policy2.size())
+		{
+			boolean ok = true;
+			for(int[] p: policy.values())
+			{
+				if(!policy2.containsValue(p))
+				{
+					ok= false;
+					break;
+				}
+			}
+			if(ok)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		
+		return false;
+	}
+	
 	
 	
 	

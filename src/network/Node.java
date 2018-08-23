@@ -9,8 +9,10 @@ public class Node {
 	public int value;
 	public int cost;
 	public HashMap<Integer, Integer> nei = new HashMap<Integer, Integer>();
+	public HashMap<Integer, int[]> neiwithexploits = new HashMap<Integer, int[]>();
 	public HashMap<Integer, Integer> exploits = new HashMap<Integer, Integer>(); 
 	public Node parent;
+	public int usedexploit = -1;
 	//initially allow every exploits
 	public ArrayList<Exploits> allowedtoexecute;
 	
@@ -46,6 +48,24 @@ public class Node {
 		for(int id: nodeids)
 		{
 			this.nei.put(id, id);
+			//count++;
+		}
+		
+	}
+	
+	
+	public void addNeighborsWithExploits(int[] nodeids, HashMap<Integer,Node> net)
+	{
+		//int count = this.nei.size();
+		for(int id: nodeids)
+		{
+			Node n = net.get(id);
+			
+			for(Integer ex: n.exploits.values())
+			{
+				int[] edge = {id, ex};
+				this.neiwithexploits.put(neiwithexploits.size(), edge);
+			}
 			//count++;
 		}
 		

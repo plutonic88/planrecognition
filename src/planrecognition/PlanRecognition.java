@@ -2869,6 +2869,34 @@ public class PlanRecognition {
 		return count;
 	}
 	
+private static int commonLenExplt(HashMap<Integer, int[]> p1, HashMap<Integer, int[]> p2) {
+		
+		int count = 0;
+		
+		int l1 = p1.size();
+		int l2 = p2.size();
+		
+		int limit = (l1<l2)?l1:l2;
+		
+		for(int i=0; i<limit; i++)
+		{
+			int x1[] = p1.get(i);
+			int x2[] = p2.get(i);
+			
+			if(x1[0]==x2[0] && x1[1] == x2[1])
+			{
+				 count++;
+			}
+			else
+			{
+				return count;
+			}
+			
+		}
+		return count;
+	}
+	
+	
 private static int commonLen(String p1, String p2) {
 		
 		int count = 0;
@@ -4243,6 +4271,49 @@ private static int commonLen(String p1, String p2) {
 		}
 
 	}
+	
+	public static void printAttackersExploit(HashMap<Integer, Attacker> attackers) {
+
+		for(Integer aid: attackers.keySet())
+		{
+			Attacker a = attackers.get(aid);
+			System.out.println("******************** Attacker "+a.id+ " ***********************");
+			//Logger.logit("******************** Attacker "+a.id+ " ***********************"+"\n");
+
+
+
+			System.out.print("exploits: ");
+			//Logger.logit("exploits: ");
+			for(Integer exp: a.exploits.values())
+			{
+				System.out.print(exp+" ");
+				//Logger.logit(exp+" ");
+			}
+			System.out.println();
+			//Logger.logit(" "+"\n");
+
+			System.out.print("policies: \n");
+			//Logger.logit("policies: \n");
+			for(HashMap<Integer, int[]> p: a.fixedexploitpolicy.values())
+			{
+
+				for(int[] s: p.values())
+				{
+					System.out.print(s[0]+"("+s[1]+")->");
+					//Logger.logit(s+" ");
+				}
+				System.out.println();
+				//Logger.logit(" "+"\n");
+
+			}
+			System.out.println();
+			//Logger.logit(" "+"\n");
+
+
+
+		}
+
+	}
 
 
 	private static void printAttackersPolicy(HashMap<Integer, HashMap<Integer, HashMap<Integer, Integer>>> attackers) {
@@ -4318,6 +4389,52 @@ private static int commonLen(String p1, String p2) {
 				//Logger.logit(exp+" ");
 			}
 			System.out.println();
+			//Logger.logit(" "+"\n");
+
+		}
+
+
+	}
+	
+	
+	public static void printNetworkWithExploits(HashMap<Integer, Node> net) {
+
+
+		for(Integer nodeid: net.keySet())
+		{
+			Node n = net.get(nodeid);
+			System.out.println("******************** Node "+n.id+ " ***********************");
+			//Logger.logit("******************** Node "+n.id+ " ***********************\n");
+			System.out.println("value: "+ n.value);
+			//Logger.logit("value: "+ n.value+"\n");
+			System.out.println("cost: "+ n.cost);
+			//Logger.logit("cost: "+ n.cost+"\n");
+			
+			
+			System.out.print("parent: ");
+			if(n.parent!=null)
+			{
+				System.out.print(n.parent.id);
+			}
+
+			System.out.print("\nneighbors: ");
+			//Logger.logit("neighbors: ");
+			for(int[] nei: n.neiwithexploits.values())
+			{
+				System.out.println("Node: "+nei[0]+", explt: "+nei[1]);
+				//Logger.logit(nei+" ");
+			}
+			System.out.println();
+			//Logger.logit(" "+"\n");
+
+			/*System.out.print("exploits: "+"");
+			//Logger.logit("exploits: ");
+			for(Integer exp: n.exploits.values())
+			{
+				System.out.print(exp+" ");
+				//Logger.logit(exp+" ");
+			}
+			System.out.println();*/
 			//Logger.logit(" "+"\n");
 
 		}
@@ -4569,6 +4686,166 @@ private static int commonLen(String p1, String p2) {
 		//return goals;
 
 	}
+	
+	
+	public static void constructAttackersWithExploitsSingleGoal(int startnodeid, HashMap<Integer, Attacker> attackers, HashMap<Integer,Node> net, 
+			HashMap<Integer,Exploits> exploits, boolean singlepath, int npath, int chosenattacker, boolean maxoverlap, boolean expoverlap) {
+
+		int id = 0;
+
+		//int goals[] = {26,23,25,24};
+
+		/*boolean singlepath = false;
+		int npath = 3;*/
+
+		Attacker a0  = new Attacker(id++);
+		//a0.goals.put(0, 23);
+		a0.goals.put(0, 23);
+		//	a0.goals.put(1, 24);
+		a0.addExploits(new int[] {0, 1});
+		//a0.findFixedPolifyBFS(net, exploits, 23);
+		//a0.findFixedPolifyBFS(net, exploits, 24);
+		//a0.findFixedPolicyMaxRewardMinCost(startnodeid, net, exploits, 23, singlepath, npath);
+		
+		a0.findFixedExploitPolicyMaxRewardMinCost(startnodeid, net, exploits, 23, singlepath, npath);
+		
+		//a0.addPolicy(new int[] {0, 1, 5, 7, 2, 1, 1, 1, 26});
+		//a0.addPolicy(new int[] {0, 1, 3, 1, 1, 1, 26});
+		a0.removeDuplicateExpltPolicies();
+		//a0.addPolicy(0, new int[] {0, 2, 5, 10, 16, 21, 26});
+		//a0.addPolicy(1, new int[] {0, 1, 4, 15, 21, 26});
+		//a0.addPolicy(1, new int[] {0, 2, 6, 10, 15, 20, 24});
+
+
+
+		Attacker a1  = new Attacker(id++);
+		a1.goals.put(0, 24);
+		//a1.goals.put(1, 24);
+		//a1.goals.put(1, 25);
+		a1.addExploits(new int[] {2, 3});
+		//a1.findFixedPolifyBFS(net, exploits, 23, singlepath, npath);
+		//a1.findFixedPolicyMaxRewardMinCost(startnodeid, net, exploits, 24, singlepath, npath);
+		
+		
+		
+		a1.findFixedExploitPolicyMaxRewardMinCost(startnodeid, net, exploits, 24, singlepath, npath);
+		
+		
+		//a1.addPolicy(new int[] {0, 1, 5, 7, 2, 1, 1, 1, 23});
+		//a1.addPolicy(new int[] {0, 1, 5, 4, 1, 1, 23});
+		a1.removeDuplicateExpltPolicies();
+		/*
+		 * a1.findFixedPolifyBFS(net, exploits, 24);
+		a1.findFixedPolifyBFS(net, exploits, 25);*/
+		//a1.addPolicy(0, new int[] {0, 1, 3, 8, 14, 19, 23});
+		//a1.addPolicy(1, new int[] {0, 2, 5, 14, 20, 25});
+
+		Attacker a2  = new Attacker(id++);
+		//a2.goals.put(0, 23);
+		a2.goals.put(0, 25);
+		//a2.goals.put(2, 25);
+		//a2.goals.put(3, 26);
+
+		a2.addExploits(new int[] {4,5});
+		//a2.findFixedPolifyBFS(net, exploits, 24, singlepath, npath);
+		//a2.findFixedPolicyMaxRewardMinCost(startnodeid, net, exploits, 25, singlepath, npath);
+		
+		a2.findFixedExploitPolicyMaxRewardMinCost(startnodeid, net, exploits, 25, singlepath, npath);
+		
+		//a2.addPolicy(new int[] {0, 1, 7, 2, 1, 1, 24});
+		//a2.addPolicy(new int[] {0, 1, 5, 7, 2, 1, 1, 1, 24});
+		a2.removeDuplicateExpltPolicies();
+		//a2.findFixedPolifyBFS(net, exploits, 25);
+		//a2.findFixedPolifyBFS(net, exploits, 26);
+
+		//a2.addPolicy(0, new int[] {0, 1, 3, 7, 13, 18, 23});
+		//a2.addPolicy(0, new int[] {0, 2, 5, 14, 20, 24});
+		//a2.addPolicy(2, new int[] {0, 2, 5, 10, 15, 20, 25});
+		//a2.addPolicy(3, new int[] {0, 2, 6, 10, 16, 21, 26});
+
+
+		Attacker a3  = new Attacker(id++);
+		a3.goals.put(0, 26);
+		//a3.goals.put(1, 24);
+		a3.addExploits(new int[] {6, 7});
+		//a3.findFixedPolifyBFS(net, exploits, 23);
+		//a3.findFixedPolifyBFS(net, exploits, 24);
+		//a3.findFixedPolifyBFS(net, exploits, 25, singlepath, npath);
+		//a3.findFixedPolicyMaxRewardMinCost(startnodeid, net, exploits, 26, singlepath, npath);
+		
+		a3.findFixedExploitPolicyMaxRewardMinCost(startnodeid, net, exploits, 26, singlepath, npath);
+		
+		//a3.addPolicy(new int[] {0, 1, 5, 7, 1, 1, 25});
+		//a3.addPolicy(new int[] {0, 1, 5, 7, 2, 1, 1, 1, 25});
+		a3.removeDuplicateExpltPolicies();
+		//a3.addPolicy(0, new int[] {0, 2, 5, 10, 15, 20, 25});
+
+
+
+
+		/*Attacker a4  = new Attacker(id++);
+		a4.goals.put(0, 24);
+		a4.goals.put(1, 25);
+		a4.addExploits(new int[] {1, 2});
+		a4.findFixedPolifyBFS(net, exploits, 24);
+		a4.findFixedPolifyBFS(net, exploits, 25);
+
+
+
+		Attacker a5  = new Attacker(id++);
+		//a5.goals.put(0, 23);
+		a5.goals.put(0, 26);
+		a5.addExploits(new int[] {0, 3});
+		//a5.findFixedPolifyBFS(net, exploits, 23);
+		a5.findFixedPolifyBFS(net, exploits, 26);*/
+
+		//a3.addPolicy(0, new int[] {0, 1, 3, 8, 14, 19, 24});
+		
+		
+		
+		
+
+		attackers.put(a0.id, a0);
+		attackers.put(a1.id, a1);
+		attackers.put(a2.id, a2);
+		attackers.put(a3.id, a3);
+		
+		
+		//HashMap<Integer,HashMap<Integer,HashMap<Integer,Integer>>> attackpolicies = new HashMap<Integer,HashMap<Integer,HashMap<Integer,Integer>>>();
+		
+		
+		printAttackersExploit(attackers);
+		
+		if(maxoverlap)
+		{
+			//refinePoliciesInit(attackers, chosenattacker);
+			refineExpltPoliciesInit(attackers, chosenattacker);
+		}
+		else if(expoverlap)
+		{
+			//refinePoliciesInitExpOverlap(attackers, chosenattacker);
+			refineExploitPoliciesInitMaxExpOverlap(attackers, chosenattacker);
+		}
+		
+		
+		
+		printAttackersExploit(attackers);
+		
+		
+		//refinePoliciesMeasure(attackpolicies);
+		
+		System.out.println("here I am ");
+		
+		
+		
+		/*
+		attackers.put(4, a4);
+		attackers.put(5, a5);*/
+
+
+		//return goals;
+
+	}
 
 
 	private static void refinePoliciesInit(HashMap<Integer, Attacker> attackers, int chosenattacker) {
@@ -4684,6 +4961,119 @@ private static int commonLen(String p1, String p2) {
 	}
 	
 	
+private static void refineExpltPoliciesInit(HashMap<Integer, Attacker> attackers, int chosenattacker) {
+		
+		
+		HashMap<Integer, HashMap<Integer, int[]>> attpolicies = new HashMap<Integer, HashMap<Integer, int[]>>();
+		
+		ArrayList<int[]> done = new ArrayList<int[]>();
+		
+		HashMap<Integer, Integer> maxindex= new HashMap<Integer, Integer>();
+		HashMap<Integer, Integer> maxlengths= new HashMap<Integer, Integer>();
+		HashMap<Integer, Integer> opmaxlengths= new HashMap<Integer, Integer>();
+		
+		int maxlen = -1;
+		
+		Attacker a0 = attackers.get(chosenattacker);
+		
+		//for(Attacker a0: attackers.values())
+		{
+
+			maxlen = -1;
+			maxlengths.put(a0.id, -1);
+			int opmaxlen = -1;
+			for(Attacker a1: attackers.values())
+			{
+
+				opmaxlen = -1;
+				opmaxlengths.put(a1.id, -1);
+				if(a0.id != a1.id)
+				{
+					int[] arr = {a0.id, a1.id};
+					boolean isdone = isDoneIt(done, arr);
+					if(!isdone)
+					{
+
+						done.add(arr);
+						for(Integer pid0: a0.fixedexploitpolicy.keySet())
+						{
+							for(Integer pid1: a1.fixedexploitpolicy.keySet())
+							{
+
+								
+
+								HashMap<Integer, int[]> p0 = a0.fixedexploitpolicy.get(pid0);
+								HashMap<Integer, int[]> p1 = a1.fixedexploitpolicy.get(pid1);
+
+
+
+								int len = commonLenExplt(p0, p1);
+
+								if(maxlen<len && len>0)
+								{
+									maxlen = len;
+									maxlengths.put(a0.id, maxlen);
+									maxindex.put(a0.id, pid0);
+									attpolicies.put(a0.id, p0);
+									
+								}
+								
+								if(opmaxlen<len && len>0)
+								{
+									opmaxlen = len;
+									opmaxlengths.put(a1.id, opmaxlen);
+									attpolicies.put(a1.id, p1);
+								}
+								
+
+								
+
+							}
+
+						}
+
+					}
+				}
+			}
+			System.out.println("Max len for attacker "+ a0.id + " is "+ maxlen + ", maxindex "+ maxindex.get(a0.id));
+			//System.out.println("Max len for attacker "+ a1.id + " is "+ maxlen + ", maxindex "+ maxindex.get(a0.id));
+		}
+		
+		
+		for(Attacker att: attackers.values())
+		{
+			int tmplen = -1;
+			
+			if(att.id == chosenattacker)
+			{
+				tmplen = maxlengths.get(att.id);
+			}
+			else
+			{
+				tmplen = opmaxlengths.get(att.id);
+			}
+			
+			if(tmplen==-1 && att.fixedpolicy.size()>0) // multiple strategy but no match with chosen attacker
+			{
+				HashMap<Integer, int[]> p0 = att.fixedexploitpolicy.get(0);
+				att.fixedexploitpolicy.clear();
+				att.fixedexploitpolicy.put(att.fixedexploitpolicy.size(), p0);
+			}
+			
+			if(tmplen != -1) // if attacker's max len strategy found
+			{
+				att.fixedexploitpolicy.clear();
+				att.fixedexploitpolicy.put(att.fixedexploitpolicy.size(), attpolicies.get(att.id));
+			}
+		}
+
+
+
+		
+		
+	}
+	
+	
 	private static void refinePoliciesInitExpOverlap(HashMap<Integer, Attacker> attackers, int chosenattacker) 
 	{
 
@@ -4714,6 +5104,28 @@ private static int commonLen(String p1, String p2) {
 		{
 			att.fixedpolicy.clear();
 			att.fixedpolicy.put(att.fixedpolicy.size(), maxoverlappolicies.get(att.id));
+		}
+
+
+
+	}
+	
+	
+	private static void refineExploitPoliciesInitMaxExpOverlap(HashMap<Integer, Attacker> attackers, int chosenattacker) 
+	{
+
+		ArrayList<HashMap<Integer, Integer>> permsofpathindexes = getPathPermsExploit(attackers);
+
+		//printComb(permsofpathindexes);
+
+
+		HashMap<Integer, HashMap<Integer, int[]>> maxoverlappolicies = getMaxExpOverlapExploitPolicies(attackers, permsofpathindexes, chosenattacker);
+
+
+		for(Attacker att: attackers.values())
+		{
+			att.fixedexploitpolicy.clear();
+			att.fixedexploitpolicy.put(att.fixedexploitpolicy.size(), maxoverlappolicies.get(att.id));
 		}
 
 
@@ -4820,6 +5232,82 @@ private static HashMap<Integer, HashMap<Integer, Integer>> getMaxExpOverlapPolic
 }
 
 
+
+private static HashMap<Integer, HashMap<Integer, int[]>> getMaxExpOverlapExploitPolicies(
+		HashMap<Integer, Attacker> attackers, ArrayList<HashMap<Integer, Integer>> permsofpathindexes, int chosenattacker) {
+	
+	
+	System.out.println("********Determining max overlapping policies********");
+	
+	double maxexpoverlap = Double.NEGATIVE_INFINITY;
+	HashMap<Integer, Integer> maxsettings = new HashMap<Integer, Integer>();
+	
+	for(HashMap<Integer, Integer> pathindex: permsofpathindexes)
+	{
+		HashMap<Integer, HashMap<Integer, int[]>> tmppolicies = new HashMap<Integer, HashMap<Integer, int[]>>();
+		HashMap<Integer, int[]> chosenattpolicy = new HashMap<Integer, int[]>();
+		for(Integer atindex: pathindex.keySet())
+		{
+			int pindex = pathindex.get(atindex);
+			//System.out.println("att "+ atindex +" pathindex "+ pindex);
+			tmppolicies.put(atindex, attackers.get(atindex).fixedexploitpolicy.get(pindex));
+			if(atindex==chosenattacker)
+			{
+				chosenattpolicy = attackers.get(atindex).fixedexploitpolicy.get(pindex);
+			}
+			
+		}
+		
+		//System.out.println("\nTmp Policies ");
+		
+		
+		
+		double policylen = chosenattpolicy.size();
+		
+		double sumexpoverlap = 0.0;
+		
+		for(int at: tmppolicies.keySet())
+		{
+			
+			if(at != chosenattacker)
+			{
+				HashMap<Integer, int[]> policy = tmppolicies.get(at);
+				
+				double overlap = commonLenExplt(chosenattpolicy, policy);
+				
+				sumexpoverlap += (overlap/policylen);
+			}
+		}
+		//System.out.println("sum exp common len: "+ sumexpoverlap);
+		if(maxexpoverlap<sumexpoverlap)
+		{
+			maxexpoverlap = sumexpoverlap;
+			maxsettings = pathindex;
+		}
+		//System.out.println("max exp common len: "+ maxexpoverlap);
+		
+		
+	}
+	
+	
+	HashMap<Integer, HashMap<Integer, int[]>> finalpolicies = new HashMap<Integer, HashMap<Integer, int[]>>();
+	
+	
+	for(Integer atindex: maxsettings.keySet())
+	{
+		int pindex = maxsettings.get(atindex);
+		//System.out.println("att "+ atindex +" pathindex "+ pindex);
+		finalpolicies.put(atindex, attackers.get(atindex).fixedexploitpolicy.get(pindex));
+		
+		
+	}
+	
+	
+	return finalpolicies;
+}
+
+
+
 private static double getMaxExpOverlapPoliciesV2(
 		HashMap<Integer, Attacker> attackers, ArrayList<HashMap<Integer, Integer>> permsofpathindexes, int chosenattacker, 
 		HashMap<Integer,HashMap<Integer,HashMap<Integer,Integer>>> attpolicies) {
@@ -4917,6 +5405,54 @@ private static ArrayList<HashMap<Integer, Integer>> getPathPerms(HashMap<Integer
 			maxnpaths = att.fixedpolicy.size();
 		}
 		pathlimits.put(att.id, att.fixedpolicy.size());
+		//System.out.println("Att "+ att.id+" pathlimit "+ att.fixedpolicy.size());
+		attmapindex[ind++] = att.id;
+	}
+	
+	//System.out.println("max n path "+ maxnpaths);
+	
+	int[] pathindexes = new int[maxnpaths];
+	
+	for(int i=0; i<maxnpaths; i++)
+	{
+		pathindexes[i] = i;
+	}
+	
+	int slotlimit = attackers.size();
+	
+	ArrayList<HashMap<Integer, Integer>> perms = new ArrayList<HashMap<Integer, Integer>>();
+	
+	
+	
+	
+	permute2(pathindexes, slotlimit, perms, pathlimits, attmapindex);
+	
+	//System.out.println("Pathindex permuations with repetitions: ");
+	
+	
+	
+	 // alws make sure the path limits are in sorted order of the attackers
+	
+	
+	return perms;
+}
+
+
+private static ArrayList<HashMap<Integer, Integer>> getPathPermsExploit(HashMap<Integer, Attacker> attackers) {
+	
+	
+	int maxnpaths = -1;
+	HashMap<Integer, Integer> pathlimits = new HashMap<Integer, Integer>();
+	int[] attmapindex = new int[attackers.size()];
+
+	int ind = 0;
+	for(Attacker att: attackers.values())
+	{
+		if(maxnpaths<att.fixedexploitpolicy.size())
+		{
+			maxnpaths = att.fixedexploitpolicy.size();
+		}
+		pathlimits.put(att.id, att.fixedexploitpolicy.size());
 		//System.out.println("Att "+ att.id+" pathlimit "+ att.fixedpolicy.size());
 		attmapindex[ind++] = att.id;
 	}
