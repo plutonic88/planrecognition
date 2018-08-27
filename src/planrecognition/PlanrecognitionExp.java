@@ -42,10 +42,10 @@ public class PlanrecognitionExp {
 		
 		
 
-		int[] goals = {23, 24, 25, 26};
+		int[] goals = {7,8,9};
 		int startnode = 0;
-		int nnodes = 27;
-		int nhoneypots = 8;
+		int nnodes = 10;//27;
+		int nhoneypots = 5;
 		int hpdeploylimit = 2;
 		int hpv = 8;
 		int hpc = 2;
@@ -53,7 +53,7 @@ public class PlanrecognitionExp {
 		
 		
 
-		int nexploits = 8;
+		int nexploits = 6;
 
 		
 
@@ -71,7 +71,10 @@ public class PlanrecognitionExp {
 		HashMap<Integer, Node> honeypots = new HashMap<Integer, Node>();
 
 
-		Network.constructNetwork(net, exploits, nnodes, nexploits);
+		//Network.constructNetwork(net, exploits, nnodes, nexploits);
+		
+		
+		Network.constructNetwork10(net, exploits, nnodes, nexploits);
 
 		
 		/**
@@ -94,7 +97,9 @@ public class PlanrecognitionExp {
 
 		if(singlegoal)
 		{
-			PlanRecognition.constructAttackersSingleGoal(startnodeid ,attackers, net, exploits, singlepath, npath, chosenattacker, maxoverlap, expoverlap);
+			//PlanRecognition.constructAttackersSingleGoal(startnodeid ,attackers, net, exploits, singlepath, npath, chosenattacker, maxoverlap, expoverlap);
+			
+			PlanRecognition.constructAttackers(startnodeid ,attackers, net, exploits, singlepath, npath, chosenattacker, maxoverlap, expoverlap);
 		}
 		else
 		{

@@ -20,6 +20,8 @@ public class Node {
 	
 	public boolean ishoneypot = false;
 	
+	public int currentdistance = 0;
+	
 	
 	public Node() {
 		super();

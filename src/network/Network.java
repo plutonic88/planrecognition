@@ -151,6 +151,89 @@ public class Network {
 	}
 	
 	
+	public static void constructNetwork10(HashMap<Integer,Node> net, HashMap<Integer,Exploits> exploits, int nnodes, int nexploits)
+	{
+		/**
+		 * create 27 nodes
+		 */
+
+		for(int i=0; i<nnodes; i++)
+		{
+			int v = randInt(5, 10);
+			int c = randInt(1,4);
+
+			if(i>=7)
+			{
+				v = randInt(11, 15);
+			}
+
+			//if(i != 9)
+			{
+				Node n = new Node(i, v, c);
+				net.put(n.id, n);
+			}
+		}
+
+
+
+
+
+		/**
+		 * create neighbors
+		 */
+
+		net.get(0).addNeighbors(new int[] {1,2});
+
+		net.get(1).addNeighbors(new int[] {3, 4, 5});
+		net.get(2).addNeighbors(new int[] {4, 5, 6});
+
+		net.get(3).addNeighbors(new int[] {7});
+		net.get(4).addNeighbors(new int[] {7, 8, 9});
+		net.get(5).addNeighbors(new int[] {7, 8, 9});
+		net.get(6).addNeighbors(new int[] {9});
+
+		//net.get(7).addNeighbors(new int[] {12, 13, 18});
+		//net.get(8).addNeighbors(new int[] {13, 14, 19});
+		//net.get(9).addNeighbors(new int[] {14, 15});
+		
+
+
+		/**
+		 * create exploits
+		 */
+		for(int i=0; i<nexploits; i++)
+		{
+			int c = randInt(1,6);
+			Exploits e = new Exploits(i, c);
+			exploits.put(i, e);
+			//System.out.println("Exploit id "+ e.id +", c: "+e.cost);
+
+		}
+
+		/*
+		 * Assign exploits to nodes
+		 */
+
+
+
+		net.get(0).addExploits(new int[] {0, 1, 2, 3, 4, 5});
+
+		net.get(1).addExploits(new int[] {0,1,3,4,2,5});
+		net.get(2).addExploits(new int[] {0,1,3,4});
+
+		net.get(3).addExploits(new int[] {0,3,4,});
+		net.get(4).addExploits(new int[] {0,3,4,1,2,5});
+		net.get(5).addExploits(new int[] {0,3,1,2});
+		net.get(6).addExploits(new int[] {0,3,4,1,2,5});
+
+		net.get(7).addExploits(new int[] {0,1,2,3});
+		net.get(8).addExploits(new int[] {0,1,2,3});
+		net.get(9).addExploits(new int[] {0, 1, 3});
+
+
+	}
+	
+	
 	
 	
 	public static void constructNetworkWithExploits(HashMap<Integer,Node> net, HashMap<Integer,Exploits> exploits, int nnodes, int nexploits)
@@ -303,7 +386,7 @@ public class Network {
 				
 				for(Node n: net.values())
 				{
-					if(n.id != 23 && n.id != 24 && n.id != 25 && n.id != 26)
+					if(n.id != 7 && n.id != 8 && n.id != 9 /*&& n.id != 26*/)
 					{
 						left.add(n);
 					}
@@ -350,7 +433,7 @@ public class Network {
 
 				if(allexploit)
 				{
-					n.addExploits(new int[] {0,1,2,3,4,5,6,7});
+					n.addExploits(new int[] {0,1,2,3,4});
 				}
 				else
 				{
