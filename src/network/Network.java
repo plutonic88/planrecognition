@@ -162,7 +162,7 @@ public class Network {
 			int v = randInt(5, 10);
 			int c = randInt(1,4);
 
-			if(i>=7)
+			if(i>=10)
 			{
 				v = randInt(11, 15);
 			}
@@ -192,9 +192,9 @@ public class Network {
 		net.get(5).addNeighbors(new int[] {7, 8, 9});
 		net.get(6).addNeighbors(new int[] {9});
 
-		//net.get(7).addNeighbors(new int[] {12, 13, 18});
-		//net.get(8).addNeighbors(new int[] {13, 14, 19});
-		//net.get(9).addNeighbors(new int[] {14, 15});
+		net.get(7).addNeighbors(new int[] {10});
+		net.get(8).addNeighbors(new int[] {10, 11});
+		net.get(9).addNeighbors(new int[] {11});
 		
 
 
@@ -203,10 +203,10 @@ public class Network {
 		 */
 		for(int i=0; i<nexploits; i++)
 		{
-			int c = randInt(1,6);
+			int c = randInt(1,4);
 			Exploits e = new Exploits(i, c);
 			exploits.put(i, e);
-			//System.out.println("Exploit id "+ e.id +", c: "+e.cost);
+			System.out.println("Exploit id "+ e.id +", c: "+e.cost);
 
 		}
 
@@ -216,19 +216,108 @@ public class Network {
 
 
 
-		net.get(0).addExploits(new int[] {0, 1, 2, 3, 4, 5});
+		net.get(0).addExploits(new int[] {0});
 
-		net.get(1).addExploits(new int[] {0,1,3,4,2,5});
-		net.get(2).addExploits(new int[] {0,1,3,4});
+		net.get(1).addExploits(new int[] {1});
+		net.get(2).addExploits(new int[] {0});
 
-		net.get(3).addExploits(new int[] {0,3,4,});
-		net.get(4).addExploits(new int[] {0,3,4,1,2,5});
-		net.get(5).addExploits(new int[] {0,3,1,2});
-		net.get(6).addExploits(new int[] {0,3,4,1,2,5});
+		net.get(3).addExploits(new int[] {2});
+		net.get(4).addExploits(new int[] {3});
+		net.get(5).addExploits(new int[] {1});
+		net.get(6).addExploits(new int[] {1});
 
-		net.get(7).addExploits(new int[] {0,1,2,3});
-		net.get(8).addExploits(new int[] {0,1,2,3});
-		net.get(9).addExploits(new int[] {0, 1, 3});
+		net.get(7).addExploits(new int[] {1});
+		net.get(8).addExploits(new int[] {3});
+		net.get(9).addExploits(new int[] {2});
+		
+		
+		net.get(10).addExploits(new int[] {2});
+		net.get(11).addExploits(new int[] {3});
+
+
+	}
+	
+	
+	public static void constructNetwork10V2(HashMap<Integer,Node> net, HashMap<Integer,Exploits> exploits, int nnodes, int nexploits)
+	{
+		/**
+		 * create 27 nodes
+		 */
+
+		for(int i=0; i<nnodes; i++)
+		{
+			int v = randInt(5, 10);
+			int c = randInt(1,4);
+
+			if(i>=8)
+			{
+				v = randInt(11, 15);
+			}
+
+			//if(i != 9)
+			{
+				Node n = new Node(i, v, c);
+				net.put(n.id, n);
+			}
+		}
+
+
+
+
+
+		/**
+		 * create neighbors
+		 */
+
+		net.get(0).addNeighbors(new int[] {1,2});
+
+		net.get(1).addNeighbors(new int[] {3, 4});
+		net.get(2).addNeighbors(new int[] {3, 4});
+
+		net.get(3).addNeighbors(new int[] {5,6,7});
+		net.get(4).addNeighbors(new int[] {5,6,7});
+		
+		net.get(5).addNeighbors(new int[] {8});
+		net.get(6).addNeighbors(new int[] {8, 9, 10});
+		net.get(7).addNeighbors(new int[] {9, 10});
+		
+		
+
+		/**
+		 * create exploits
+		 */
+		for(int i=0; i<nexploits; i++)
+		{
+			int c = randInt(1,4);
+			Exploits e = new Exploits(i, c);
+			exploits.put(i, e);
+			System.out.println("Exploit id "+ e.id +", c: "+e.cost);
+
+		}
+
+		/*
+		 * Assign exploits to nodes
+		 */
+
+
+
+		net.get(0).addExploits(new int[] {0});
+
+		net.get(1).addExploits(new int[] {1});
+		net.get(2).addExploits(new int[] {2});
+
+		net.get(3).addExploits(new int[] {0});
+		net.get(4).addExploits(new int[] {0});
+		net.get(5).addExploits(new int[] {1});
+		net.get(6).addExploits(new int[] {2});
+
+		net.get(7).addExploits(new int[] {0});
+		net.get(8).addExploits(new int[] {0});
+		net.get(9).addExploits(new int[] {1});
+		net.get(10).addExploits(new int[] {2});
+		
+		
+		
 
 
 	}
@@ -386,7 +475,19 @@ public class Network {
 				
 				for(Node n: net.values())
 				{
-					if(n.id != 7 && n.id != 8 && n.id != 9 /*&& n.id != 26*/)
+					boolean ing = false;
+					
+					for(int i=0; i<goals.length; i++)
+					{
+						if(n.id==goals[i])
+						{
+							ing = true;
+							break;
+						}
+					}
+					
+					
+					if(!ing) 
 					{
 						left.add(n);
 					}
@@ -403,9 +504,9 @@ public class Network {
 					Node n = new Node(i+nnodes, pn.value, pn.cost);
 					n.ishoneypot = true;
 					
-					for(Integer e: pn.exploits.values())
+					//for(Integer e: pn.exploits.values())
 					{
-						n.exploits.put(e, e);
+						n.exploits.put(0, 0);
 					}
 					
 					honeypots.put(n.id, n);
@@ -419,29 +520,29 @@ public class Network {
 				for(int i=0; i<(nhoneypots); i++)
 				{
 
-				int v = randInt(5, 10);
-				int c = randInt(1,4);
+					int v = randInt(5, 10);
+					int c = randInt(1,4);
 
-				if(sameval)
-				{
-					v = 7;
-					c = 3;
+					if(sameval)
+					{
+						v = 7;
+						c = 3;
+					}
+
+					Node n = new Node(i+nnodes, v, c);
+					n.ishoneypot = true;
+
+					if(allexploit)
+					{
+						n.addExploits(new int[] {0,1,2,3,4});
+					}
+					else
+					{
+						n.addExploits(new int[] {i});
+					}
+
+					honeypots.put(n.id, n);
 				}
-
-				Node n = new Node(i+nnodes, v, c);
-				n.ishoneypot = true;
-
-				if(allexploit)
-				{
-					n.addExploits(new int[] {0,1,2,3,4});
-				}
-				else
-				{
-					n.addExploits(new int[] {i});
-				}
-
-				honeypots.put(n.id, n);
-			}
 
 		}
 		

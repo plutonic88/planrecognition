@@ -18,9 +18,14 @@ public class Node {
 	
 	public double currentreward = 0;
 	
+	
+	public double currentcost = 0;
+	
 	public boolean ishoneypot = false;
 	
 	public int currentdistance = 0;
+	
+	public int depth = 0;
 	
 	
 	public Node() {
@@ -34,6 +39,15 @@ public class Node {
 		this.id = node.id;
 		this.value = node.value;
 		this.cost = node.cost;
+	}
+	
+	
+	public Node(int nodeid)
+	{
+		super();
+		this.id = nodeid;
+		
+		
 	}
 
 

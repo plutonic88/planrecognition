@@ -234,6 +234,117 @@ public class Attacker {
 	}
 	
 	
+	public double findFixedPolicyMinCost(int startnodeid, HashMap<Integer,Node> net, 
+			HashMap<Integer,Exploits> allexploits, int goal, boolean singlepath, int npath) 
+	{
+
+		
+		
+		
+		Queue<Node> fringequeue = new LinkedList<Node>();
+		Queue<Integer> closed = new LinkedList<Integer>();
+
+		Node start = new Node(net.get(startnodeid));
+		
+
+		double exploitcost = minCostExploit(net.get(startnodeid), this.exploits, allexploits);
+		start.currentcost +=  exploitcost;
+
+		fringequeue.add(start);
+
+		double mincost = Double.POSITIVE_INFINITY;
+		//Node maxgoalnode = null;
+
+
+		while(!fringequeue.isEmpty())
+		{
+			Node node = fringequeue.poll();
+			closed.add(node.id);
+
+			if(node.id==goal)
+			{
+
+
+				if(node.currentcost < mincost)
+				{
+					
+					mincost = node.currentcost;
+					//maxgoalnode = node;
+					
+					HashMap<Integer, Integer> path = new HashMap<Integer, Integer>();
+					traversePolicy(node, path);
+					System.out.println();
+					
+					if(singlepath)
+					{
+						this.fixedpolicy.clear();
+					}
+					if(!this.fixedpolicy.isEmpty())
+					{
+						
+					}
+					this.fixedpolicy.put(this.fixedpolicy.size(), path);
+
+
+					int numberofpaths = nPaths(this.fixedpolicy, goal);
+
+					if(numberofpaths>npath)
+					{
+						//break;
+					}
+
+					
+				}
+				else if(node.currentcost==mincost && singlepath==false)
+				{
+					HashMap<Integer, Integer> path = new HashMap<Integer, Integer>();
+					traversePolicy(node, path);
+					System.out.println();
+					if(!this.fixedpolicy.isEmpty())
+					{
+						//this.fixedpolicy.clear();;
+					}
+					this.fixedpolicy.put(this.fixedpolicy.size(), path);
+				}
+				//break;
+			}
+
+			Node orignode = net.get(node.id);
+
+
+			for(Integer nei: orignode.nei.values())
+			{
+				//canaccess = false;
+				//Logger.logit(" Node "+ nei +" exploits: \n");
+
+				Node neinode = net.get(nei);
+
+				for(Integer neinodeexploit: neinode.exploits.values())
+				{
+					//Logger.logit("exploit:"+neinodeexploit+"\n");
+					if(this.exploits.containsValue(neinodeexploit))
+					{
+						Node tmp = new Node(neinode);
+						exploitcost = minCostExploit(neinode, this.exploits, allexploits);
+						tmp.currentcost += /*node.currentreward + tmp.value - tmp.cost -*/node.currentcost + exploitcost;
+						tmp.parent = node;
+						fringequeue.add(tmp);
+
+
+					}
+				}
+
+			}
+
+
+
+		}
+		return mincost;
+
+
+	}
+	
+	
 	
 	public double findFixedPolicyShortestPath(int startnodeid, HashMap<Integer,Node> net, 
 			HashMap<Integer,Exploits> allexploits, int goal, boolean singlepath, int npath) 
@@ -697,6 +808,127 @@ public class Attacker {
 
 
 	}
+	
+	
+	public HashMap<Integer, HashMap<Integer, Integer>> findPolicyMinCostPath(int startnodeid, HashMap<Integer,Node> net, 
+			HashMap<Integer,Exploits> allexploits, int goal, boolean singlepath, int npath, HashMap<Integer,Double> costs, int attid) 
+	{
+
+		Queue<Node> fringequeue = new LinkedList<Node>();
+		Queue<Integer> closed = new LinkedList<Integer>();
+
+		Node start = new Node(net.get(startnodeid));
+		
+
+		HashMap<Integer, HashMap<Integer, Integer>> paths = new HashMap<Integer, HashMap<Integer, Integer>>();
+		HashMap<Integer, Integer> path = new HashMap<Integer, Integer>();
+		
+		double exploitcost = minCostExploit(net.get(startnodeid), this.exploits, allexploits);
+		start.currentcost = /*start.value - start.cost -*/ exploitcost;
+
+		fringequeue.add(start);
+
+		double mincost = Double.POSITIVE_INFINITY;
+		//Node maxgoalnode = null;
+
+
+		while(!fringequeue.isEmpty())
+		{
+			Node node = fringequeue.poll();
+			
+			//System.out.println("polled node  "+ node.id);
+			
+			closed.add(node.id);
+
+			if(node.id==goal)
+			{
+
+
+				if(node.currentcost < mincost)
+				{
+					
+					
+					mincost = node.currentcost;
+					
+					costs.put(attid, mincost);
+					//maxgoalnode = node;
+					
+					path = new HashMap<Integer, Integer>();
+					traversePolicy(node, path);
+					System.out.println();
+					if(singlepath)
+					{
+						paths.clear();
+					}
+					paths.put(paths.size(), path);
+					
+					/*if(!this.fixedpolicy.isEmpty())
+					{
+						this.fixedpolicy.remove(0);
+					}
+					this.fixedpolicy.put(this.fixedpolicy.size(), path);
+
+
+					int numberofpaths = nPaths(this.fixedpolicy, goal);
+
+					if(numberofpaths>npath)
+					{
+						//break;
+					}
+
+					if(singlepath)
+					{
+						//break;
+					}*/
+				}
+				else if(node.currentcost==mincost && singlepath==false)
+				{
+					path = new HashMap<Integer, Integer>();
+					traversePolicy(node, path);
+					System.out.println();
+					paths.put(paths.size(), path);
+				}
+				//break;
+			}	
+
+			Node orignode = net.get(node.id);
+
+
+			for(Integer nei: orignode.nei.values())
+			{
+				//canaccess = false;
+				//Logger.logit(" Node "+ nei +" exploits: \n");
+
+				Node neinode = net.get(nei);
+
+				for(Integer neinodeexploit: neinode.exploits.values())
+				{
+					//Logger.logit("exploit:"+neinodeexploit+"\n");
+					if(this.exploits.containsValue(neinodeexploit))
+					{
+						Node tmp = new Node(neinode);
+						exploitcost = minCostExploit(neinode, this.exploits, allexploits);
+						tmp.currentcost += /*node.currentreward + tmp.value - tmp.cost -*/node.currentcost + exploitcost;
+						tmp.parent = node;
+						tmp.currentdistance = node.currentdistance + 1;
+						fringequeue.add(tmp);
+
+
+					}
+				}
+
+			}
+
+
+
+		}
+		
+		
+		return paths;
+
+
+	}
+
 
 
 
@@ -802,7 +1034,7 @@ private double[] maxUtilityWithExploit(Node start, HashMap<Integer, Integer> att
 			return;
 
 		traversePolicy(node.parent, path);
-		//System.out.print(node.id+"("+node.currentreward+")"+"->");
+		System.out.print(node.id+"("+node.currentcost+")"+"->");
 		path.put(path.size(), node.id);
 
 
