@@ -14,7 +14,7 @@ import solver.Solver;
 public class PlanrecognitionExp {
 	
 	public static void doFixedPolicyWithDefenseExp1(boolean withdefense, int chosenattacker, int chosenpolicy, boolean minentropy, 
-			boolean maxoverlap, boolean expoverlap, boolean mincost, boolean mincommonoverlap) throws Exception {
+			boolean maxoverlap, boolean expoverlap, boolean mincost, boolean mincommonoverlap, boolean honeyedge) throws Exception {
 
 
 
@@ -46,12 +46,15 @@ public class PlanrecognitionExp {
 		
 		
 		
+		
+		
+		
 
-		int[] goals = {8,9,10};
+		
 		//int[] goals = {10, 11};
-
+		int nattackers = 3;
 		int startnode = 0;
-		int nnodes = 11;
+		int nnodes = 16;
 		int nhoneypots = 3;
 		int hpdeploylimit = 2;
 		int hpv = 8;
@@ -60,7 +63,7 @@ public class PlanrecognitionExp {
 		
 		
 
-		int nexploits = 3;
+		int nexploits = 5;
 
 		
 
@@ -81,9 +84,23 @@ public class PlanrecognitionExp {
 		//Network.constructNetwork(net, exploits, nnodes, nexploits);
 		
 		
+		
+		
+		int[] goals = new int[nattackers];
+		
+		for(int i=0; i<nattackers; i++)
+		{
+			goals[i] = nnodes - nattackers + i;
+		}
+		
+		//Network.constructNetwork23(net, exploits, nnodes, nexploits);
+		
+		Network.constructNetwork16(net, exploits, nnodes, nexploits);
+		
+		
 		//Network.constructNetwork10(net, exploits, nnodes, nexploits);
 		
-		Network.constructNetwork10V2(net, exploits, nnodes, nexploits);
+		//Network.constructNetwork10V2(net, exploits, nnodes, nexploits);
 
 		System.out.println("Attacker construction... \ndone");
 
@@ -98,14 +115,18 @@ public class PlanrecognitionExp {
 		 * construct honeypots from real node configurations
 		 * Imagine that attacker is naive
 		 */
-		Network.constructHoneyPots(honeypots, exploits, nhoneypots, nnodes, hpv, hpc, samevalhp, allexphp, net, pickfromnet, goals);
+		
+		if(!honeyedge)
+		{
+			Network.constructHoneyPots(honeypots, exploits, nhoneypots, nnodes, hpv, hpc, samevalhp, allexphp, net, pickfromnet, goals);
+		}
 		
 		
 		System.out.println("*****************Honeypots******************");
 		PlanRecognition.printNetwork(honeypots);
 		//PlanRecognition.printNetwork(honeypots);
 		
-		testSolver(net, exploits, honeypots, chosenattacker);
+		testSolver(net, exploits, honeypots, chosenattacker, goals, nattackers);
 
 		//System.out.println("Network construction... \ndone");
 		
@@ -119,7 +140,7 @@ public class PlanrecognitionExp {
 		{
 			//PlanRecognition.constructAttackersSingleGoal(startnodeid ,attackers, net, exploits, singlepath, npath, chosenattacker, maxoverlap, expoverlap);
 			
-			PlanRecognition.constructAttackers(startnodeid ,attackers, net, exploits, singlepath, npath, chosenattacker, maxoverlap, expoverlap);
+			PlanRecognition.constructAttackers(startnodeid ,attackers, net, exploits, singlepath, npath, chosenattacker, maxoverlap, expoverlap, nattackers, goals);
 		}
 		else
 		{
@@ -140,7 +161,7 @@ public class PlanrecognitionExp {
 		
 		
 		PlanRecognition.playGameWithNaiveDefense(chosenattacker, chosenpolicy, net, exploits, attackers, goals, 
-				honeypots, hpdeploylimit, singlepath, npath, startnode, withdefense, minentropy, mincommonoverlap, maxoverlap, expoverlap, mincost);
+				honeypots, hpdeploylimit, singlepath, npath, startnode, withdefense, minentropy, mincommonoverlap, maxoverlap, expoverlap, mincost, honeyedge);
 
 
 
@@ -149,7 +170,7 @@ public class PlanrecognitionExp {
 	}
 	
 	
-private static void testSolver(HashMap<Integer,Node> net, HashMap<Integer,Exploits> exploits, HashMap<Integer,Node> honeypots, int chosenattacker) throws Exception {
+private static void testSolver(HashMap<Integer,Node> net, HashMap<Integer,Exploits> exploits, HashMap<Integer,Node> honeypots, int chosenattacker, int[] goals2, int nattackers) throws Exception {
 		
 	
 	int n= net.size();
@@ -173,7 +194,7 @@ private static void testSolver(HashMap<Integer,Node> net, HashMap<Integer,Exploi
 	int [][][] w = build3DCostMatrix(net, nodeexpltmap, nodeexpltmapback, edgecost, exploits);
 	
 	int start = 0;
-	int goal = 8;
+	int goal = goals2[0];
 	//int[] goals = {8,9,10};
 	
 	
@@ -195,9 +216,12 @@ private static void testSolver(HashMap<Integer,Node> net, HashMap<Integer,Exploi
 		}
 	}
 	
-	goals.add(8);
-	goals.add(9);
-	goals.add(10);
+	for(int g: goals2)
+	{
+		goals.add(g);
+	}
+	
+	
 	
 	
 	
@@ -212,7 +236,7 @@ private static void testSolver(HashMap<Integer,Node> net, HashMap<Integer,Exploi
 	 
 	// ArrayList<int[]> path = Solver.solve3DCost(w, start, goal, exploits.size());
 	
-	int nattakers = 3;
+	//int nattakers = 3;
 	
 	//int n = net.size();
 	
@@ -350,11 +374,11 @@ private static void testSolver(HashMap<Integer,Node> net, HashMap<Integer,Exploi
 	
 	
 	
-	buildCostVar(hpdeploymentcost, net, exploits, nattakers, e, w, slotids, hpids, honeypots, placestoallocatehp, hpdeploylimit, freehps, hplimit);
+	buildCostVar(hpdeploymentcost, net, exploits, nattackers, e, w, slotids, hpids, honeypots, placestoallocatehp, hpdeploylimit, freehps, hplimit);
 	
-	/*totalconf = 100;
+	/*totalconf = 50;
 	
-	int cnf = 76;
+	int cnf = 14;
 	
 	hpdeploymentcost[cnf][1][11][0] = 1;
 	hpdeploymentcost[cnf][11][8][0] = 1;
@@ -365,8 +389,21 @@ private static void testSolver(HashMap<Integer,Node> net, HashMap<Integer,Exploi
 	
 	
 	hpdeploymentcost[cnf][1][11][0] = 1;
-	hpdeploymentcost[cnf][11][10][0] = 1;*/
+	hpdeploymentcost[cnf][11][10][0] = 1;
 	
+	int cnf2 = 12;
+	
+	hpdeploymentcost[cnf2][1][11][0] = 1;
+	hpdeploymentcost[cnf2][11][8][0] = 1;
+	
+	
+	hpdeploymentcost[cnf2][1][11][0] = 1;
+	hpdeploymentcost[cnf2][11][9][0] = 1;
+	
+	
+	hpdeploymentcost[cnf2][1][11][0] = 1;
+	hpdeploymentcost[cnf2][11][10][0] = 1;
+	*/
 	
 	
 	
@@ -384,7 +421,11 @@ private static void testSolver(HashMap<Integer,Node> net, HashMap<Integer,Exploi
 	
 	
 	
-	int bfsconf = findMinCostPath(hpdeploymentcost, goals, totalconf, start, chosenattacker, priors);
+	double[] bfsconf = findMinCostPath(hpdeploymentcost, goals, totalconf, start, chosenattacker, priors);
+	
+	
+	
+	//double[] bfsconf1 = findMaxCostPath(hpdeploymentcost, goals, totalconf, start, chosenattacker, priors);
 	 
 	
 	
@@ -394,27 +435,41 @@ private static void testSolver(HashMap<Integer,Node> net, HashMap<Integer,Exploi
 	
 	
 	
-	 
-	// ArrayList<int[]> path = Solver.solve3DCostWithHP(w, start, goal, exploits.size(), nattakers, hpdeploymentcost);
+	// ArrayList<int[]> path = Solver.solve3DCostWithHP(w, start, goal, exploits.size(), nattackers, hpdeploymentcost);
 	 
 	
 	startTime =  System.currentTimeMillis();
 	
-	ArrayList<ArrayList<int[]>> paths = Solver.solveHPDeploymentMultAttacker(w, start, goals, exploits.size(), nattakers, hpdeploymentcost, totalconf, priors);
+	//ArrayList<ArrayList<double[]>> paths = Solver.solveHPDeploymentMultAttacker(w, start, goals, exploits.size(), nattackers, hpdeploymentcost, totalconf, priors);
 	
-
+	//ArrayList<ArrayList<double[]>> paths = Solver.solveHPDeploymentMultAttackerCommPath(w, start, goals, exploits.size(), nattackers, hpdeploymentcost, totalconf, priors);
+	
+	ArrayList<ArrayList<double[]>> paths = Solver.solveDummy2(w, start, goals, exploits.size(), nattackers, hpdeploymentcost, totalconf, priors);
+	
+	
+	//ArrayList<ArrayList<double[]>> paths = Solver.solveHPDeploymentMultAttackerWorstCase(w, start, goals, exploits.size(), nattackers, hpdeploymentcost, totalconf, priors);
+	
+	
+	
 	
 	endTime   =  System.currentTimeMillis();
 	long milptotalTime = endTime - startTime;
 	
 	
-	int milpconf = printSolutionM(paths);
+	double[] milpconf = printSolutionM(paths);
 	
 	
 	System.out.println("#conf: "+totalconf);
 	
-	System.out.println("BFS conf: "+bfsconf);
-	System.out.println("MILP conf: "+milpconf);
+	System.out.println("BFS conf: "+bfsconf[0]);
+	System.out.println("MILP conf: "+milpconf[0]);
+	
+	
+	System.out.println("BFS cost: "+bfsconf[1]);
+	System.out.println("MILP cost: "+milpconf[1]);
+	
+	
+	
 	
 	System.out.println("BFS runtime: "+bfstotalTime);
 	System.out.println("MILP runtime: "+milptotalTime);
@@ -431,12 +486,12 @@ private static void testSolver(HashMap<Integer,Node> net, HashMap<Integer,Exploi
 	}
 
 
-private static int printSolutionM(ArrayList<ArrayList<int[]>> paths) {
+private static double[] printSolutionM(ArrayList<ArrayList<double[]>> paths) {
 	
 	
-	 int winnerconf = -1;
+	 double[] winnerconf = {-1.0, -1.0};
 	 
-		 for(ArrayList<int[]> path: paths)
+		 for(ArrayList<double[]> path: paths)
 		 {
 			 
 			 System.out.println("****attacker "+ paths.indexOf(path)+"*****");
@@ -447,7 +502,7 @@ private static int printSolutionM(ArrayList<ArrayList<int[]>> paths) {
 			 }
 			 else
 			 {
-				 for(int[] a: path)
+				 for(double[] a: path)
 				 {
 					 /*String sid1 = nodeexpltmapback.get(a[0]).split("-")[0];
 				 String sid2 = nodeexpltmapback.get(a[1]).split("-")[0];
@@ -456,9 +511,10 @@ private static int printSolutionM(ArrayList<ArrayList<int[]>> paths) {
 
 					 System.out.println(a[0] +"->"+ a[1] +"("+a[2]+")" + "("+a[3]+")");
 
-					 if(winnerconf==-1)
+					 if(winnerconf[0]==-1)
 					 {
-						 winnerconf = a[3];
+						 winnerconf[0] = a[3];
+						 winnerconf[1] = a[4];
 					 }
 
 
@@ -537,12 +593,19 @@ private static void printSolution(ArrayList<int[]> paths) {
 }
 
 
-private static int findMinCostPath(int[][][][] hpdeploymentcost, ArrayList<Integer> goals, int totalconf, int startnode, int chosenattacker, double[] priors) throws Exception {
+private static double[] findMinCostPath(int[][][][] hpdeploymentcost, ArrayList<Integer> goals, int totalconf, int startnode, int chosenattacker, double[] priors) throws Exception {
 	
 	
 	double mincost = Double.POSITIVE_INFINITY;
 	int minconf = -1;
+	
+	ArrayList<Integer> allmincostcofs = new ArrayList<Integer>();
+	
+	
+	
+	
 	ArrayList<ArrayList<Integer>> minpath = new ArrayList<ArrayList<Integer>>();
+	ArrayList<ArrayList<ArrayList<Integer>>> minpaths = new ArrayList<ArrayList<ArrayList<Integer>>>();
 	
 	for(int c=0; c<totalconf; c++)
 	{
@@ -578,21 +641,172 @@ private static int findMinCostPath(int[][][][] hpdeploymentcost, ArrayList<Integ
 		
 		if(sumcost<mincost)
 		{
+			allmincostcofs.clear();
 			mincost = sumcost;
 			minconf = c;
+			allmincostcofs.add(minconf);
 			minpath = tmppaths;
-			//System.out.println("mincost path: ");
+			System.out.println("mincost path: ");
 			
 			
 			for(ArrayList<Integer> path: minpath)
 			{
 				for(int p: path)
 				{
-					//System.out.print(p+"->");
+					System.out.print(p+"->");
 				}
 
 
-				//System.out.print("\n");
+				System.out.print("\n");
+			}
+			minpaths.clear();
+			minpaths.add(minpath);
+		}
+		else if(sumcost==mincost)
+		{
+			mincost = sumcost;
+			minconf = c;
+			minpath = tmppaths;
+			
+			
+			
+			allmincostcofs.add(minconf);
+			
+			System.out.println("mincost path: ");
+			
+			
+			for(ArrayList<Integer> path: minpath)
+			{
+				for(int p: path)
+				{
+					System.out.print(p+"->");
+				}
+
+
+				System.out.print("\n");
+			}
+			minpaths.add(minpath);
+		}
+		
+		/*if(sumcost==mincost)
+		{
+			mincost = sumcost;
+			minconf = c;
+			minpath = tmppaths;
+			System.out.println("mincost path: ");
+			
+			
+			for(ArrayList<Integer> path: minpath)
+			{
+				for(int p: path)
+				{
+					System.out.print(p+"->");
+				}
+
+
+				System.out.print("\n");
+			}
+		}*/
+		
+		//System.out.println("mincost "+ mincost + ", minconf "+ minconf);
+		
+		
+		
+	}
+	
+	System.out.println("mincost "+ mincost + ", minconf "+ minconf);
+	
+	System.out.println("mincost path: ");
+	
+	
+	int ind = 0;
+	
+	for(ArrayList<ArrayList<Integer>> minpa: minpaths)
+	{
+
+		//int ind = minpaths.indexOf(minpa);
+		
+		System.out.println("mincost conf: "+ allmincostcofs.get(ind));
+		System.out.println("mincost path: ");
+		for(ArrayList<Integer> path: minpa)
+		{
+			for(int p: path)
+			{
+				System.out.print(p+"->");
+			}
+
+
+			System.out.print("\n");
+		}
+		ind++;
+	}
+
+
+
+	return new double[] {minconf, mincost};
+
+
+	
+}
+
+
+
+private static double[] findMaxCostPath(int[][][][] hpdeploymentcost, ArrayList<Integer> goals, int totalconf, int startnode, int chosenattacker, double[] priors) throws Exception {
+	
+	
+	double mincost = Double.POSITIVE_INFINITY;
+	int minconf = -1;
+	ArrayList<ArrayList<Integer>> minpath = new ArrayList<ArrayList<Integer>>();
+	
+	for(int c=0; c<totalconf; c++)
+	{
+		int[][][] confcost = hpdeploymentcost[c];
+		
+		/*mincost = Double.POSITIVE_INFINITY;
+		minconf = -1;*/
+		
+		//System.out.println(confcost[0][1][0]);
+		
+		if(c==9)
+		{
+			//System.out.println("conf: "+c);
+		}
+		
+		double sumcost = 0;
+		ArrayList<ArrayList<Integer>> tmppaths = new ArrayList<ArrayList<Integer>>();
+		for(int a=0; a<3; a++)
+		{
+
+			ArrayList<Integer> tmpminpath = new ArrayList<Integer>();
+
+			double tmpcost = findMaxCostP(tmpminpath, confcost, startnode, goals, a);
+			
+			sumcost += (tmpcost*priors[a]);
+			tmppaths.add(tmpminpath);
+
+			//System.out.println("conf: "+c+", cost "+ tmpcost);
+
+
+			
+		}
+		
+		if(sumcost<mincost)
+		{
+			mincost = sumcost;
+			minconf = c;
+			minpath = tmppaths;
+			System.out.println("mincost path: ");
+			
+			
+			for(ArrayList<Integer> path: minpath)
+			{
+				for(int p: path)
+				{
+					System.out.print(p+"->");
+				}
+
+
+				System.out.print("\n");
 			}
 		}
 		
@@ -640,7 +854,7 @@ private static int findMinCostPath(int[][][][] hpdeploymentcost, ArrayList<Integ
 	
 
 	
-	return minconf;
+	return new double[] {minconf, mincost};
 	
 	
 	
@@ -690,7 +904,11 @@ private static double findMinCostP(ArrayList<Integer> path, int[][][] confcost, 
 	while(!fringequeue.isEmpty())
 	{
 		Node node = fringequeue.poll();
-		closed.add(node.id);
+		if(!closed.contains(node.id))
+		{
+			closed.add(node.id);
+		}
+		
 		if(node.id==goals.get(attacker))
 		{
 
@@ -756,6 +974,106 @@ private static double findMinCostP(ArrayList<Integer> path, int[][][] confcost, 
 	
 	
 	return mincost;
+}
+
+
+private static double findMaxCostP(ArrayList<Integer> path, int[][][] confcost, int startnode, ArrayList<Integer> goals, int attacker) throws Exception {
+	
+	
+	double maxcost = Double.NEGATIVE_INFINITY;
+	
+	
+	
+	
+	
+	
+
+	Queue<Node> fringequeue = new LinkedList<Node>();
+	Queue<Integer> closed = new LinkedList<Integer>();
+
+	Node start = new Node(startnode);
+	
+
+	
+	
+
+	fringequeue.add(start);
+
+	
+
+	while(!fringequeue.isEmpty())
+	{
+		Node node = fringequeue.poll();
+		if(!closed.contains(node.id))
+		{
+			closed.add(node.id);
+		}
+		
+		if(node.id==goals.get(attacker))
+		{
+
+
+			if(node.currentcost > maxcost)
+			{
+				
+				maxcost = node.currentcost;
+				//maxgoalnode = node;
+				
+				ArrayList<Integer> tmppath = new ArrayList<Integer>();
+				traversePolicy(node, tmppath);
+				//System.out.println();
+				
+				path.clear();
+				
+				for(int z: tmppath)
+				{
+					path.add(z);
+				}
+				
+				
+				
+				
+				
+			}
+			
+			
+		}
+		else
+		{
+			for(int j=0; j<confcost[node.id].length; j++)
+			{
+				for(int k=0; k<confcost[node.id][j].length; k++)
+				{
+					if(confcost[node.id][j][k] != 100 && confcost[node.id][j][k] != 0)
+					{
+						Node tmp = new Node(j);
+						tmp.currentcost = node.currentcost + confcost[node.id][j][k] ;
+						
+						if(tmp.currentcost > maxcost && !(closed.contains(tmp.id)))
+						{
+							tmp.parent = node;
+							fringequeue.add(tmp);
+						}
+						
+						
+					}
+					if(confcost[node.id][j][k] == 0)
+					{
+						throw new Exception("0 cost found");
+					}
+				}
+			}
+		}
+
+		
+
+
+	}
+	
+
+	
+	
+	return maxcost;
 }
 
 

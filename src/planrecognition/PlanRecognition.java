@@ -288,12 +288,13 @@ public class PlanRecognition {
 	 * @param minentropy 
 	 * @param expoverlap 
 	 * @param maxoverlap 
+	 * @param honeyedge 
 	 * @throws Exception 
 	 */
 	public static void playGameWithNaiveDefense(int chosenattacker, int chosenpolicy, HashMap<Integer, Node> net, HashMap<Integer, Exploits> exploits,
 			HashMap<Integer, Attacker> attackers, int[] goals, HashMap<Integer,Node> honeypots, int hpdeploylimit, 
 			boolean singlepath, int npath, int startnode, boolean withdefense, boolean minentropy, boolean mincommonoverlap, 
-			boolean maxoverlap, boolean expoverlap, boolean mincost) throws Exception {
+			boolean maxoverlap, boolean expoverlap, boolean mincost, boolean honeyedge) throws Exception {
 
 
 		/**
@@ -366,13 +367,16 @@ public class PlanRecognition {
 
 		HashMap<Integer, Integer> oactions = new HashMap<Integer, Integer>();
 		ArrayList<Integer> currenthps = new ArrayList<Integer>();
+		HashMap<Integer, Integer> currenthdges = new HashMap<Integer, Integer>();
+		
 
 		int round = 0;
 
 		oactions.put(oactions.size(), startnodeid);
 		
-		ArrayList<int[]> hpslots = new ArrayList<int[]>();
+		ArrayList<int[]> deceptionslots = new ArrayList<int[]>();
 		ArrayList<int[]> hpsdeployments = new ArrayList<int[]>();
+		ArrayList<int[]> hesdeployments = new ArrayList<int[]>();
 		ArrayList<Integer> atobservedactions = new ArrayList<Integer>();
 		
 		
@@ -426,7 +430,7 @@ public class PlanRecognition {
 				System.out.println("***********Attacker reached his goal "+ currentnodeid+"********************");
 				//System.out.println("***********Determined attacker type "+ chosenattacker+"********************");
 				System.out.println("***********round "+ round+"********************");
-				printInfos(hpslots, hpsdeployments, atobservedactions, round);
+				printInfos(deceptionslots, hpsdeployments, atobservedactions, round);
 				//break;
 			}
 
@@ -455,10 +459,14 @@ public class PlanRecognition {
 				 * first free the honeypots which are invalid because of the attacker actions
 				 * The honeypots are not in the paths of the attacker
 				 */
-				if(currenthps.size()>0)
+				if(currenthps.size()>0 && !honeyedge)
 				{
 					freeInvalidHoneypots(currenthps, curnode, net, honeypots, currentnodeid);
 					//printNetwork(honeypots);
+				}
+				else if(honeyedge)
+				{
+					
 				}
 
 				//printNetwork(net);
@@ -485,7 +493,7 @@ public class PlanRecognition {
 				/**
 				 * write the probs
 				 */
-				printInfos(hpslots, hpsdeployments, atobservedactions, round);
+				printInfos(deceptionslots, hpsdeployments, atobservedactions, round);
 				return;
 			}
 
@@ -497,7 +505,7 @@ public class PlanRecognition {
 			{
 				System.out.println("***********Determined attacker type "+ determinedattacker+"********************");
 				System.out.println("***********round "+ round+"********************");
-				printInfos(hpslots, hpsdeployments, atobservedactions, round);
+				printInfos(deceptionslots, hpsdeployments, atobservedactions, round);
 				return;
 			}
 
@@ -544,7 +552,13 @@ public class PlanRecognition {
 					*/
 					
 					deployHPMinEntropyV2(net, honeypots, currenthps, oactions, attackers, chosenatt, chosenattackerpolicy, singlepath, 
-							npath, priorsattackertype, priorforplang, round, hpdeploylimit, startnodeid, exploits, maxoverlap, expoverlap, hpslots, hpsdeployments, goals );
+							npath, priorsattackertype, priorforplang, round, hpdeploylimit, startnodeid, exploits, maxoverlap, expoverlap, deceptionslots, hpsdeployments, goals );
+					
+					
+					
+					
+					
+					
 				}
 				else if(mincommonoverlap)
 				{
@@ -574,10 +588,20 @@ public class PlanRecognition {
 							npath, priorsattackertype, priorforplang, round, hpdeploylimit, startnodeid, exploits, maxoverlap, expoverlap );
 					*/
 					
-					hpslots.clear();
+					deceptionslots.clear();
 					hpsdeployments.clear();
 					deployHPMinCost(net, honeypots, currenthps, oactions, attackers, chosenatt, chosenattackerpolicy, singlepath, 
-							npath, priorsattackertype, priorforplang, round, hpdeploylimit, startnodeid, exploits, maxoverlap, expoverlap, goals, hpslots, hpsdeployments );
+							npath, priorsattackertype, priorforplang, round, hpdeploylimit, startnodeid, exploits, maxoverlap, expoverlap, goals, deceptionslots, hpsdeployments );
+				}
+				else if(honeyedge)
+				{
+					
+					System.out.println("***********Using deployHEMinEntropy******************************");
+					
+					
+					deployHEMinEntropy(net, oactions, attackers, chosenatt, chosenattackerpolicy, singlepath, 
+							npath, priorsattackertype, priorforplang, round, hpdeploylimit, startnodeid, exploits, maxoverlap, expoverlap, deceptionslots, hesdeployments, goals, currenthdges );
+					
 				}
 				
 				
@@ -610,7 +634,7 @@ public class PlanRecognition {
 				
 				if(!attackerok)
 				{
-					printInfos(hpslots, hpsdeployments, atobservedactions, round);
+					printInfos(deceptionslots, hpsdeployments, atobservedactions, round);
 					return;
 				}
 				
@@ -641,9 +665,16 @@ public class PlanRecognition {
 
 			
 			//printAttackers(attackers);
+			if(honeyedge)
+			{
+				printInfos(deceptionslots, hesdeployments, atobservedactions, round);
+			}
+			else
+			{
+				printInfos(deceptionslots, hpsdeployments, atobservedactions, round);
+			}
 			
 			
-			printInfos(hpslots, hpsdeployments, atobservedactions, round);
 
 
 			round++;
@@ -817,7 +848,7 @@ public class PlanRecognition {
 			}
 			System.out.print("] ");
 		}
-		System.out.println("\ndeployed HPs: ");
+		System.out.println("\ndeployed Deception: ");
 		for(int[] slts: hpsdeployments)
 		{
 			System.out.print("[");
@@ -1888,6 +1919,489 @@ public class PlanRecognition {
 
 
 	}
+	
+	
+	
+	/*
+	 * does not recompute the attackers policies repeatedly 
+	 * deploys honeyedge
+	 */
+	private static void deployHEMinEntropy(HashMap<Integer, Node> net, HashMap<Integer, Integer> oactions, HashMap<Integer, Attacker> attackers, Attacker chosenatt, 
+			HashMap<Integer,Integer> chosenattackerpolicy, boolean singlepath, int npath,
+			HashMap<Integer, Double> priorsattackertype, HashMap<Integer,HashMap<Integer,Double>> priorforplang, int round, 
+			int hedeploylimit, int startnodeid, HashMap<Integer,Exploits> exploits, boolean maxoverlap, boolean expoverlap, ArrayList<int[]> hpslots, ArrayList<int[]> hesdeployments, int[] goals, HashMap<Integer,Integer> currenthdges) throws Exception {
+
+
+
+		/**
+		 * Now defender makes a defensive move naively
+		 * 1. See which slots are free
+		 * 2. see which honeypots are free
+		 * 3. compute posterior for every combination of hps and networks for each attacker
+		 * 4. Then deploy the hp where the prob for type increases most
+		 * 5. If the prob does not increase, see if the goal increases
+		 */
+
+		System.out.println("Finding placecs where honetpots can be placed");
+		
+		int currentnodeid = startnodeid;
+		if(oactions.size()>0)
+		{
+			currentnodeid = oactions.get(oactions.size()-1);
+		}
+
+		System.out.println("Attacker current position "+ currentnodeid);
+		
+		
+		
+		
+		
+		Node curnode = net.get(currentnodeid);
+		
+		System.out.println("Attacker current node depth "+ curnode.depth);
+		
+		
+		
+		ArrayList<Integer> reachablesnodes = PlanrecognitionExp.findReachableNodes(net, currentnodeid, exploits);
+		
+		PlanRecognition.printNetwork(net);
+		
+		/**
+		 * 1. free HPS
+		 * 2. total # of settings
+		 * 3. For each settings set costs between two i j nodes. 
+		 * 
+		 * 4. need slot ids and Hps
+		 * 5. need combinations
+		 * 6. then set up costs 
+		 */
+		
+		ArrayList<Integer> gls = new ArrayList<Integer>();
+		
+		for(int i=0; i<goals.length; i++)
+		{
+			gls.add(goals[i]);
+		}
+		
+		
+		
+		
+		HashMap<Integer, int[]> placestoallocatehp = PlanRecognition.computePlacesToAllocateHP(reachablesnodes, net, gls, curnode);
+
+		
+		PlanRecognition.printSlots(placestoallocatehp);
+
+		//HashMap<Integer, int[]> placestoallocatehp = computePlacesToAllocateHP(net, honeypots, currenthps, oactions);
+
+		if(placestoallocatehp.size()==1)
+		{
+			System.out.println("One slot only");
+		}
+
+
+		/**
+		 * Now compute which honeypots are free
+		 * Which are currently not being used
+		 */
+
+		//ArrayList<Integer> freehps = findFreeHP(currenthps, honeypots);
+
+		int helimit = hedeploylimit - currenthdges.size();
+
+		if(helimit>placestoallocatehp.size())
+		{
+			helimit = placestoallocatehp.size();
+		}
+
+		System.out.println("We can deploy "+ helimit +" honeyedges from "+ exploits.size() + " exploits");
+
+
+		
+		if(helimit<=0)
+		{
+			System.out.println("We can deploy no honeyedges");
+			return;
+		}
+		
+
+		int slotlimit = helimit;
+		System.out.println("#slotslimit "+ slotlimit);
+
+
+		/**
+		 * create combinations of placestoallocatehp
+		 */
+		HashMap<Integer, int[]> slotids = new HashMap<Integer, int[]>();
+		HashMap<Integer, int[]> heids = new HashMap<Integer, int[]>();
+
+		System.out.println("Slot ids: ");
+		createSlotCombinations(slotids, slotlimit, placestoallocatehp.size());
+		System.out.println("HE ids: ");
+		createHPCombinations(heids, helimit, exploits.size());
+
+
+		//refineSlots(slotids, placestoallocatehp);
+
+
+		/**
+		 * create all the settings
+		 * then iterate over them
+		 * 
+		 * Slots
+		 * Honeypots: freehps
+		 */
+
+
+
+
+
+		/**
+		 * For each settings we need to compute the posteriors
+		 * Then pick a setting which has the max posterior
+		 */
+		
+		double maxoverlaplen = -1;
+
+		int settingsid = 0;
+		HashMap<Integer, HashMap<Integer, HashMap<Integer, Double>>> posteriorlibrary = new HashMap<Integer, HashMap<Integer, HashMap<Integer, Double>>>();
+		double minentropy = Double.POSITIVE_INFINITY;
+		double maxprior = Double.NEGATIVE_INFINITY;
+		double minsettings = -1;
+		int minslotid = -1;
+		int minhpid = -1;
+		HashMap<Integer, int[]> minslots = new HashMap<Integer, int[]>();
+		for(int s1: slotids.keySet())
+		{
+
+
+			int[] slid = slotids.get(s1);
+
+			HashMap<Integer, int[]> slots = new HashMap<Integer, int[]>();
+			for(int i=0; i<slid.length; i++)
+			{
+				int[] slot1 = placestoallocatehp.get(slid[i]);
+				slots.put(slots.size(), slot1);
+			}
+			
+			//slots = refineSlots(slots);
+			
+			System.out.println("sss");
+			
+			//slots = refineSlots(slots);
+			
+			if(slots.size()==0)
+			{
+				settingsid++;
+				continue;
+			}
+
+
+			for(int h1: heids.keySet())
+			{
+
+
+
+				int[] heid = heids.get(h1);
+
+				int he[] = new int[heid.length];
+				for(int i=0; i<heid.length; i++)
+				{
+					he[i] = exploits.get(heid[i]).id;
+				}
+
+
+
+
+				System.out.println("\nSettings "+ settingsid +": \nslots: ");
+				for(int[] sl: slots.values())
+				{
+					System.out.print("[");
+					for(int s: sl)
+					{
+						System.out.print(s+", ");
+					}
+					System.out.println("]");
+				}
+
+				
+				/*
+				for(int[] sl: slots.values())
+				{
+					System.out.print("[");
+					for(int s: sl)
+					{
+						System.out.print(s+", ");
+					}
+					System.out.println("]");
+				}*/
+				
+				System.out.println("HE: ");
+
+				System.out.print("[");
+				for(int s: he)
+				{
+					System.out.print(s+", ");
+				}
+				System.out.println("]");
+
+
+
+				/*if(settingsid==1)
+			{
+
+				printNetwork(net);
+				printNetwork(honeypots);
+			}
+				 */
+
+				
+				/**
+				 * deploy the honeypots
+				 */
+				
+				for(Integer sid: slots.keySet())
+				{
+					int[] nodepair = slots.get(sid);
+					int e = he[sid];
+					
+					//addHoneyPot(nodepair, h, net, honeypots);
+					
+					addHoneyEdge(nodepair, e, net, exploits);
+					//insertHoneyPot(nodepair, h, net, honeypots);
+					//insertHoneyPot(slot2, hp2, net, honeypots);
+
+
+				}
+				
+				
+				printNetwork(net);
+				
+				
+				/**
+				 * compute attacker policies
+				 */
+				
+				
+				
+				
+				/*if(settingsid==506 && currentnodeid==4)
+				{
+					System.out.println("Attacker current position "+ currentnodeid);
+					printNetwork(net);
+				}*/
+
+
+				/**
+				 * attackpolicies for each attacker for a particular settings of honeypot
+				 * attids--> polcicies
+				 */
+				//System.out.println("*********Attacker policies before adding honeypots*********");
+				//printAttackers(attackers);
+
+
+				/**
+				 * Need to change the attackpolicies if  we want to adapt multiple policies by the attacker
+				 */
+				HashMap<Integer, HashMap<Integer, HashMap<Integer, Integer>>> attackpolicies = new HashMap<Integer, HashMap<Integer, HashMap<Integer, Integer>>>();
+				
+				HashMap<Integer, Double> costs = new HashMap<Integer, Double>();
+				computeSingleAttackPolicies(attackpolicies, net, exploits, attackers, currentnodeid, singlepath, npath, costs);
+				
+				
+				printAttackersPolicy(attackpolicies);
+				
+				
+
+				for(Integer atidconsidered: attackers.keySet()) // defender considers atid
+				{
+
+
+					/*double overlaplen = measureDefenseMovesForEntropy(priorsattackertype, priorforplang, startnodeid,placestoallocatehp, freehps, 
+							honeypots, net, exploits, attackers, oactions, singlepath, npath, round, slots, hp, 
+							posteriorlibrary, settingsid, atidconsidered, maxoverlap, expoverlap );
+
+					*/
+					
+					
+					
+					double overlaplen = measureHEMovesForEntropy(priorsattackertype, priorforplang, startnodeid,placestoallocatehp, 
+							 net, exploits, attackers, oactions, singlepath, npath, round, slots, he, 
+							posteriorlibrary, settingsid, atidconsidered, maxoverlap, expoverlap, attackpolicies, currentnodeid );
+
+					
+
+					double entropy = computeEntropy(posteriorlibrary.get(settingsid), atidconsidered);
+
+					/**
+					 * if the entropy is zero then
+					 * define some other criteria to choose the settings
+					 */
+
+					if(entropy==Double.NaN)
+					{
+						System.out.println("Found entropy NaN");
+					}
+					else if(entropy==0)
+					{
+
+
+						System.out.println("Found entopy 0");
+					}
+
+					System.out.println("Considering Attacker "+ atidconsidered + " entropy "+ entropy);
+
+					double attprior = priorsattackertype.get(atidconsidered);
+
+
+					/**
+					 * measure the max overlap length
+					 * work in favor of the attacker
+					 */
+
+					if((minentropy>entropy) /*&& (maxprior<attprior)*/)
+					{
+						minentropy = entropy;
+						minsettings = settingsid;
+						minslotid = s1;
+						minhpid = h1;
+						maxprior = attprior;
+						minslots = slots;
+
+					}
+					else if(minentropy==entropy)
+					{
+						if(maxoverlaplen<overlaplen)
+						{
+							maxoverlaplen = overlaplen;
+							minentropy = entropy;
+							minsettings = settingsid;
+							minslotid = s1;
+							minhpid = h1;
+							maxprior = attprior;
+							minslots = slots;
+						}
+
+					}
+
+					System.out.println("Min entropy "+ minentropy + ", minsettings "+ minsettings);
+					settingsid++;
+				}
+				
+				
+				for(Integer sid: slots.keySet())
+				{
+					int[] nodepair = slots.get(sid);
+					int e = he[sid];
+
+					eliminateHoneyEdge(nodepair, e, net, exploits);
+					//removeHoneyPot(nodepair, h, net, honeypots);
+					//insertHoneyPot(slot2, hp2, net, honeypots);
+
+
+				}
+				
+				//printNetwork(net);
+
+				//printPosteriors(posteriorlibrary, settingsid);
+
+				
+
+				//System.out.println("Hii");
+
+
+			}
+
+		}// end of for loop
+
+
+		//printNetwork(net);
+
+		/**
+		 * deploy the HP with min entropy
+		 * update the currenthps
+		 */
+
+		int sltid[] = slotids.get(minslotid);
+		int hpid[] = heids.get(minhpid);
+
+
+		System.out.println("Selected slots: ");
+
+
+		HashMap<Integer, int[]> slots = new HashMap<Integer, int[]>(minslots);
+		for(int i=0; i<sltid.length; i++)
+		{
+			int[] slot1 = placestoallocatehp.get(sltid[i]);
+			//slots.put(slots.size(), slot1);
+			
+			hpslots.add(slot1);
+
+			System.out.print("[");
+			for(int s: slot1)
+			{
+				System.out.print(s+" ");
+			}
+			System.out.print("]");
+
+		}
+
+
+
+
+		System.out.println("Selected HPs: ");
+
+		int he[] = new int[hpid.length];
+		for(int i=0; i<hpid.length; i++)
+		{
+			he[i] = exploits.get(hpid[i]).id;
+		}
+		
+		hesdeployments.add(he);
+
+
+		for(int s: he)
+		{
+			System.out.print(s+" ");
+		}
+		System.out.println("");
+
+		for(Integer slid: slots.keySet())
+		{
+			int[] nodepair = slots.get(slid);
+			int e = he[slid];
+
+			//addHoneyPot(nodepair, h, net, honeypots);
+			boolean ok = addHoneyEdge(nodepair, e, net, exploits);
+			if(ok)
+			{
+				currenthdges.put(nodepair[1], e);
+			}
+			//insertHoneyPot(slot2, hp2, net, honeypots);
+		}
+		
+		System.out.println("Selected HPs: ");
+
+		/**
+		 * fix it
+		 */
+		
+		
+		he = new int[currenthdges.size()];
+		for(int i=0; i<hpid.length; i++)
+		{
+			he[i] = exploits.get(hpid[i]).id;
+		}
+		
+		hesdeployments.add(he);
+		
+
+		//printNetwork(net);
+
+
+
+
+	}
+	
 	
 	
 	
@@ -3127,7 +3641,7 @@ public class PlanRecognition {
 		HashSet jSet=new HashSet();
 		jSet=combine(input, slotlimit, 0, branch, 0, jSet);
 		List<ArrayList<Integer>> jset = new ArrayList<ArrayList<Integer>>(jSet);
-		printSlotIdPairs(jset);
+		//printSlotIdPairs(jset);
 		/**
 		 * now insert the id pairs in hashmap
 		 */
@@ -3783,6 +4297,265 @@ public class PlanRecognition {
 	private static double measureDefenseMovesForEntropyV2(HashMap<Integer,Double> priorsattackertype, HashMap<Integer,HashMap<Integer,Double>> priorforplang, int startnodeid, 
 			HashMap<Integer, int[]> placestoallocatehp, ArrayList<Integer> freehps,
 			HashMap<Integer, Node> honeypots, HashMap<Integer, Node> net, HashMap<Integer, Exploits> exploits,
+			HashMap<Integer, Attacker> attackers, HashMap<Integer, Integer> oactions, boolean singlepath, int npath, int round,
+			HashMap<Integer, int[]> slots, int[] hps, HashMap<Integer,HashMap<Integer,HashMap<Integer, Double>>> posteriorlibrary, 
+			int settingsid, Integer atidconsidered, boolean maxoverlap, boolean expoverlap, HashMap<Integer,HashMap<Integer,HashMap<Integer,Integer>>> attackpolicies, int currentnodeid) throws Exception {
+
+
+		/**
+		 * For a single slot find the policies of each attacker from current 
+		 * position and using the previous history
+		 * and previous cost
+		 */
+
+		/*int[] slot1 = placestoallocatehp.get(0);
+		int slot2[] = placestoallocatehp.get(2);
+
+		int hp1 = freehps.get(0);
+		int hp2 = freehps.get(1);*/
+
+		/**
+		 * insert hp1 into slot1 and so on...
+		 */
+		
+		/*if(round==2)
+		{
+			printNetwork(net);
+			printNetwork(honeypots);
+		}*/
+		
+		double maxoverlaplength = Double.NEGATIVE_INFINITY;
+		
+
+		/*for(Integer slid: slots.keySet())
+		{
+			int[] nodepair = slots.get(slid);
+			int hp = hps[slid];
+
+			insertHoneyPot(nodepair, hp, net, honeypots);
+			//insertHoneyPot(slot2, hp2, net, honeypots);
+
+
+		}*/
+
+
+		/*if(round==2)
+		{
+			printNetwork(net);
+			printNetwork(honeypots);
+		}
+*/
+
+
+
+		/**
+		 * now find each attacker's policy from current node
+		 * Need current cost for each attacker
+		 * ACtually we don't need current cost.
+		 * All we need is to minimize the future cost and maximize rewards
+		 * 
+		 */
+
+
+		
+		
+		printAttackersPolicy(attackpolicies);
+		
+		HashMap<Integer,HashMap<Integer,HashMap<Integer,Integer>>> tmpattackpolicies = new HashMap<Integer,HashMap<Integer,HashMap<Integer,Integer>>>();
+		
+		
+		for(Integer at: attackpolicies.keySet())
+		{
+			HashMap<Integer,HashMap<Integer,Integer>> t = new HashMap<Integer,HashMap<Integer,Integer>>();
+			
+			t = attackpolicies.get(at);
+			
+			tmpattackpolicies.put(at, t);
+		}
+		
+		
+		if(tmpattackpolicies.size() != attackers.size())
+		{
+			throw new Exception("Attacker doesnt have policy");
+		}
+		else
+		{
+			if(maxoverlap)
+			{
+				tmpattackpolicies = refinePoliciesMeasure(tmpattackpolicies, attackers, atidconsidered);
+				maxoverlaplength = maxOverlapLength(tmpattackpolicies, atidconsidered);
+			}
+			else if(expoverlap)
+			{
+				maxoverlaplength = refinePoliciesMaxExpOverlap(attackers, tmpattackpolicies, atidconsidered);
+			}
+			
+			
+			if(maxoverlaplength==Double.NEGATIVE_INFINITY)
+			{
+				throw new Exception("maxoverlaplen==Double.NEGATIVE_INFINITY");
+				//printNetwork(net);
+				//maxoverlaplength = 99;
+				
+				
+			}
+			
+		}
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		/**
+		 * compute max overlap length
+		 */
+		
+		//maxoverlaplength = maxOverlapLength(attackpolicies);
+		
+		
+		//System.out.println("********Attacker policies after adding honeypots*********");
+		//printAttackers(attackers);
+		printAttackersPolicy(tmpattackpolicies);
+
+		/**
+		 * For all the settings: all slots, all honeypots and for all the attackers
+		 * compute posterior considering each attacker's next move
+		 *
+		 */
+
+		HashMap<Integer, HashMap<Integer, Double>> posteriors = new HashMap<Integer, HashMap<Integer, Double>>();
+		HashMap<Integer, Integer> tmpoactions = new HashMap<Integer, Integer>();
+
+
+
+		//for(Integer attid: attackpolicies.keySet())
+		Integer attid = atidconsidered;
+		{
+			System.out.println("Considering attacker "+ attid +" as the attacker to compute posteriors.\npolicy:..");
+			HashMap<Integer, Integer> tmppolicy = tmpattackpolicies.get(attid).get(0);
+
+			
+			
+			/*if(tmppolicy==null)
+			{
+				HashMap<Integer, Double> tmppost = new HashMap<Integer, Double>();
+				
+				for(Attacker at: attackers.values())
+				{
+
+					tmppost.put(at.id, 0.0);
+					
+				}
+
+				posteriors.put(attid, tmppost);
+				//Integer key = settingsid;
+
+				posteriorlibrary.put(settingsid, posteriors);
+			}
+			else */
+			if(tmppolicy.size()>0)
+			{
+
+				for(Integer p: tmppolicy.values())
+				{
+					System.out.print(p+" ");
+				}
+
+				System.out.println();
+
+				tmpoactions = new HashMap<Integer, Integer>();
+				tmpoactions.put(tmpoactions.size(), currentnodeid);
+
+				if(tmppolicy.get(1)==null)
+				{
+					throw new Exception("Found null in policy");
+				}
+
+				tmpoactions.put(tmpoactions.size(), tmppolicy.get(1));
+
+				System.out.println("Attacker "+ attid +" next round "+(1)+" move: "+ tmppolicy.get(1));
+
+				/*//System.out.print("observed action seq: ");
+
+			for(int a: tmpoactions.values())
+			{
+				System.out.print(a+" ");
+			}
+			System.out.println();*/
+
+				/**
+				 * this method supports only single policy per attacker
+				 */
+				HashMap<Integer, Double> tmpposteriors = computePosteriorAttTypeWithPolicy(tmpoactions, attackers, net, priorsattackertype, tmpattackpolicies);
+
+
+
+				HashMap<Integer, Double> tmppost = new HashMap<Integer, Double>();
+
+				System.out.println("Posteriors: ");
+				for(Integer in: tmpposteriors.keySet())
+				{
+
+					//tmppost[in] = tmpposteriors.get(in);
+
+					tmppost.put(in, tmpposteriors.get(in));
+
+					System.out.println("Att "+ in + " posterior : "+ tmppost.get(in));
+				}
+				posteriors.put(attid, tmppost);
+
+
+				//Integer key = settingsid;
+
+				posteriorlibrary.put(settingsid, posteriors);
+			}
+
+
+		}
+
+
+		/**
+		 * remove the inserted honeypots
+		 * update the net
+		 */
+
+
+		/*for(Integer slid: slots.keySet())
+		{
+			int[] nodepair = slots.get(slid);
+			int hp = hps[slid];
+
+			removeHoneyPot(nodepair, hp, net, honeypots);
+			//insertHoneyPot(slot2, hp2, net, honeypots);
+
+
+		}*/
+
+		/*printNetwork(net);
+	printNetwork(honeypots);
+		 */
+
+
+		//System.out.println("hp");
+		
+		return maxoverlaplength;
+
+
+
+
+	}
+	
+	
+	private static double measureHEMovesForEntropy(HashMap<Integer,Double> priorsattackertype, HashMap<Integer,HashMap<Integer,Double>> priorforplang, int startnodeid, 
+			HashMap<Integer, int[]> placestoallocatehp,
+			 HashMap<Integer, Node> net, HashMap<Integer, Exploits> exploits,
 			HashMap<Integer, Attacker> attackers, HashMap<Integer, Integer> oactions, boolean singlepath, int npath, int round,
 			HashMap<Integer, int[]> slots, int[] hps, HashMap<Integer,HashMap<Integer,HashMap<Integer, Double>>> posteriorlibrary, 
 			int settingsid, Integer atidconsidered, boolean maxoverlap, boolean expoverlap, HashMap<Integer,HashMap<Integer,HashMap<Integer,Integer>>> attackpolicies, int currentnodeid) throws Exception {
@@ -4906,6 +5679,51 @@ private static int commonLen(String p1, String p2) {
 
 
 	}
+	
+	
+	private static boolean addHoneyEdge(int[] slot, int he, HashMap<Integer, Node> net, HashMap<Integer,Exploits> honeyedges) {
+
+		Node node1 = net.get(slot[0]);
+		Node node2 = net.get(slot[1]);
+		Exploits ex = honeyedges.get(he);
+
+		
+
+		/**
+		 * 1. remove 2 from 1's nei
+		 * 2. insert hp into 1's nei
+		 * 3. assign hp as 2's parent
+		 * 4. assign 1 as hp's parent
+		 * 5. insert 2 as hp's nei
+		 */
+
+		//node1.nei.remove(node2.id);
+		/*node1.nei.put(he, he);
+		//node2.parent = hpnode;
+		hpnode.parent = node1;
+		
+		hpnode.depth = node1.depth+1;
+		hpnode.nei.put(node2.id, node2.id);
+		net.put(hpnode.id, hpnode);*/
+		
+		if(!node2.exploits.containsValue(ex.id))
+		{
+			node2.exploits.put(ex.id, ex.id);
+			node2.honeyedge.put(ex.id, ex.id);
+			System.out.println("adding he "+ ex.id + " in the middle of slot ["+node1.id + ","+node2.id+"]");
+			return true;
+		}
+		else
+		{
+			System.out.println("could not add he "+ ex.id + " in the middle of slot ["+node1.id + ","+node2.id+"]");
+			return false;
+		}
+		
+		
+
+
+
+	}
 
 
 
@@ -4949,6 +5767,41 @@ private static int commonLen(String p1, String p2) {
 		hpnode.nei.clear();
 
 		net.remove(hpnode.id);
+
+
+
+	}
+	
+	private static void eliminateHoneyEdge(int[] slot, int he, HashMap<Integer, Node> net, HashMap<Integer,Exploits> exploits) {
+
+		//Node node1 = net.get(slot[0]);
+		Node node2 = net.get(slot[1]);
+		Exploits hpnode = exploits.get(he);
+
+
+
+		//node1.nei.put(node2.id, node2.id);
+		
+		
+		
+		if(node2.honeyedge.containsKey(hpnode.id))
+		{
+			node2.exploits.remove(hpnode.id);
+			System.out.println("Removing honey edge "+ he + " from node "+ node2.id);
+			node2.honeyedge.remove(hpnode.id);
+			
+		}
+		else
+		{
+			System.out.println("already exists, was not added honey edge "+ he + " in node "+ node2.id +", so not need to remove");
+		}
+
+		//node2.parent = node1;
+
+		/*hpnode.parent = null;
+		hpnode.nei.clear();
+
+		net.remove(hpnode.id);*/
 
 
 
@@ -6607,37 +7460,46 @@ private static int commonLen(String p1, String p2) {
 	
 	
 	public static void constructAttackers(int startnodeid, HashMap<Integer, Attacker> attackers, HashMap<Integer,Node> net, 
-			HashMap<Integer,Exploits> exploits, boolean singlepath, int npath, int chosenattacker, boolean maxoverlap, boolean expoverlap) {
+			HashMap<Integer,Exploits> exploits, boolean singlepath, int npath, int chosenattacker, boolean maxoverlap, boolean expoverlap, int nattackers, int[] goals) {
 
-		int id = 0;
+		
+		for(int id=0; id<nattackers; id++)
+		{
 
-		//int goals[] = {26,23,25,24};
+			//	int id = 0;
 
-		/*boolean singlepath = false;
+			//int goals[] = {26,23,25,24};
+
+			/*boolean singlepath = false;
 		int npath = 3;*/
 
-		Attacker a0  = new Attacker(id++);
-		//a0.goals.put(0, 23);
-		a0.goals.put(0, 8);
-		//	a0.goals.put(1, 24);
-		a0.addExploits(new int[] {0,1,2,3});
-		//a0.findFixedPolifyBFS(net, exploits, 23);
-		//a0.findFixedPolifyBFS(net, exploits, 24);
-		//a0.findFixedPolicyMaxRewardMinCost(startnodeid, net, exploits, 23, singlepath, npath);
-		
-		//a0.findFixedPolicyShortestPath(startnodeid, net, exploits, 8, singlepath, npath);
-		
-		a0.findFixedPolicyMinCost(startnodeid, net, exploits, 8, singlepath, npath);
-		
-		
-		//a0.addPolicy(new int[] {0, 1, 5, 7, 2, 1, 1, 1, 26});
-		//a0.addPolicy(new int[] {0, 1, 3, 1, 1, 1, 26});
-		a0.removeDuplicatePolicies();
+			Attacker a0  = new Attacker(id);
+			//a0.goals.put(0, 23);
+			//int gid = net.size()-nattackers+id;
+			a0.goals.put(0, goals[id]);
+			//	a0.goals.put(1, 24);
+			a0.addExploits(new int[] {0,1,2,3});
+			//a0.findFixedPolifyBFS(net, exploits, 23);
+			//a0.findFixedPolifyBFS(net, exploits, 24);
+			//a0.findFixedPolicyMaxRewardMinCost(startnodeid, net, exploits, 23, singlepath, npath);
+
+			//a0.findFixedPolicyShortestPath(startnodeid, net, exploits, 8, singlepath, npath);
+
+			a0.findFixedPolicyMinCost(startnodeid, net, exploits, goals[id], singlepath, npath);
+
+
+			//a0.addPolicy(new int[] {0, 1, 5, 7, 2, 1, 1, 1, 26});
+			//a0.addPolicy(new int[] {0, 1, 3, 1, 1, 1, 26});
+			a0.removeDuplicatePolicies();
+			attackers.put(a0.id, a0);
+
+
+		}
 		//a0.addPolicy(0, new int[] {0, 2, 5, 10, 16, 21, 26});
 		//a0.addPolicy(1, new int[] {0, 1, 4, 15, 21, 26});
 		//a0.addPolicy(1, new int[] {0, 2, 6, 10, 15, 20, 24});
 
-
+/*
 
 		Attacker a1  = new Attacker(id++);
 		a1.goals.put(0, 9);
@@ -6654,9 +7516,9 @@ private static int commonLen(String p1, String p2) {
 		//a1.addPolicy(new int[] {0, 1, 5, 7, 2, 1, 1, 1, 23});
 		//a1.addPolicy(new int[] {0, 1, 5, 4, 1, 1, 23});
 		a1.removeDuplicatePolicies();
-		/*
+		
 		 * a1.findFixedPolifyBFS(net, exploits, 24);
-		a1.findFixedPolifyBFS(net, exploits, 25);*/
+		a1.findFixedPolifyBFS(net, exploits, 25);
 		//a1.addPolicy(0, new int[] {0, 1, 3, 8, 14, 19, 23});
 		//a1.addPolicy(1, new int[] {0, 2, 5, 14, 20, 25});
 
@@ -6684,7 +7546,7 @@ private static int commonLen(String p1, String p2) {
 		//a2.addPolicy(3, new int[] {0, 2, 6, 10, 16, 21, 26});
 
 
-		/*Attacker a3  = new Attacker(id++);
+		Attacker a3  = new Attacker(id++);
 		a3.goals.put(0, 26);
 		//a3.goals.put(1, 24);
 		a3.addExploits(new int[] {0, 1,2,3,4,5,6,7});
@@ -6700,10 +7562,10 @@ private static int commonLen(String p1, String p2) {
 		a3.removeDuplicatePolicies();
 		//a3.addPolicy(0, new int[] {0, 2, 5, 10, 15, 20, 25});
 
-*/
 
 
-		/*Attacker a4  = new Attacker(id++);
+
+		Attacker a4  = new Attacker(id++);
 		a4.goals.put(0, 24);
 		a4.goals.put(1, 25);
 		a4.addExploits(new int[] {1, 2});
@@ -6717,7 +7579,7 @@ private static int commonLen(String p1, String p2) {
 		a5.goals.put(0, 26);
 		a5.addExploits(new int[] {0, 3});
 		//a5.findFixedPolifyBFS(net, exploits, 23);
-		a5.findFixedPolifyBFS(net, exploits, 26);*/
+		a5.findFixedPolifyBFS(net, exploits, 26);
 
 		//a3.addPolicy(0, new int[] {0, 1, 3, 8, 14, 19, 24});
 		
@@ -6728,6 +7590,7 @@ private static int commonLen(String p1, String p2) {
 		attackers.put(a0.id, a0);
 		attackers.put(a1.id, a1);
 		attackers.put(a2.id, a2);
+		}*/
 		//attackers.put(a3.id, a3);
 		
 		
@@ -7915,7 +8778,7 @@ private static HashMap<Integer,HashMap<Integer,HashMap<Integer,Integer>>> refine
 				int dif = bnode.depth - anode.depth;
 				
 				
-				if(a != b && a<b && !goals.contains(a) && (anode.depth != bnode.depth) && dif>=2 && ((anode.depth-curnode.depth)==1))
+				if(a != b && a<b && !goals.contains(a) && (anode.depth != bnode.depth) && dif==1 && ((anode.depth-curnode.depth)==1))
 				{
 					int pair [] = {a,b};
 					slots.put(slots.size(), pair);

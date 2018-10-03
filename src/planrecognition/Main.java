@@ -32,7 +32,9 @@ public class Main {
 		
 		boolean minentropy = false;
 		boolean mincommonoverlap = false;
-		boolean mincost = true;
+		boolean mincost = false;
+		boolean honeyedge = true;
+		
 		
 		//boolean expoverlap = false;
 		boolean maxoverlap = false;
@@ -54,7 +56,7 @@ public class Main {
 		
 		
 		
-		PlanrecognitionExp.doFixedPolicyWithDefenseExp1(withdefense, chosenattacker, chosenpolicy, minentropy, maxoverlap, expoverlap, mincost, mincommonoverlap);
+		PlanrecognitionExp.doFixedPolicyWithDefenseExp1(withdefense, chosenattacker, chosenpolicy, minentropy, maxoverlap, expoverlap, mincost, mincommonoverlap, honeyedge);
 		
 		//PlanrecognitionExp.doFixedExploitPolicyWithDefenseExp1(withdefense, chosenattacker, chosenpolicy, minentropy, maxoverlap, expoverlap);
 		

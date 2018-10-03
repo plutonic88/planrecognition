@@ -10,7 +10,9 @@ public class Node {
 	public int cost;
 	public HashMap<Integer, Integer> nei = new HashMap<Integer, Integer>();
 	public HashMap<Integer, int[]> neiwithexploits = new HashMap<Integer, int[]>();
-	public HashMap<Integer, Integer> exploits = new HashMap<Integer, Integer>(); 
+	public HashMap<Integer, Integer> exploits = new HashMap<Integer, Integer>();
+	public HashMap<Integer, Integer> honeyedge = new HashMap<Integer, Integer>();
+	
 	public Node parent;
 	public int usedexploit = -1;
 	//initially allow every exploits
