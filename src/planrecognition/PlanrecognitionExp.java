@@ -402,8 +402,8 @@ private static void testSolver(HashMap<Integer,Node> net, HashMap<Integer,Exploi
 	
 	
 	hpdeploymentcost[cnf2][1][11][0] = 1;
-	hpdeploymentcost[cnf2][11][10][0] = 1;
-	*/
+	hpdeploymentcost[cnf2][11][10][0] = 1;*/
+	
 	
 	
 	

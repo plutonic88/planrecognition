@@ -2040,22 +2040,22 @@ public class Solver {
 	public static ArrayList<ArrayList<double[]>> solveDummy2(int[][][] w, int start, ArrayList<Integer> goals, int e,
 			int nattakers, int[][][][] hpdeploymentcosts, int totalconf, double[] priors) {
 
-		int[] mincost = {3, 3};
+		int[] mincost = {5, 5};
 
-		int n= 6;
+		int n= 11;
 
 		//int L = 3;
 
 		int p[][] = new int[n][n];
 
-		int M = 3;
+		int M = 5;
 
 
 		goals.clear();
 
 
-		goals.add(4);
-		goals.add(5);
+		goals.add(10);
+		goals.add(9);
 
 
 
@@ -2072,9 +2072,11 @@ public class Solver {
 
 
 		p[0][2] = 1;
-		p[2][3] = 1;
-		p[3][4] = 1;
-		p[4][4] = 0;
+		p[2][4] = 1;
+		p[4][10] = 1;
+		//p[6][8] = 1;
+		//p[8][10] = 1;
+		p[10][10] = 0;
 
 
 		/*p[0][1] = 1;
@@ -2082,18 +2084,20 @@ public class Solver {
 		p[3][4] = 1;*/
 
 
-		p[0][2] = 1;
-		p[2][3] = 1;
+		p[0][1] = 1;
+		p[1][3] = 1;
 		p[3][5] = 1;
-		p[5][5] = 0;
+		p[5][7] = 1;
+		p[7][9] = 1;
+		p[9][9] = 0;
 
 
 
 
 
 		HashMap<String, Integer> edgeids = new HashMap<String, Integer>();
-		HashMap<Integer, String> edgebackids = new HashMap<Integer, String>();
-		HashMap<Integer, Integer> edgecost = new HashMap<Integer, Integer>();
+		//HashMap<Integer, String> edgebackids = new HashMap<Integer, String>();
+		//HashMap<Integer, Integer> edgecost = new HashMap<Integer, Integer>();
 
 		int count = 0;
 
@@ -2107,8 +2111,25 @@ public class Solver {
 					String key = i+","+j;
 
 					edgeids.put(key, count);
-					edgebackids.put(count, key);
-					edgecost.put(count++, p[i][j]);
+					//edgebackids.put(count, key);
+					count++;
+					//edgecost.put(count++, p[i][j]);
+				}
+			}
+		}
+		
+		
+		
+		for(int i=0; i<n; i++)
+		{
+			for(int j=0; j<n; j++)
+			{
+				//if(i != j)
+				{
+
+					String key = i+","+j;
+
+					System.out.println("key "+ key+ ": "+ edgeids.get(key));
 				}
 			}
 		}
@@ -2168,7 +2189,7 @@ public class Solver {
 			}
 
 
-			/*IloNumVar[][][][] x_kijm = new IloNumVar[2][n][n][M];
+			IloNumVar[][][][] x_kijm = new IloNumVar[2][n][n][M];
 
 
 			for(int a1=0; a1<2; a1++)
@@ -2183,7 +2204,7 @@ public class Solver {
 						}
 					}
 				}
-			}*/
+			}
 
 
 
@@ -2320,9 +2341,6 @@ public class Solver {
 					{
 
 						ex.addTerm(-1, d_ij[a1][a2]);
-
-
-
 					}
 				}
 			}
@@ -2583,23 +2601,7 @@ public class Solver {
 
 
 			
-			for(int a1=0; a1<2; a1++)
-			{
-				for(int k=0; k<M; k++)
-				{
-
-					IloLinearNumExpr expr2 = cplex.linearNumExpr();
-
-					for(int i=0; i<count; i++)
-					{
-						expr2.addTerm(1, e_tem[a1][i][k]);
-					}
-					cplex.addEq(expr2, 1);
-				}
-
-			}
-
-
+			
 
 
 
@@ -2783,8 +2785,8 @@ public class Solver {
 
 				cplex.addLe(expr, mincost[a]);
 
-			}
-			*/
+			}*/
+			
 			
 			/*for(int a=0; a<2; a++)
 			{
@@ -2805,8 +2807,8 @@ public class Solver {
 
 				cplex.addGe(expr,0);
 
-			}*/
-
+			}
+*/
 			
 			
 			
@@ -2843,13 +2845,63 @@ public class Solver {
 
 
 
+			/*for(int a=0; a<2; a++)
+			{
+				for(int i=0; i<n; i++)
+				{
+					IloLinearNumExpr expr1 = cplex.linearNumExpr();
+					for(int k=0; k<(M); k++)
+					{
+						for(int j=0; j<n; j++)
+						{
+							String k1 = i+","+j;
+							int id1 = edgeids.get(k1);
+							expr1.addTerm(1.0, e_tem[a][id1][k]);
+							String k2 = j+","+i;
+							int id2 = edgeids.get(k2);
+							expr1.addTerm(-1.0, e_tem[a][id2][k]);
+						}
+
+					}
+
+					for(int k=0; k<(M); k++)
+					{
+						for(int j=0; j<n; j++)
+						{
+							String k2 = j+","+i;
+							int id2 = edgeids.get(k2);
+							expr1.addTerm(-1.0, e_tem[a][id2][k]);
+
+						}
+
+					}
+
+					if(start == i)
+					{
+						cplex.addEq(expr1, 1.0);
+					}
+					else if(goals.get(a) == i)
+					{
+						cplex.addEq(expr1, -1.0);
+					}
+					else
+					{
+						cplex.addEq(expr1, 0.0);
+					}
+				}
+
+
+
+			}
+*/
+			
+			
+			
 			for(int a=0; a<2; a++)
 			{
 				for(int i=0; i<n; i++)
 				{
 					IloLinearNumExpr expr1 = cplex.linearNumExpr();
-
-
 					for(int k=0; k<(M); k++)
 					{
 						for(int j=0; j<n; j++)
@@ -2859,16 +2911,14 @@ public class Solver {
 							expr1.addTerm(1.0, e_tem[a][id1][k]);
 							
 							
-							
 							String k2 = j+","+i;
 							int id2 = edgeids.get(k2);
 							expr1.addTerm(-1.0, e_tem[a][id2][k]);
+							
 						}
 
 					}
-					
-					
-					
+
 					/*for(int k=0; k<(M); k++)
 					{
 						for(int j=0; j<n; j++)
@@ -2876,68 +2926,187 @@ public class Solver {
 							String k2 = j+","+i;
 							int id2 = edgeids.get(k2);
 							expr1.addTerm(-1.0, e_tem[a][id2][k]);
+
 						}
 
 					}*/
-					
-					
-					
-					
 
 					if(start == i)
 					{
-
-						cplex.addEq(expr1, 1.0);
+						cplex.addGe(expr1, 1.0);
 					}
 					else if(goals.get(a) == i)
 					{
-
-						cplex.addEq(expr1, -1.0);
+						cplex.addLe(expr1, -1.0);
 					}
 					else
 					{
 						cplex.addEq(expr1, 0.0);
 					}
-
-
 				}
+
+
+
 			}
 			
+			
+			for(int a=0; a<2; a++)
+			{
+				for(int i=0; i<n; i++)
+				{
+
+					if(i != start && (i != goals.get(a) ))
+					{
+						
+						
+						for(int k=1; k<(M); k++)
+						{
+							IloLinearNumExpr expr1 = cplex.linearNumExpr();
+							for(int j=0; j<n; j++)
+							{
+								String k1 = j+","+i;
+								int id1 = edgeids.get(k1);
+								expr1.addTerm(1.0, e_tem[a][id1][k-1]);
+							}
+
+
+							for(int j=0; j<n; j++)
+							{
+								String k2 = i+","+j;
+								int id2 = edgeids.get(k2);
+								expr1.addTerm(-1.0, e_tem[a][id2][k]);
+							}
+							
+							cplex.addEq(expr1, 0);
+
+						}
+						
+						
+
+					}
+
+				}
+
+			}
+
+			
+			for(int a1=0; a1<2; a1++)
+			{
+				for(int k=0; k<M; k++)
+				{
+
+					IloLinearNumExpr expr2 = cplex.linearNumExpr();
+
+					for(int i=0; i<count; i++)
+					{
+						expr2.addTerm(1, e_tem[a1][i][k]);
+					}
+					cplex.addEq(expr2, 1);
+				}
+
+			}
+			
+			
+			/*for(int a1=0; a1<2; a1++)
+			{
+				for(int k=0; k<M; k++)
+				{
+
+					IloLinearNumExpr expr2 = cplex.linearNumExpr();
+
+					for(int i=0; i<count; i++)
+					{
+						expr2.addTerm(1, e_tem[a1][i][k]);
+					}
+					cplex.addGe(expr2, 0);
+				}
+
+			}*/
+
 			
 			
 			
 			/*for(int a=0; a<2; a++)
 			{
-				for(int i=0; i<n; i++)
-				{
-					
 
-					for(int j=0; j<n; j++)
+				for(int m=0; m<(M); m++)
+				{
+
+					for(int i=0; i<n; i++)
 					{
-						for(int k=0; k<(M); k++)
+
+						for(int j=0; j<n; j++)
 						{
 
+							//if(i != j)
+							{
 							IloLinearNumExpr expr1 = cplex.linearNumExpr();
-							String k1 = i+","+j;
-							
 
+							String k1 = j+","+i;
 							int id1 = edgeids.get(k1);
 							
+							expr1.addTerm(1.0, x_kijm[a][j][i][m]);
+							expr1.addTerm(-1.0, e_tem[a][id1][m]);
+							cplex.addLe(expr1, 0);
+							}
 
-
-							expr1.addTerm(1.0, e_tem[a][id1][k]);
-							
 						}
 
 					}
 
-					
 				}
 			}
-			*/
+			
+			
+			for(int a=0; a<2; a++)
+			{
+
+				for(int m=0; m<(M); m++)
+				{
+
+					for(int i=0; i<n; i++)
+					{
+
+						for(int j=0; j<n; j++)
+						{
+
+							//if(i != j)
+							{
+							IloLinearNumExpr expr1 = cplex.linearNumExpr();
+
+							String k1 = i+","+j;
+							int id1 = edgeids.get(k1);
+							
+							expr1.addTerm(1.0, x_kijm[a][i][j][m]);
+							expr1.addTerm(-1.0, e_tem[a][id1][m]);
+							
+							
+							
+							cplex.addGe(expr1, 0);
+							}
+
+						}
+
+					}
+
+				}
+			}*/
+
+			
+			
+			
+			
+			
+			
+
+			
+			
+			
+			
+		/*	
 			
 			// player a
-			/*for(int a=0; a<2; a++)
+			for(int a=0; a<2; a++)
 			{
 				// node i
 				for(int i=0; i<n; i++)
@@ -2983,33 +3152,58 @@ public class Solver {
 
 				}
 			}
-			*/
 			
-			/*for(int a=0; a<2; a++)
+			*/
+	
+			
+			
+			
+			
+
+			
+			
+			/*
+			for(int a=0; a<2; a++)
 			{
 				for(int m=0; m<M; m++)
 				{
+					
 					IloLinearNumExpr expr1 = cplex.linearNumExpr();
-
 					for(int i=0; i<n; i++)
 					{
-
-
+						
 						for(int j=0; j<n; j++)
 						{
-
-
 							expr1.addTerm(1.0, x_kijm[a][i][j][m]);
 						}
-
-
-
+						
 					}
-
-					cplex.addGe(expr1, 1);
+					cplex.addLe(expr1, 1);
+					
 				}
 			}
-			*/
+			
+			
+			for(int a=0; a<2; a++)
+			{
+				for(int m=0; m<M; m++)
+				{
+					
+					IloLinearNumExpr expr1 = cplex.linearNumExpr();
+					for(int i=0; i<n; i++)
+					{
+						
+						for(int j=0; j<n; j++)
+						{
+							expr1.addTerm(1.0, x_kijm[a][i][j][m]);
+						}
+						
+					}
+					cplex.addGe(expr1, 0);
+					
+				}
+			}*/
+			
 			
 			
 
@@ -3075,6 +3269,62 @@ public class Solver {
 
 
 
+			
+			/*
+			
+			for(int a=0; a<2; a++)
+			{
+
+
+				int k = 0;
+				IloLinearNumExpr expr2 = cplex.linearNumExpr();
+
+				for(int i=0; i<n; i++)
+				{
+					for(int j=0; j<n; j++)
+					{
+
+						if(i==start)
+						{
+							String k1 = i+","+j;
+							int id1 = edgeids.get(k1);
+							expr2.addTerm(1.0, x_kijm[a][i][j][k]);
+						}
+					}
+				}
+
+				cplex.addEq(expr2, 1);
+
+			}*/
+
+
+			/*for(int a=0; a<2; a++)
+			{
+				int k = M-1;
+
+				
+				IloLinearNumExpr expr2 = cplex.linearNumExpr();
+
+
+				for(int i=0; i<n; i++)
+				{
+					for(int j=0; j<n; j++)
+					{
+
+						if(j==goals.get(a))
+						{
+							String k1 = i+","+j;
+							int id1 = edgeids.get(k1);
+							expr2.addTerm(1.0, x_kijm[a][i][j][k]);
+							//expr2.addTerm(1.0, e_tem[a][id1][k]);
+						}
+					}
+				}
+
+				cplex.addEq(expr2, 1);
+
+			}
+*/
 
 
 
@@ -3208,26 +3458,33 @@ public class Solver {
 			/*for(int a=0; a<2; a++)
 			{
 
-				for(int i=0; i<n; i++)
+				for(int m=0; m<M; m++)
 				{
-
-					res = new ArrayList<double[]>();
-
-					for(int j=0; j<n; j++)
+					for(int i=0; i<n; i++)
 					{
-						
-						for(int m=0; m<M; m++)
+
+						res = new ArrayList<double[]>();
+
+						for(int j=0; j<n; j++)
 						{
 
-						if(cplex.getValue(x_kijm[a][i][j][m])>0)
-						{
-
-							System.out.print("x_kij["+a+"]["+i+"]["+j+"]["+m+"]="+cplex.getValue(x_kijm[a][i][j][m])+ " ");
-							//cplex.getValue(x[i]);
 
 
+							if(cplex.getValue(x_kijm[a][i][j][m])>0)
+							{
 
-						}
+								String k1 = i +","+j;
+								int id1 =  edgeids.get(k1);
+								//System.out.println("key: "+ k1);
+								//System.out.println("["+ id1 + "]["+ m + "] = 1");
+
+
+								System.out.print("x_kij["+a+"]["+i+"]["+j+"]["+m+"]="+cplex.getValue(x_kijm[a][i][j][m])+ " ");
+								//cplex.getValue(x[i]);
+
+
+
+							}
 						}
 
 					}
@@ -3235,7 +3492,7 @@ public class Solver {
 				}
 				System.out.println();
 			}
-			*/
+*/
 			
 			
 			if(res.size()>0)
@@ -3267,6 +3524,1038 @@ public class Solver {
 
 
 	}
+	
+	
+	
+	public static ArrayList<ArrayList<double[]>> solveDummy3(int[][][] w, int start, ArrayList<Integer> goals, int e,
+			int nattakers, int[][][][] hpdeploymentcosts, int totalconf, double[] priors) {
+
+		int[] mincost = {5, 5};
+
+		int n= 11;
+
+		//int L = 3;
+
+		int p[][] = new int[n][n];
+
+		int M = 5;
+
+
+		goals.clear();
+
+
+		goals.add(10);
+		goals.add(9);
+
+
+
+
+		for(int i=0; i<n; i++)
+		{
+			for(int j=0; j<n; j++)
+			{
+				p[i][j] = 100;
+			}
+		}
+
+
+
+
+		p[0][2] = 1;
+		p[2][4] = 1;
+		p[4][6] = 1;
+		p[6][8] = 1;
+		p[8][10] = 1;
+		p[10][10] = 0;
+
+
+		/*p[0][1] = 1;
+		p[1][3] = 1;
+		p[3][4] = 1;*/
+
+
+		p[0][1] = 1;
+		p[1][3] = 1;
+		p[3][5] = 1;
+		p[5][7] = 1;
+		p[7][9] = 1;
+		p[9][9] = 0;
+
+
+
+
+
+		HashMap<String, Integer> edgeids = new HashMap<String, Integer>();
+		//HashMap<Integer, String> edgebackids = new HashMap<Integer, String>();
+		//HashMap<Integer, Integer> edgecost = new HashMap<Integer, Integer>();
+
+		int count = 0;
+
+		for(int i=0; i<n; i++)
+		{
+			for(int j=0; j<n; j++)
+			{
+				//if(i != j)
+				{
+
+					String key = i+","+j;
+
+					edgeids.put(key, count);
+					//edgebackids.put(count, key);
+					count++;
+					//edgecost.put(count++, p[i][j]);
+				}
+			}
+		}
+		
+		
+		
+		for(int i=0; i<n; i++)
+		{
+			for(int j=0; j<n; j++)
+			{
+				//if(i != j)
+				{
+
+					String key = i+","+j;
+
+					System.out.println("key "+ key+ ": "+ edgeids.get(key));
+				}
+			}
+		}
+
+
+
+		//double M = 1000.0;
+
+
+
+		try
+		{
+
+
+
+
+			IloCplex cplex = new IloCplex();
+
+
+
+
+			/**
+			 * objective: max d 
+
+			d: length of maximum overlapping path between any pair of attacker types
+			d_ij: length of overlap between i and j 
+
+			constraint: d >= d_ij  for all ij
+
+			d_ijm: binary variable representing whether the paths of i and j overlap up to and including move m (note that this is on vector for each pair) 
+			e_tm: binary variable representing whether or not type t takes this edge on turn m (one for each type, assuming we have a bound on # of moves) 
+
+			constraint: d_ijm < e_tm for all m, ij (i.e., this can only be set to 1 if both types i and j make this move) 
+			constraint: e_tm <= e_t(m-1) for all t,m  (i.e., once this is set to zero it must always be 0 going forward)  
+
+
+
+
+
+			 */
+
+			int Z = 10000;
+
+
+			IloNumVar d = cplex.numVar(0, Double.MAX_VALUE);
+
+
+			IloNumVar[][] d_ij = new IloNumVar[2][2];
+
+
+			for(int a1=0; a1<2; a1++)
+			{
+				for(int a2=0; a2<2; a2++)
+				{
+					d_ij[a1][a2] = cplex.numVar(0, Double.MAX_VALUE);
+				}
+			}
+
+
+			IloNumVar[][][][] x_kijm = new IloNumVar[2][n][n][M];
+
+
+			for(int a1=0; a1<2; a1++)
+			{
+				for(int a2=0; a2<n; a2++)
+				{
+					for(int a3=0; a3<n; a3++)
+					{
+						for(int a4=0; a4<M; a4++)
+						{
+							x_kijm[a1][a2][a3][a4] = cplex.boolVar();
+						}
+					}
+				}
+			}
+
+
+
+			
+			IloNumVar[][][][][] d_ijmuv = new IloNumVar[2][2][M][n][n];
+
+
+			for(int a1=0; a1<2; a1++)
+			{
+				for(int a2=0; a2<2; a2++)
+				{
+					for(int m=0; m<M; m++)
+					{
+
+						for(int i=0; i<n; i++)
+						{
+
+							for(int j=0; j<n; j++)
+							{
+								d_ijmuv[a1][a2][m][i][j] = cplex.boolVar();
+							}
+						}
+					}
+				}
+			}
+
+
+
+
+
+
+
+
+
+
+			/*
+
+
+			IloNumVar b[] = new IloNumVar[2];
+
+			for(int a=0; a<2; a++)
+			{
+				b[a] = 	cplex.numVar(-1000, 1000);
+			}
+			 */
+
+
+
+			/**
+			 * 
+			 * d: length of maximum overlapping path between any pair of attacker types
+			 * d_ij: length of overlap between i and j 
+			 * d_ijm: binary variable representing whether the paths of i and j overlap up to and 
+			 * including move m (note that this is on vector for each pair) 
+			 * e_tem: binary variable representing whether or not type t takes edge e on 
+			 * turn m (one for each type, assuming we have a bound on # of moves) 
+			 * 
+			 * 
+			 * 
+			 */
+
+
+			/**
+			 * obj max d
+			 */
+
+
+			IloLinearNumExpr obj = cplex.linearNumExpr();
+
+
+			for(int a1=0; a1<2; a1++)
+			{
+				for(int a2=0; a2<2; a2++)
+				{
+					if(a1 != a2)
+					{
+
+						obj.addTerm(1, d_ij[a1][a2]);
+
+
+					}
+				}
+			}
+
+
+			cplex.addMaximize(obj);
+
+
+
+
+
+
+			/**
+			 * constraint 3
+			 */
+
+
+			IloLinearNumExpr ex = cplex.linearNumExpr();
+
+
+			ex.addTerm(1, d);
+
+			for(int a1=0; a1<2; a1++)
+			{
+				for(int a2=0; a2<2; a2++)
+				{
+					if(a1 != a2)
+					{
+
+						ex.addTerm(-1, d_ij[a1][a2]);
+
+
+
+					}
+				}
+			}
+
+			cplex.addEq(ex, 0);
+
+
+
+
+
+
+			/**
+			 * 
+			 * constraint  4 dij >= sum_m  dijm for all ij 
+			 * 
+			 * The idea is that the vector d_ijm is 1 only for the initial edges (moves) that 
+			 * are the same for types i and j. So the length of the overlap is the the sum of this vector. 
+			 * 
+			 *  
+			 *  for all i
+			 *  	for all j
+			 *  		dij = sum_m  dijme 
+			 *  
+			 *  
+			 */
+
+
+
+
+			for(int a1=0; a1<2; a1++)
+			{
+				for(int a2=0; a2<2; a2++)
+				{
+					if(a1 != a2)
+					{
+						IloLinearNumExpr expr = cplex.linearNumExpr();
+
+						expr.addTerm(1, d_ij[a1][a2]);
+						for(int k=0; k<M; k++)
+						{
+							for(int i=0; i<n; i++)
+							{
+								for(int j=0; j<n; j++)
+								{
+									expr.addTerm(-1, d_ijmuv[a1][a2][k][i][j]);
+								}
+							}
+						}
+
+
+						cplex.addEq(expr, 0);
+
+
+					}
+
+				}
+			}
+
+
+
+
+
+			/**
+			 * 
+			 * 
+			 * d: length of maximum overlapping path between any pair of attacker types
+			 * d_ij: length of overlap between i and j 
+			 * d_ijm: binary variable representing whether the paths of i and j overlap up to and 
+			 * including move m (note that this is on vector for each pair) 
+			 * e_tem: binary variable representing whether or not type t takes edge e on 
+			 * turn m (one for each type, assuming we have a bound on # of moves) 
+			 * 
+			 * 
+			 * obj max d
+			 * 
+			 * 
+			 * constraint: d >= d_ij  for all ij
+			 * 
+			 * 
+			 * for all i
+			 * 	for all j 
+			 * 		d >= d_ij	
+			 * 
+			 * 
+			 * 
+			 * constraint: dij >= sum_m  dijm for all ij 
+			 * 
+			 * The idea is that the vector d_ijm is 1 only for the initial edges (moves) that 
+			 * are the same for types i and j. So the length of the overlap is the the sum of this vector. 
+			 * 
+			 *  
+			 *  for all i
+			 *  	for all j
+			 *  		dij >= sum_m  dijm 
+			 * 
+			 * 
+			 * 
+			 * 
+			 * constraint: d_ijm < e_tm for all m, ij
+			 * (i.e., this can only be set to 1 if both types i and j make this move)
+			 * 
+			 * 
+			 * y = x1 AND x2 can be written as the following constraints
+			 * 
+			 * 
+			 * y >= x1 + x2 -1 
+			 * y <= x1
+			 * y <= x2
+			 * 0 <= y <= 1
+			 * 
+			 * 
+			 * So wrote the constraints as 
+			 * 
+			 * constraint d_ijm >= e_tem + e_tem - 1
+			 * 
+			 * 
+			 * e is the edge identifier
+			 * 
+			 * for all m
+			 *   for all i
+			 *      for all j
+			 *         for all e
+			 *             d_ijm >= e_tem + e_t'em - 1
+			 * 
+			 * 
+			 * 
+			 * constraint d_ijm <= e_tem
+			 * 
+			 * for all m
+			 *   for all i
+			 *      for all j
+			 *         for all e
+			 *             d_ijm <= e_tem
+			 * 
+			 * 
+			 * constraint 0 <= d_ijm <= 1
+			 * 
+			 * 
+			 * d_ijm <= 1
+			 * 
+			 * for all i
+			 * 	 for all j
+			 *      for all m
+			 *           d_ijm <= 1
+			 *           
+			 *           
+			 *for all i
+			 * 	 for all j
+			 *      for all m
+			 *           d_ijm >= 0     
+			 *           
+			 *                 
+			 *     
+			 *                 
+			 *constraint: d_ijm <= d_ij(m-1) for all t,e,m  (i.e., once this is set to zero it must always be 0 going forward)                 
+			 *                 
+			 * for all i
+			 * 	 for all e
+			 *      for all m   
+			 *          e_iem <= e_ie(m-1)    
+			 *          
+			 *                   
+			 *constraint 
+			 *
+			 *for all type i
+			 *  sum_em e_iem*w_iem <= mincost  
+			 *  
+			 *                   
+			 * and other path flow constraints                  
+			 *           
+			 */
+
+
+
+
+
+
+			//constraint 5
+
+			/*	for(int a1=0; a1<2; a1++)
+			{
+				for(int a2=0; a2<2; a2++)
+				{
+					if(a1 != a2)
+					{
+						for(int k=0; k<M; k++)
+						{
+							for(int i=0; i<count; i++)
+							{
+
+								IloLinearNumExpr expr = cplex.linearNumExpr();
+
+
+								expr.addTerm(1, d_ijme[a1][a2][k][i]);
+
+								expr.addTerm(-1, e_tem[a1][i][k]);
+
+								expr.addTerm(-1, e_tem[a2][i][k]);
+
+								cplex.addGe(expr, -1);
+
+							}
+
+						}
+					}
+				}
+			}
+
+			 */
+
+
+
+
+			/**
+			 * d_ijme <= e_tem
+			 */
+
+			for(int k=0; k<M; k++)
+			{
+
+				for(int a1=0; a1<2; a1++)
+				{
+					for(int a2=0; a2<2; a2++)
+					{
+						if(a1 != a2)
+						{
+							for(int i=0; i<n; i++)
+							{
+
+								for(int j=0; j<n; j++)
+								{
+
+
+
+									IloLinearNumExpr expr2 = cplex.linearNumExpr();
+									expr2.addTerm(1, d_ijmuv[a1][a2][k][i][j]);
+
+									expr2.addTerm(-1, x_kijm[a1][i][j][k]);
+
+									//cplex.addLe(expr2, 0);
+
+
+
+									IloLinearNumExpr expr3 = cplex.linearNumExpr();
+									expr3.addTerm(1, d_ijmuv[a1][a2][k][i][j]);
+
+									expr3.addTerm(-1, x_kijm[a2][i][j][k]);
+
+									//cplex.addLe(expr3, 0);
+
+
+								}
+
+
+
+
+
+							}
+
+
+
+						}
+					}
+				}
+			}
+
+
+
+
+
+
+
+
+
+
+
+			/**
+			 * d_ijm >= 0
+			 * 
+			 * for all i
+			 * 	 for all j
+			 *      for all m
+			 *           d_ijm >= 0
+			 * 
+			 */
+
+			
+
+
+
+			/**
+			 * constraint: d_ijme <= d_ij(m-1)e for all t,m  (i.e., once this is set to zero it must always be 0 going forward)
+			 */
+			for(int a1=0; a1<2; a1++)
+			{
+
+				for(int a2=0; a2<2; a2++)
+				{
+
+					if(a1 != a2)
+					{
+
+						for(int m=1; m<M; m++)
+						{
+
+							IloLinearNumExpr expr = cplex.linearNumExpr();
+							for(int i=0; i<n; i++)
+							{
+
+								for(int j=0; j<n; j++)
+								{
+
+
+									expr.addTerm(1, d_ijmuv[a1][a2][m][i][j]);
+									expr.addTerm(-1, d_ijmuv[a1][a2][m-1][i][j]);
+
+								}
+
+							}
+							cplex.addLe(expr, 0);
+
+
+
+						}
+
+					}
+
+				}
+
+			}
+
+
+
+
+
+			
+
+
+
+			/**
+			 * manually set up the e_tem variable
+			 */
+
+
+			/*for(int a=0; a<2; a++)
+			{
+
+				for(int k=0; k<M; k++)
+				{
+
+					for(int i=0; i<count; i++)
+					{
+						IloLinearNumExpr expr = cplex.linearNumExpr();
+
+						if(a==0 && k==0 && i==1)
+						{
+							expr.addTerm(1, e_tem[a][i][k]);
+							cplex.addEq(expr, 1);
+
+						}
+						else if(a==0 && k==1 && i==8)
+						{
+							expr.addTerm(1, e_tem[a][i][k]);
+							cplex.addEq(expr, 1);
+						}
+						else if(a==0 && k==2 && i==16)
+						{
+							expr.addTerm(1, e_tem[a][i][k]);
+							cplex.addEq(expr, 1);
+						}
+						else if(a==1 && k==0 && i==1)
+						{
+							expr.addTerm(1, e_tem[a][i][k]);
+							cplex.addEq(expr, 1);
+
+						}
+						else if(a==1 && k==1 && i==8)
+						{
+							expr.addTerm(1, e_tem[a][i][k]);
+							cplex.addEq(expr, 1);
+						}
+						else if(a==1 && k==2 && i==17)
+						{
+							expr.addTerm(1, e_tem[a][i][k]);
+							cplex.addEq(expr, 1);
+						}
+						else
+						{
+							expr.addTerm(1, e_tem[a][i][k]);
+							cplex.addEq(expr, 0);
+						}
+
+
+
+
+
+
+					}
+				}
+			}
+			 */
+
+
+			/**
+			 * for all type i
+			 * 	  sum_em e_iem*w_iem <= mincost
+			 *        
+			 */
+
+
+
+			
+			
+			for(int a=0; a<2; a++)
+			{
+				IloLinearNumExpr expr = cplex.linearNumExpr();
+				for(int i=0; i<n; i++)
+				{
+					for(int j=0; j<n; j++)
+					{
+						
+						for(int m=0; m<M; m++)
+						{
+						
+							expr.addTerm(p[i][j], x_kijm[a][i][j][m]);
+							
+						}
+					}
+
+				}
+
+
+				cplex.addLe(expr, mincost[a]);
+
+			}
+			
+			
+			for(int a=0; a<2; a++)
+			{
+				IloLinearNumExpr expr = cplex.linearNumExpr();
+				for(int i=0; i<n; i++)
+				{
+					for(int j=0; j<n; j++)
+					{
+						for(int m=0; m<M; m++)
+						{
+						
+						expr.addTerm(p[i][j], x_kijm[a][i][j][m]);
+						}
+					}
+
+				}
+
+
+				cplex.addGe(expr,0);
+
+			}
+
+			
+			
+			
+
+			
+			
+			
+			
+			
+			
+			
+			
+
+			
+			
+			
+			
+			
+			
+			// player a
+			for(int a=0; a<2; a++)
+			{
+				// node i
+				for(int i=0; i<n; i++)
+				{
+					IloLinearNumExpr expr1 = cplex.linearNumExpr();
+					// step m1
+					for(int m1=0; m1<M; m1++)
+					{
+						// ndoe j
+						for(int j=0; j<n; j++)
+						{
+							expr1.addTerm(1.0, x_kijm[a][i][j][m1]);
+
+						}
+					}
+
+					for(int m2=0; m2<M; m2++)
+					{
+						// ndoe j
+						for(int j=0; j<n; j++)
+						{
+							expr1.addTerm(-1.0, x_kijm[a][j][i][m2]);
+
+						}
+
+					}
+
+
+					if(start == i )
+					{
+						cplex.addEq(expr1, 1.0);
+					}
+					else if(goals.get(a) == i )
+					{
+						cplex.addEq(expr1, -1.0);
+					}
+					else 
+					{
+						cplex.addEq(expr1, 0.0);
+					}
+
+
+
+				}
+			}
+			
+			
+			for(int a=0; a<2; a++)
+			{
+				for(int m=0; m<M; m++)
+				{
+					IloLinearNumExpr expr1 = cplex.linearNumExpr();
+
+					for(int i=0; i<n; i++)
+					{
+						for(int j=0; j<n; j++)
+						{
+							expr1.addTerm(1.0, x_kijm[a][i][j][m]);
+						}
+					}
+					cplex.addEq(expr1, 1);
+				}
+			}
+			
+			
+			
+			for(int a=0; a<2; a++)
+			{
+
+
+				int k = 0;
+				IloLinearNumExpr expr2 = cplex.linearNumExpr();
+
+				for(int i=0; i<n; i++)
+				{
+					for(int j=0; j<n; j++)
+					{
+
+						if(i==start)
+						{
+							
+							expr2.addTerm(1.0, x_kijm[a][i][j][k]);
+						}
+					}
+				}
+
+				cplex.addEq(expr2, 1);
+
+			}
+
+
+			for(int a=0; a<2; a++)
+			{
+				int k = M-1;
+				
+				IloLinearNumExpr expr2 = cplex.linearNumExpr();
+				for(int i=0; i<n; i++)
+				{
+					for(int j=0; j<n; j++)
+					{
+
+						if(j==goals.get(a))
+						{
+							
+							expr2.addTerm(1.0, x_kijm[a][i][j][k]);
+						}
+					}
+				}
+
+				cplex.addEq(expr2, 1);
+
+			}
+			
+			
+			
+
+			
+
+
+
+
+
+
+
+			cplex.solve();
+
+			double ob = cplex.getObjValue();
+
+			System.out.println(" obj: "+ ob+"\n");
+
+
+
+			ArrayList<double[]> res = new ArrayList<double[]>();
+
+			ArrayList<ArrayList<double[]>> results = new ArrayList<ArrayList<double[]>>();
+
+
+
+			for(int a1=0; a1<2; a1++)
+			{
+				for(int a2=0; a2<2; a2++)
+				{
+					if(a1 != a2)
+					{
+						if(cplex.getValue(d_ij[a1][a2])>=0)
+						{
+							System.out.println("d_ij["+a1+"]["+a2+"] = "+cplex.getValue(d_ij[a1][a2]));
+						}
+
+					}
+				}
+			}
+
+			System.out.println();
+
+
+			
+
+			System.out.println();
+
+
+			for(int a1=0; a1<2; a1++)
+			{
+				for(int a2=0; a2<2; a2++)
+				{
+					if(a1 != a2)
+					{
+
+						for(int m=0; m<M; m++)
+						{
+							for(int i=0; i<n; i++)
+							{
+
+								for(int j=0; j<n; j++)
+								{
+
+									if(cplex.getValue(d_ijmuv[a1][a2][m][i][j])>0)
+									{
+										System.out.println("d_ijmuv["+a1+"]["+a2+"]["+m+"]["+i+"]["+j+"] = "+cplex.getValue(d_ijmuv[a1][a2][m][i][j]));
+									}
+								}
+							}
+							System.out.println();
+
+						}
+					}
+				}
+			}
+
+
+
+			System.out.println();
+
+
+
+
+			
+			
+
+			for(int a=0; a<2; a++)
+			{
+
+				for(int m=0; m<M; m++)
+				{
+					for(int i=0; i<n; i++)
+					{
+
+						res = new ArrayList<double[]>();
+
+						for(int j=0; j<n; j++)
+						{
+
+
+
+							if(cplex.getValue(x_kijm[a][i][j][m])>0)
+							{
+
+								String k1 = i +","+j;
+								int id1 =  edgeids.get(k1);
+								//System.out.println("key: "+ k1);
+								//System.out.println("["+ id1 + "]["+ m + "] = 1");
+
+
+								System.out.print("x_kij["+a+"]["+i+"]["+j+"]["+m+"]="+cplex.getValue(x_kijm[a][i][j][m])+ " ");
+								//cplex.getValue(x[i]);
+
+
+
+							}
+						}
+
+					}
+					System.out.println();
+				}
+				System.out.println();
+			}
+
+			
+			
+			if(res.size()>0)
+			{
+				results.add(res);
+			}
+
+
+
+
+			return results;
+
+
+
+
+
+
+
+
+		}
+		catch(Exception ex)
+		{
+
+		}
+
+
+
+		return null;
+
+
+	}
+
 
 
 
