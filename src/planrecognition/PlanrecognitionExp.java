@@ -170,6 +170,144 @@ public class PlanrecognitionExp {
 	}
 	
 	
+	public static void doFixedPolicyWithDefenseMILP(boolean withdefense, int chosenattacker, int chosenpolicy, boolean minentropy, 
+			boolean maxoverlap, boolean expoverlap, boolean mincost, boolean mincommonoverlap, boolean honeyedge) throws Exception {
+
+
+
+
+		
+		boolean samevalhp = false;
+		boolean allexphp = true; // if false, this can lead to blocking action, attacker might not have any policy...
+		
+		
+		
+		//int[] goals = {10, 11};
+		int nattackers = 3;
+		int startnode = 0;
+		int nnodes = 16;
+		int nhoneypots = 3;
+		int hpdeploylimit = 2;
+		int hpv = 8;
+		int hpc = 2;
+		boolean pickfromnet = true;
+		
+		
+
+		int nexploits = 5;
+
+		
+
+		boolean singlegoal = true;
+		boolean singlepath = false;
+		int startnodeid = 0;
+		int npath = 1;
+
+
+		HashMap<Integer, Node> net = new HashMap<Integer, Node>();
+		HashMap<Integer, Exploits> exploits = new HashMap<Integer, Exploits>();
+		HashMap<Integer, Attacker> attackers = new HashMap<Integer, Attacker>();
+
+
+		HashMap<Integer, Node> honeypots = new HashMap<Integer, Node>();
+
+
+		//Network.constructNetwork(net, exploits, nnodes, nexploits);
+		
+		
+		
+		
+		int[] goals = new int[nattackers];
+		
+		for(int i=0; i<nattackers; i++)
+		{
+			goals[i] = nnodes - nattackers + i;
+		}
+		
+		//Network.constructNetwork23(net, exploits, nnodes, nexploits);
+		
+		Network.constructNetwork16(net, exploits, nnodes, nexploits);
+		
+		
+		//Network.constructNetwork10(net, exploits, nnodes, nexploits);
+		
+		//Network.constructNetwork10V2(net, exploits, nnodes, nexploits);
+
+		System.out.println("Attacker construction... \ndone");
+
+		PlanRecognition.printNetwork(net);
+		System.out.println();
+		
+		//PlanRecognition.printNetwork(net);
+		
+		
+		
+		/**
+		 * construct honeypots from real node configurations
+		 * Imagine that attacker is naive
+		 */
+		
+		if(!honeyedge)
+		{
+			Network.constructHoneyPots(honeypots, exploits, nhoneypots, nnodes, hpv, hpc, samevalhp, allexphp, net, pickfromnet, goals);
+		}
+		
+		
+		System.out.println("*****************Honeypots******************");
+		PlanRecognition.printNetwork(honeypots);
+		//PlanRecognition.printNetwork(honeypots);
+		
+		//testSolver(net, exploits, honeypots, chosenattacker, goals, nattackers);
+
+		//System.out.println("Network construction... \ndone");
+		
+		
+		
+		
+		
+
+
+		if(singlegoal)
+		{
+			
+			
+			
+			PlanRecognition.constructAttackersMILP(startnodeid ,attackers, net, exploits, singlepath, npath, chosenattacker, maxoverlap, expoverlap, nattackers, goals, honeypots);
+
+			//PlanRecognition.constructAttackers(startnodeid ,attackers, net, exploits, singlepath, npath, chosenattacker, maxoverlap, expoverlap, nattackers, goals);
+			
+			
+			//PlanRecognition.constructAttackersSingleGoal(startnodeid ,attackers, net, exploits, singlepath, npath, chosenattacker, maxoverlap, expoverlap);
+		}
+		else
+		{
+			PlanRecognition.constructAttackersMultGoal(attackers, net, exploits, singlepath, npath);
+		}
+
+
+
+
+		
+
+		//HashMap<Integer, HashMap<Integer, HashMap<Integer, Integer>>> policylib = new HashMap<Integer, HashMap<Integer, HashMap<Integer, Integer>>>();
+
+		//constructPolicyLib();
+		
+		
+
+		
+		
+		PlanRecognition.playGameWithNaiveDefense(chosenattacker, chosenpolicy, net, exploits, attackers, goals, 
+				honeypots, hpdeploylimit, singlepath, npath, startnode, withdefense, minentropy, mincommonoverlap, maxoverlap, expoverlap, mincost, honeyedge);
+
+
+
+
+
+	}
+	
+	
+	
 private static void testSolver(HashMap<Integer,Node> net, HashMap<Integer,Exploits> exploits, HashMap<Integer,Node> honeypots, int chosenattacker, int[] goals2, int nattackers) throws Exception {
 		
 	
@@ -456,10 +594,10 @@ private static void testSolver(HashMap<Integer,Node> net, HashMap<Integer,Exploi
 	long milptotalTime = endTime - startTime;
 	
 	
-	double[] milpconf = printSolutionM(paths);
+	//printSolutionM(paths);
 	
 	
-	System.out.println("#conf: "+totalconf);
+	/*System.out.println("#conf: "+totalconf);
 	
 	System.out.println("BFS conf: "+bfsconf[0]);
 	System.out.println("MILP conf: "+milpconf[0]);
@@ -473,7 +611,7 @@ private static void testSolver(HashMap<Integer,Node> net, HashMap<Integer,Exploi
 	
 	System.out.println("BFS runtime: "+bfstotalTime);
 	System.out.println("MILP runtime: "+milptotalTime);
-	
+	*/
 	
 	
 	
@@ -486,16 +624,19 @@ private static void testSolver(HashMap<Integer,Node> net, HashMap<Integer,Exploi
 	}
 
 
-private static double[] printSolutionM(ArrayList<ArrayList<double[]>> paths) {
+public static void printSolutionM(ArrayList<ArrayList<double[]>> paths, ArrayList<Integer> g) {
 	
 	
-	 double[] winnerconf = {-1.0, -1.0};
+	// double[] winnerconf = {-1.0, -1.0};
 	 
 		 for(ArrayList<double[]> path: paths)
 		 {
 			 
 			 System.out.println("****attacker "+ paths.indexOf(path)+"*****");
 
+			 
+			 int att = paths.indexOf(path);
+			 
 			 if(path==null)
 			 {
 				 System.out.println("Didn't find any solution");
@@ -509,14 +650,19 @@ private static double[] printSolutionM(ArrayList<ArrayList<double[]>> paths) {
 				 String ex = String.valueOf(a[2]);*/
 
 
-					 System.out.println(a[0] +"->"+ a[1] +"("+a[2]+")" + "("+a[3]+")");
+					 System.out.println(a[0] +"->"+ a[1] +"("+a[2]+")");
+					 
+					 if(a[1]==g.get(att))
+					 {
+						 break;
+					 }
 
-					 if(winnerconf[0]==-1)
+					 /*if(winnerconf[0]==-1)
 					 {
 						 winnerconf[0] = a[3];
 						 winnerconf[1] = a[4];
 					 }
-
+*/
 
 
 				 }
@@ -527,7 +673,7 @@ private static double[] printSolutionM(ArrayList<ArrayList<double[]>> paths) {
 		 
 		 System.out.println();
 		 
-		 return winnerconf;
+		// return winnerconf;
 		 
 
 	
@@ -1425,7 +1571,7 @@ private static void buildCostVar(int[][][][] hpdeploymentcost, HashMap<Integer, 
 }
 
 
-private static int[][][] build3DCostMatrix(HashMap<Integer, Node> net, HashMap<String, Integer> nodeexpltmap,
+public static int[][][] build3DCostMatrix(HashMap<Integer, Node> net, HashMap<String, Integer> nodeexpltmap,
 		HashMap<Integer, String> nodeexpltmapback, HashMap<String, Integer> edgecost,
 		HashMap<Integer, Exploits> exploits) {
 	
@@ -1462,7 +1608,7 @@ int[][][] w = new int[net.size()][net.size()][exploits.size()];
 	}
 	
 	
-	System.out.println(w[0][1][1]);
+	//System.out.println(w[0][1][1]);
 	
 	return w;
 }

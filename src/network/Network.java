@@ -320,6 +320,9 @@ public class Network {
 	
 	public static void constructNetwork16(HashMap<Integer,Node> net, HashMap<Integer,Exploits> exploits, int nnodes, int nexploits)
 	{
+		
+		Network.rand = new Random(nnodes);
+		
 		/**
 		 * create 27 nodes
 		 */
@@ -390,12 +393,16 @@ public class Network {
 		/**
 		 * create exploits
 		 */
+		
+		
+		
 		for(int i=0; i<nexploits; i++)
 		{
-			int c = randInt(1,6);
+			
+			int c = randInt(1,nexploits);
 			Exploits e = new Exploits(i, c);
 			exploits.put(i, e);
-			//System.out.println("Exploit id "+ e.id +", c: "+e.cost);
+			System.out.println("Exploit id "+ e.id +", c: "+e.cost);
 
 		}
 

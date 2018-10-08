@@ -14,6 +14,7 @@ import agents.Attacker;
 import network.Exploits;
 import network.Network;
 import network.Node;
+import solver.Solver;
 
 public class PlanRecognition {
 
@@ -7463,29 +7464,31 @@ private static int commonLen(String p1, String p2) {
 			HashMap<Integer,Exploits> exploits, boolean singlepath, int npath, int chosenattacker, boolean maxoverlap, boolean expoverlap, int nattackers, int[] goals) {
 
 		
+		double mincosts[] = new double[nattackers];
+		
 		for(int id=0; id<nattackers; id++)
 		{
 
-			//	int id = 0;
-
-			//int goals[] = {26,23,25,24};
-
-			/*boolean singlepath = false;
-		int npath = 3;*/
-
+			
 			Attacker a0  = new Attacker(id);
-			//a0.goals.put(0, 23);
-			//int gid = net.size()-nattackers+id;
+			
 			a0.goals.put(0, goals[id]);
-			//	a0.goals.put(1, 24);
-			a0.addExploits(new int[] {0,1,2,3});
+			
+			for(Exploits e: exploits.values())
+			{
+				a0.addExploits(new int[] {e.id});
+			}
+			
+			
 			//a0.findFixedPolifyBFS(net, exploits, 23);
 			//a0.findFixedPolifyBFS(net, exploits, 24);
 			//a0.findFixedPolicyMaxRewardMinCost(startnodeid, net, exploits, 23, singlepath, npath);
 
 			//a0.findFixedPolicyShortestPath(startnodeid, net, exploits, 8, singlepath, npath);
 
-			a0.findFixedPolicyMinCost(startnodeid, net, exploits, goals[id], singlepath, npath);
+			double minc = a0.findFixedPolicyMinCost(startnodeid, net, exploits, goals[id], singlepath, npath);
+			
+			mincosts[id] = minc;
 
 
 			//a0.addPolicy(new int[] {0, 1, 5, 7, 2, 1, 1, 1, 26});
@@ -7495,106 +7498,6 @@ private static int commonLen(String p1, String p2) {
 
 
 		}
-		//a0.addPolicy(0, new int[] {0, 2, 5, 10, 16, 21, 26});
-		//a0.addPolicy(1, new int[] {0, 1, 4, 15, 21, 26});
-		//a0.addPolicy(1, new int[] {0, 2, 6, 10, 15, 20, 24});
-
-/*
-
-		Attacker a1  = new Attacker(id++);
-		a1.goals.put(0, 9);
-		//a1.goals.put(1, 24);
-		//a1.goals.put(1, 25);
-		a1.addExploits(new int[] {0,1,2,3});
-		//a1.findFixedPolifyBFS(net, exploits, 23, singlepath, npath);
-		//a1.findFixedPolicyMaxRewardMinCost(startnodeid, net, exploits, 24, singlepath, npath);
-		
-		//a1.findFixedPolicyShortestPath(startnodeid, net, exploits, 9, singlepath, npath);
-		
-		a1.findFixedPolicyMinCost(startnodeid, net, exploits, 9, singlepath, npath);
-		
-		//a1.addPolicy(new int[] {0, 1, 5, 7, 2, 1, 1, 1, 23});
-		//a1.addPolicy(new int[] {0, 1, 5, 4, 1, 1, 23});
-		a1.removeDuplicatePolicies();
-		
-		 * a1.findFixedPolifyBFS(net, exploits, 24);
-		a1.findFixedPolifyBFS(net, exploits, 25);
-		//a1.addPolicy(0, new int[] {0, 1, 3, 8, 14, 19, 23});
-		//a1.addPolicy(1, new int[] {0, 2, 5, 14, 20, 25});
-
-		Attacker a2  = new Attacker(id++);
-		//a2.goals.put(0, 23);
-		a2.goals.put(0, 10);
-		//a2.goals.put(2, 25);
-		//a2.goals.put(3, 26);
-
-		a2.addExploits(new int[] {0, 1,2,3});
-		//a2.findFixedPolifyBFS(net, exploits, 24, singlepath, npath);
-		//a2.findFixedPolicyMaxRewardMinCost(startnodeid, net, exploits, 25, singlepath, npath);
-		a2.findFixedPolicyMinCost(startnodeid, net, exploits, 10, singlepath, npath);
-		
-		
-		//a2.addPolicy(new int[] {0, 1, 7, 2, 1, 1, 24});
-		//a2.addPolicy(new int[] {0, 1, 5, 7, 2, 1, 1, 1, 24});
-		a2.removeDuplicatePolicies();
-		//a2.findFixedPolifyBFS(net, exploits, 25);
-		//a2.findFixedPolifyBFS(net, exploits, 26);
-
-		//a2.addPolicy(0, new int[] {0, 1, 3, 7, 13, 18, 23});
-		//a2.addPolicy(0, new int[] {0, 2, 5, 14, 20, 24});
-		//a2.addPolicy(2, new int[] {0, 2, 5, 10, 15, 20, 25});
-		//a2.addPolicy(3, new int[] {0, 2, 6, 10, 16, 21, 26});
-
-
-		Attacker a3  = new Attacker(id++);
-		a3.goals.put(0, 26);
-		//a3.goals.put(1, 24);
-		a3.addExploits(new int[] {0, 1,2,3,4,5,6,7});
-		//a3.findFixedPolifyBFS(net, exploits, 23);
-		//a3.findFixedPolifyBFS(net, exploits, 24);
-		//a3.findFixedPolifyBFS(net, exploits, 25, singlepath, npath);
-		//a3.findFixedPolicyMaxRewardMinCost(startnodeid, net, exploits, 26, singlepath, npath);
-		a3.findFixedPolicyShortestPath(startnodeid, net, exploits, 26, singlepath, npath);
-		
-		
-		//a3.addPolicy(new int[] {0, 1, 5, 7, 1, 1, 25});
-		//a3.addPolicy(new int[] {0, 1, 5, 7, 2, 1, 1, 1, 25});
-		a3.removeDuplicatePolicies();
-		//a3.addPolicy(0, new int[] {0, 2, 5, 10, 15, 20, 25});
-
-
-
-
-		Attacker a4  = new Attacker(id++);
-		a4.goals.put(0, 24);
-		a4.goals.put(1, 25);
-		a4.addExploits(new int[] {1, 2});
-		a4.findFixedPolifyBFS(net, exploits, 24);
-		a4.findFixedPolifyBFS(net, exploits, 25);
-
-
-
-		Attacker a5  = new Attacker(id++);
-		//a5.goals.put(0, 23);
-		a5.goals.put(0, 26);
-		a5.addExploits(new int[] {0, 3});
-		//a5.findFixedPolifyBFS(net, exploits, 23);
-		a5.findFixedPolifyBFS(net, exploits, 26);
-
-		//a3.addPolicy(0, new int[] {0, 1, 3, 8, 14, 19, 24});
-		
-		
-		
-		
-
-		attackers.put(a0.id, a0);
-		attackers.put(a1.id, a1);
-		attackers.put(a2.id, a2);
-		}*/
-		//attackers.put(a3.id, a3);
-		
-		
-		//HashMap<Integer,HashMap<Integer,HashMap<Integer,Integer>>> attackpolicies = new HashMap<Integer,HashMap<Integer,HashMap<Integer,Integer>>>();
 		
 		
 		printAttackers(attackers);
@@ -7620,16 +7523,244 @@ private static int commonLen(String p1, String p2) {
 		
 		
 		
-		/*
-		attackers.put(4, a4);
-		attackers.put(5, a5);*/
-
-
-		//return goals;
+		
 
 	}
 	
 	
+	
+	public static void constructAttackersMILP(int startnodeid, HashMap<Integer, Attacker> attackers, HashMap<Integer,Node> net, 
+			HashMap<Integer,Exploits> exploits, boolean singlepath, int npath, int chosenattacker, 
+			boolean maxoverlap, boolean expoverlap, int nattackers, int[] goals, HashMap<Integer,Node> honeypots) {
+
+		
+		int mincosts[] = new int[nattackers];
+		
+		for(int id=0; id<nattackers; id++)
+		{
+
+			
+			Attacker a0  = new Attacker(id);
+			
+			a0.goals.put(0, goals[id]);
+			
+			for(Exploits e: exploits.values())
+			{
+				a0.addExploits(new int[] {e.id});
+			}
+			
+			
+			//a0.findFixedPolifyBFS(net, exploits, 23);
+			//a0.findFixedPolifyBFS(net, exploits, 24);
+			//a0.findFixedPolicyMaxRewardMinCost(startnodeid, net, exploits, 23, singlepath, npath);
+
+			//a0.findFixedPolicyShortestPath(startnodeid, net, exploits, 8, singlepath, npath);
+
+			int minc = (int)a0.findFixedPolicyMinCost(startnodeid, net, exploits, goals[id], singlepath, npath);
+			
+			mincosts[id] = minc;
+
+
+			//a0.addPolicy(new int[] {0, 1, 5, 7, 2, 1, 1, 1, 26});
+			//a0.addPolicy(new int[] {0, 1, 3, 1, 1, 1, 26});
+			a0.removeDuplicatePolicies();
+			attackers.put(a0.id, a0);
+
+
+		}
+		
+		
+		constructAttackerPoliciesMILP(net, exploits, honeypots, chosenattacker, goals, nattackers, mincosts, attackers);
+		
+		
+		printAttackers(attackers);
+		
+		if(maxoverlap && !singlepath)
+		{
+			refinePoliciesInit(attackers, chosenattacker);
+		}
+		else if(expoverlap && !singlepath)
+		{
+			//refinePoliciesInitExpOverlap(attackers, chosenattacker);
+			refinePoliciesInitMaxExpOverlap(attackers, chosenattacker);
+		}
+		
+		
+		
+		printAttackers(attackers);
+		
+		
+		//refinePoliciesMeasure(attackpolicies);
+		
+		System.out.println("here I am ");
+		
+		
+		
+		
+
+	}
+	
+	
+	private static void constructAttackerPoliciesMILP(HashMap<Integer, Node> net, HashMap<Integer, Exploits> exploits,
+			HashMap<Integer, Node> honeypots, int chosenattacker, int[] goals, int nattackers, int[] mincosts, HashMap<Integer,Attacker> attackers) {
+		
+		int n= net.size();
+		int e = exploits.size();
+		
+		
+		/**
+		 * create a map of nodes with exploits to id
+		 */
+		
+		
+		HashMap<String, Integer> nodeexpltmap = new HashMap<String, Integer>();
+		HashMap<Integer, String> nodeexpltmapback = new HashMap<Integer, String>();
+		HashMap<String, Integer> edgecost = new HashMap<String, Integer>();
+		
+		
+		//HashMap<Integer,Node> newnet = new HashMap<Integer,Node>();
+		
+		
+		//int[][] wt = buildCostMatrix(net, nodeexpltmap, nodeexpltmapback, edgecost, exploits);
+		//w[node1][node2][exploits]
+		int [][][] w = PlanrecognitionExp.build3DCostMatrix(net, nodeexpltmap, nodeexpltmapback, edgecost, exploits);
+		
+		int start = 0;
+		
+		
+		/*int[][][][] hpdeploymentcost = new int[totalconf][n+hplimit][n+hplimit][e];
+		
+		
+		
+		
+		
+		
+		buildCostVar(hpdeploymentcost, net, exploits, nattackers, e, w, slotids, hpids, honeypots, placestoallocatehp, hpdeploylimit, freehps, hplimit);
+		
+		*//*totalconf = 50;
+		
+		int cnf = 14;
+		
+		hpdeploymentcost[cnf][1][11][0] = 1;
+		hpdeploymentcost[cnf][11][8][0] = 1;
+		
+		
+		hpdeploymentcost[cnf][1][11][0] = 1;
+		hpdeploymentcost[cnf][11][9][0] = 1;
+		
+		
+		hpdeploymentcost[cnf][1][11][0] = 1;
+		hpdeploymentcost[cnf][11][10][0] = 1;
+		
+		int cnf2 = 12;
+		
+		hpdeploymentcost[cnf2][1][11][0] = 1;
+		hpdeploymentcost[cnf2][11][8][0] = 1;
+		
+		
+		hpdeploymentcost[cnf2][1][11][0] = 1;
+		hpdeploymentcost[cnf2][11][9][0] = 1;
+		
+		
+		hpdeploymentcost[cnf2][1][11][0] = 1;
+		hpdeploymentcost[cnf2][11][10][0] = 1;*/
+		
+		
+		
+		
+		
+		
+		
+		//verifyW(hpdeploymentcost);
+		
+		double[] priors = new double[nattackers];
+		
+		for(int a: attackers.keySet())
+		{
+			priors[a] = 1.0/ nattackers;
+		}
+		
+		
+		long startTime = System.currentTimeMillis();
+		
+		
+		
+		
+		
+		//double[] bfsconf = findMinCostPath(hpdeploymentcost, goals, totalconf, start, chosenattacker, priors);
+		
+		
+		
+		//double[] bfsconf1 = findMaxCostPath(hpdeploymentcost, goals, totalconf, start, chosenattacker, priors);
+		 
+		
+		
+		long endTime   =  System.currentTimeMillis();
+		long bfstotalTime = endTime - startTime;
+		System.out.println("BFS runtime: "+bfstotalTime);
+		
+		
+		
+		// ArrayList<int[]> path = Solver.solve3DCostWithHP(w, start, goal, exploits.size(), nattackers, hpdeploymentcost);
+		 
+		
+		startTime =  System.currentTimeMillis();
+		
+		//ArrayList<ArrayList<double[]>> paths = Solver.solveHPDeploymentMultAttacker(w, start, goals, exploits.size(), nattackers, hpdeploymentcost, totalconf, priors);
+		
+		//ArrayList<ArrayList<double[]>> paths = Solver.solveHPDeploymentMultAttackerCommPath(w, start, goals, exploits.size(), nattackers, hpdeploymentcost, totalconf, priors);
+		
+		
+		ArrayList<Integer> g = new ArrayList<Integer>();
+		
+		for(int a: goals)
+		{
+			g.add(a);
+		}
+		
+		ArrayList<ArrayList<double[]>> paths = Solver.attackerPolicyInItMILP(w, start, g, exploits.size(), nattackers, priors, mincosts, net.size());
+		
+		
+		//ArrayList<ArrayList<double[]>> paths = Solver.solveHPDeploymentMultAttackerWorstCase(w, start, goals, exploits.size(), nattackers, hpdeploymentcost, totalconf, priors);
+		
+		
+		
+		
+		endTime   =  System.currentTimeMillis();
+		long milptotalTime = endTime - startTime;
+		
+		
+		PlanrecognitionExp.printSolutionM(paths, g);
+		
+		
+		/*System.out.println("#conf: "+totalconf);
+		
+		System.out.println("BFS conf: "+bfsconf[0]);
+		System.out.println("MILP conf: "+milpconf[0]);
+		
+		
+		System.out.println("BFS cost: "+bfsconf[1]);
+		System.out.println("MILP cost: "+milpconf[1]);*/
+		
+		
+		
+		
+		System.out.println("BFS runtime: "+bfstotalTime);
+		System.out.println("MILP runtime: "+milptotalTime);
+		
+		
+		
+		
+		
+		//ArrayList<int[]> paths = Solver.solveHPDeploymentSingleAttacker(w, start, goal, exploits.size(), nattakers, hpdeploymentcost, totalconf);
+		 //printSolution(paths);
+		
+		
+	}
+
+
+
+
 	public static void constructAttackersWithExploitsSingleGoal(int startnodeid, HashMap<Integer, Attacker> attackers, HashMap<Integer,Node> net, 
 			HashMap<Integer,Exploits> exploits, boolean singlepath, int npath, int chosenattacker, boolean maxoverlap, boolean expoverlap) {
 
