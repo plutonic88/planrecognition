@@ -273,7 +273,7 @@ public class Attacker {
 					
 					HashMap<Integer, Integer> path = new HashMap<Integer, Integer>();
 					traversePolicy(node, path);
-					System.out.println();
+					//System.out.println();
 					
 					if(singlepath)
 					{
@@ -299,11 +299,11 @@ public class Attacker {
 				{
 					HashMap<Integer, Integer> path = new HashMap<Integer, Integer>();
 					traversePolicy(node, path);
-					System.out.println();
-					if(!this.fixedpolicy.isEmpty())
+					//System.out.println();
+					/*if(!this.fixedpolicy.isEmpty())
 					{
 						//this.fixedpolicy.clear();;
-					}
+					}*/
 					this.fixedpolicy.put(this.fixedpolicy.size(), path);
 				}
 				//break;
@@ -343,6 +343,8 @@ public class Attacker {
 
 
 	}
+	
+	
 	
 	
 	
@@ -856,7 +858,7 @@ public class Attacker {
 					path = new HashMap<Integer, Integer>();
 					traversePolicy(node, path);
 					System.out.println();
-					if(singlepath)
+					//if(singlepath)
 					{
 						paths.clear();
 					}
@@ -932,7 +934,7 @@ public class Attacker {
 
 
 
-	private double minCostExploit(Node start, HashMap<Integer, Integer> attackerexploits, HashMap<Integer,Exploits> allexploits) {
+	public static double minCostExploit(Node start, HashMap<Integer, Integer> attackerexploits, HashMap<Integer,Exploits> allexploits) {
 		
 		double mincost = Double.POSITIVE_INFINITY;
 		

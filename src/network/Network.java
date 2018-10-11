@@ -318,7 +318,7 @@ public class Network {
 	}
 	
 	
-	public static void constructNetwork16(HashMap<Integer,Node> net, HashMap<Integer,Exploits> exploits, int nnodes, int nexploits)
+	public static void constructNetwork13(HashMap<Integer,Node> net, HashMap<Integer,Exploits> exploits, int nnodes, int nexploits)
 	{
 		
 		Network.rand = new Random(nnodes);
@@ -353,23 +353,23 @@ public class Network {
 		net.get(2).addNeighbors(new int[] {3, 4, 5});
 
 		net.get(3).addNeighbors(new int[] {6,7});
-		net.get(4).addNeighbors(new int[] {7,8});
+		net.get(4).addNeighbors(new int[] {6, 7,8,9});
 		net.get(5).addNeighbors(new int[] {8, 9});
 		
 		
 		net.get(6).addNeighbors(new int[] {10, 11});
-		net.get(7).addNeighbors(new int[] {10, 11, 12});
-		net.get(8).addNeighbors(new int[] {10, 11, 12});
+		net.get(7).addNeighbors(new int[] {11});
+		net.get(8).addNeighbors(new int[] {11});
 		net.get(9).addNeighbors(new int[] {11, 12});
 		
 		
-		
-		net.get(10).addNeighbors(new int[] {13, 14});
-		net.get(11).addNeighbors(new int[] {13, 14, 15});
-
-
-
+		net.get(10).addNeighbors(new int[] {13,14});
+		net.get(11).addNeighbors(new int[] {14});
 		net.get(12).addNeighbors(new int[] {14, 15});
+		
+		
+		
+		
 		
 		
 		/*
@@ -399,7 +399,7 @@ public class Network {
 		for(int i=0; i<nexploits; i++)
 		{
 			
-			int c = randInt(1,nexploits);
+			int c = randInt(1,10);
 			Exploits e = new Exploits(i, c);
 			exploits.put(i, e);
 			System.out.println("Exploit id "+ e.id +", c: "+e.cost);
@@ -414,7 +414,8 @@ public class Network {
 		
 		for(int i=0; i<nnodes; i++)
 		{
-			int exlt = randInt(1, exploits.size());
+			int l = exploits.size()/2;
+			int exlt = randInt(1, l);
 			
 			
 			ArrayList<Integer> explts = new ArrayList<Integer>();
@@ -429,6 +430,7 @@ public class Network {
 			int extoadd[] = new int[exlt];
 			for(int e=0; e<exlt; e++)
 			{
+				
 				int pe = randInt(0, explts.size()-1);
 				extoadd[e] = explts.get(pe);
 				explts.remove(pe);

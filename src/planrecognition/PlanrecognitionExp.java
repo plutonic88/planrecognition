@@ -95,7 +95,7 @@ public class PlanrecognitionExp {
 		
 		//Network.constructNetwork23(net, exploits, nnodes, nexploits);
 		
-		Network.constructNetwork16(net, exploits, nnodes, nexploits);
+		Network.constructNetwork13(net, exploits, nnodes, nexploits);
 		
 		
 		//Network.constructNetwork10(net, exploits, nnodes, nexploits);
@@ -171,7 +171,7 @@ public class PlanrecognitionExp {
 	
 	
 	public static void doFixedPolicyWithDefenseMILP(boolean withdefense, int chosenattacker, int chosenpolicy, boolean minentropy, 
-			boolean maxoverlap, boolean expoverlap, boolean mincost, boolean mincommonoverlap, boolean honeyedge) throws Exception {
+			boolean maxoverlap, boolean expoverlap, boolean mincost, boolean mincommonoverlap, boolean honeyedge, boolean minmaxexpectedoverlap) throws Exception {
 
 
 
@@ -194,7 +194,14 @@ public class PlanrecognitionExp {
 		
 		
 
+		/**
+		 * there should be a cost for honey edges and a cost limit at a single time
+		 * or how many there should be a limit on how many exploits we can start at a single round in how many nodes
+		 * can we repeatedly use an exploit to add in different nodes?
+		 */
 		int nexploits = 5;
+		int honeyedgelimit = 2;
+		
 
 		
 
@@ -226,7 +233,7 @@ public class PlanrecognitionExp {
 		
 		//Network.constructNetwork23(net, exploits, nnodes, nexploits);
 		
-		Network.constructNetwork16(net, exploits, nnodes, nexploits);
+		Network.constructNetwork13(net, exploits, nnodes, nexploits);
 		
 		
 		//Network.constructNetwork10(net, exploits, nnodes, nexploits);
@@ -294,13 +301,26 @@ public class PlanrecognitionExp {
 		//constructPolicyLib();
 		
 		
-
 		
 		
-		PlanRecognition.playGameWithNaiveDefense(chosenattacker, chosenpolicy, net, exploits, attackers, goals, 
+		
+		/*PlanRecognition.playGameWithNaiveDefense(chosenattacker, chosenpolicy, net, exploits, attackers, goals, 
 				honeypots, hpdeploylimit, singlepath, npath, startnode, withdefense, minentropy, mincommonoverlap, maxoverlap, expoverlap, mincost, honeyedge);
+*/
+		
+		/**
+		 * 1. honey edges
+		 * 2. honeypot
+		 * 
+		 * For each defensive action the decision criteria can be: 
+		 * 
+		 * a. min max overlap
+		 * b. min ax expected overlap
+		 * c. min entropy
+		 */
 
-
+		PlanRecognition.playGameWithNaiveDefenseMILP(chosenattacker, chosenpolicy, net, exploits, attackers, goals, 
+				honeypots, hpdeploylimit, singlepath, npath, startnode, withdefense, minentropy, mincommonoverlap, maxoverlap, expoverlap, mincost, honeyedge, honeyedgelimit, minmaxexpectedoverlap);
 
 
 
@@ -394,7 +414,7 @@ private static void testSolver(HashMap<Integer,Node> net, HashMap<Integer,Exploi
 	 */
 	
 	
-	ArrayList<Integer> reachablesnodes = findReachableNodes(net, attcurrentnodeid, exploits);
+	ArrayList<Integer> reachablesnodes = new ArrayList<Integer>(); //findReachableNodes(net, attcurrentnodeid, exploits, goals);
 	
 	PlanRecognition.printNetwork(net);
 	
@@ -654,6 +674,68 @@ public static void printSolutionM(ArrayList<ArrayList<double[]>> paths, ArrayLis
 					 
 					 if(a[1]==g.get(att))
 					 {
+						 break;
+					 }
+
+					 /*if(winnerconf[0]==-1)
+					 {
+						 winnerconf[0] = a[3];
+						 winnerconf[1] = a[4];
+					 }
+*/
+
+
+				 }
+
+			 }
+		 }
+		 
+		 
+		 System.out.println();
+		 
+		// return winnerconf;
+		 
+
+	
+}
+
+
+public static void assignAttackerPolicy(ArrayList<ArrayList<double[]>> paths, ArrayList<Integer> g, ArrayList<Attacker> att2) {
+	
+	
+	// double[] winnerconf = {-1.0, -1.0};
+	 
+		 for(ArrayList<double[]> path: paths)
+		 {
+			 
+			 System.out.println("****attacker "+ paths.indexOf(path)+"*****");
+
+			 
+			 int att = paths.indexOf(path);
+			 
+			 if(path==null)
+			 {
+				 System.out.println("Didn't find any solution");
+			 }
+			 else
+			 {
+				 HashMap<Integer, Integer> pol = new HashMap<Integer, Integer>();
+				 
+				 for(double[] a: path)
+				 {
+					 /*String sid1 = nodeexpltmapback.get(a[0]).split("-")[0];
+				 String sid2 = nodeexpltmapback.get(a[1]).split("-")[0];
+				 String ex = String.valueOf(a[2]);*/
+
+
+					 System.out.println(a[0] +"->"+ a[1] +"("+a[2]+")");
+					 pol.put(pol.size(), (int)a[0]);
+					 
+					 if(a[1]==g.get(att))
+					 {
+						 pol.put(pol.size(), (int)a[1]);
+						 att2.get(att).fixedpolicy.clear();
+						 att2.get(att).fixedpolicy.put(att2.get(att).fixedpolicy.size(), pol);
 						 break;
 					 }
 
@@ -1016,7 +1098,7 @@ public static void traversePolicy(Node node, ArrayList<Integer> path) {
 		return;
 
 	traversePolicy(node.parent, path);
-	//System.out.print(node.id+"("+node.currentcost+")"+"->");
+	System.out.print(node.id+"("+node.currentcost+")"+"->");
 	path.add(node.id);
 
 
@@ -1275,6 +1357,8 @@ public static ArrayList<Integer> findReachableNodes(HashMap<Integer, Node> net, 
 		Node node = fringequeue.poll();
 		if(!rn.contains(node.id) && node.id != startnodeid)
 		{
+			//for()
+			
 			rn.add(node.id);
 		}
 		closed.add(node.id);
@@ -1307,14 +1391,70 @@ public static ArrayList<Integer> findReachableNodes(HashMap<Integer, Node> net, 
 		}
 
 
-
-	
-	
-
-	
 	
 	return rn;
 }
+
+
+public static ArrayList<Integer> findReachableNodesMILP(HashMap<Integer, Node> net, int startnodeid, HashMap<Integer,Exploits> allexploits, ArrayList<Integer> g) {
+	
+	
+	ArrayList<Integer> rn = new ArrayList<Integer>();
+	
+	
+	Queue<Node> fringequeue = new LinkedList<Node>();
+	Queue<Integer> closed = new LinkedList<Integer>();
+
+	Node start = new Node(net.get(startnodeid));
+	
+
+
+	fringequeue.add(start);
+
+	
+
+	while(!fringequeue.isEmpty())
+	{
+		Node node = fringequeue.poll();
+		if(!rn.contains(node.id) && (node.id != startnodeid) && !g.contains(node.id))
+		{
+			
+			rn.add(node.id);
+		}
+		closed.add(node.id);
+		
+			
+
+		Node orignode = net.get(node.id);
+
+
+		for(Integer nei: orignode.nei.values())
+		{
+			
+			Node neinode = net.get(nei);
+			
+
+			
+					Node tmp = new Node(neinode);
+					
+					
+					if(!closed.contains(tmp.id))
+					{
+						neinode.depth = orignode.depth +1;
+						fringequeue.add(tmp);
+					}
+
+
+				
+			}
+
+		}
+
+
+	
+	return rn;
+}
+
 
 
 public static int comb(int n , int r)
@@ -1571,45 +1711,58 @@ private static void buildCostVar(int[][][][] hpdeploymentcost, HashMap<Integer, 
 }
 
 
+
+/**
+ * see if incoming edges have cost to honey edge node
+ * @param net
+ * @param nodeexpltmap
+ * @param nodeexpltmapback
+ * @param edgecost
+ * @param exploits
+ * @return
+ */
 public static int[][][] build3DCostMatrix(HashMap<Integer, Node> net, HashMap<String, Integer> nodeexpltmap,
 		HashMap<Integer, String> nodeexpltmapback, HashMap<String, Integer> edgecost,
 		HashMap<Integer, Exploits> exploits) {
-	
-	
-int[][][] w = new int[net.size()][net.size()][exploits.size()];
-	
-	
+
+
+	int[][][] w = new int[net.size()][net.size()][exploits.size()];
+
+
 	for(int i=0; i<w.length; i++)
 	{
 		for(int j=0; j<w[i].length; j++)
 		{
 			for(int k=0; k<w[i][j].length; k++)
 			{
-				
-				
 				Node a = net.get(i);
 				Node b = net.get(j);
-				
+
+
+				/**
+				 * need to update the condition when the a node in edge a->b will have rules
+				 * right now we are allowing every exploits
+				 */
 				if(a.nei.containsValue(b.id) && b.exploits.containsValue(k))
 				{
-					
-						Exploits ex2 = exploits.get(k);
-						w[i][j][k] = ex2.cost;
-					
+
+					Exploits ex2 = exploits.get(k);
+					w[i][j][k] = ex2.cost;
+
 				}
 				else
 				{
 					w[i][j][k] = 100;
 				}
 			}
-			
-			
+
+
 		}
 	}
-	
-	
+
+
 	//System.out.println(w[0][1][1]);
-	
+
 	return w;
 }
 
