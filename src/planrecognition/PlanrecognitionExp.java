@@ -171,7 +171,7 @@ public class PlanrecognitionExp {
 	
 	
 	public static void doFixedPolicyWithDefenseMILP(boolean withdefense, int chosenattacker, int chosenpolicy, boolean minentropy, 
-			boolean maxoverlap, boolean expoverlap, boolean mincost, boolean mincommonoverlap, boolean honeyedge, boolean minmaxexpectedoverlap) throws Exception {
+			boolean maxoverlap, boolean expoverlap, boolean mincost, boolean mincommonoverlap, boolean honeyedge, boolean minmaxexpectedoverlap, boolean honeypot) throws Exception {
 
 
 
@@ -185,8 +185,8 @@ public class PlanrecognitionExp {
 		//int[] goals = {10, 11};
 		int nattackers = 3;
 		int startnode = 0;
-		int nnodes = 16;
-		int nhoneypots = 3;
+		int nnodes = 14;
+		int nhoneypots = 5;
 		int hpdeploylimit = 2;
 		int hpv = 8;
 		int hpc = 2;
@@ -320,7 +320,8 @@ public class PlanrecognitionExp {
 		 */
 
 		PlanRecognition.playGameWithNaiveDefenseMILP(chosenattacker, chosenpolicy, net, exploits, attackers, goals, 
-				honeypots, hpdeploylimit, singlepath, npath, startnode, withdefense, minentropy, mincommonoverlap, maxoverlap, expoverlap, mincost, honeyedge, honeyedgelimit, minmaxexpectedoverlap);
+				honeypots, hpdeploylimit, singlepath, npath, startnode, withdefense, minentropy, mincommonoverlap, 
+				maxoverlap, expoverlap, mincost, honeyedge, honeyedgelimit, minmaxexpectedoverlap, honeypot);
 
 
 
@@ -340,16 +341,13 @@ private static void testSolver(HashMap<Integer,Node> net, HashMap<Integer,Exploi
 	 */
 	
 	
-	HashMap<String, Integer> nodeexpltmap = new HashMap<String, Integer>();
-	HashMap<Integer, String> nodeexpltmapback = new HashMap<Integer, String>();
-	HashMap<String, Integer> edgecost = new HashMap<String, Integer>();
 	
 	
 	//HashMap<Integer,Node> newnet = new HashMap<Integer,Node>();
 	
 	
 	//int[][] wt = buildCostMatrix(net, nodeexpltmap, nodeexpltmapback, edgecost, exploits);
-	int [][][] w = build3DCostMatrix(net, nodeexpltmap, nodeexpltmapback, edgecost, exploits);
+	int [][][] w = build3DCostMatrix(net, exploits);
 	
 	int start = 0;
 	int goal = goals2[0];
@@ -360,19 +358,7 @@ private static void testSolver(HashMap<Integer,Node> net, HashMap<Integer,Exploi
 	ArrayList<Integer> goals = new ArrayList<Integer>();
 	
 	
-	for(String key: nodeexpltmap.keySet())
-	{
-		String s1 = key.split("-")[0];
-		int id = Integer.parseInt(s1);
-		if(id==start)
-		{
-			starts.add(nodeexpltmap.get(key));
-		}
-		if(id==goal)
-		{
-			goals.add(nodeexpltmap.get(key));
-		}
-	}
+	
 	
 	for(int g: goals2)
 	{
@@ -1466,7 +1452,7 @@ public static int comb(int n , int r)
 }
 
 
-private static void buildCostVar(int[][][][] hpdeploymentcost, HashMap<Integer, Node> net, HashMap<Integer, Exploits> exploits,
+public static void buildCostVar(int[][][][] hpdeploymentcost, HashMap<Integer, Node> net, HashMap<Integer, Exploits> exploits,
 		int nattakers, int e, int[][][] w, HashMap<Integer,int[]> slotids, HashMap<Integer,int[]> hpids, 
 		HashMap<Integer,Node> honeypots, HashMap<Integer,int[]> placestoallocatehp, int hpdeploylimit, ArrayList<Integer> freehps, int hplimit) {
 	
@@ -1721,8 +1707,7 @@ private static void buildCostVar(int[][][][] hpdeploymentcost, HashMap<Integer, 
  * @param exploits
  * @return
  */
-public static int[][][] build3DCostMatrix(HashMap<Integer, Node> net, HashMap<String, Integer> nodeexpltmap,
-		HashMap<Integer, String> nodeexpltmapback, HashMap<String, Integer> edgecost,
+public static int[][][] build3DCostMatrix(HashMap<Integer, Node> net,
 		HashMap<Integer, Exploits> exploits) {
 
 

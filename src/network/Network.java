@@ -349,23 +349,23 @@ public class Network {
 
 		net.get(0).addNeighbors(new int[] {1,2});
 
-		net.get(1).addNeighbors(new int[] {3, 4, 5});
-		net.get(2).addNeighbors(new int[] {3, 4, 5});
+		net.get(1).addNeighbors(new int[] {3, 4});
+		net.get(2).addNeighbors(new int[] {5, 6});
 
-		net.get(3).addNeighbors(new int[] {6,7});
-		net.get(4).addNeighbors(new int[] {6, 7,8,9});
-		net.get(5).addNeighbors(new int[] {8, 9});
+		net.get(3).addNeighbors(new int[] {7, 8});
+		net.get(4).addNeighbors(new int[] {8, 9});
+		net.get(5).addNeighbors(new int[] {8, 9, 10});
 		
 		
-		net.get(6).addNeighbors(new int[] {10, 11});
+		net.get(6).addNeighbors(new int[] {10});
 		net.get(7).addNeighbors(new int[] {11});
-		net.get(8).addNeighbors(new int[] {11});
-		net.get(9).addNeighbors(new int[] {11, 12});
+		net.get(8).addNeighbors(new int[] {11, 12});
+		net.get(9).addNeighbors(new int[] {12, 13});
 		
 		
-		net.get(10).addNeighbors(new int[] {13,14});
-		net.get(11).addNeighbors(new int[] {14});
-		net.get(12).addNeighbors(new int[] {14, 15});
+		net.get(10).addNeighbors(new int[] {13});
+		
+		
 		
 		
 		
@@ -399,7 +399,7 @@ public class Network {
 		for(int i=0; i<nexploits; i++)
 		{
 			
-			int c = randInt(1,10);
+			int c = i+1;//randInt(1,i);
 			Exploits e = new Exploits(i, c);
 			exploits.put(i, e);
 			System.out.println("Exploit id "+ e.id +", c: "+e.cost);
@@ -411,10 +411,33 @@ public class Network {
 		 */
 
 		
+		net.get(0).addExploits(new int[] {0, 1});
+
+		net.get(1).addExploits(new int[] {2});
+		net.get(2).addExploits(new int[] {3});
+
+		net.get(3).addExploits(new int[] {4});
+		net.get(4).addExploits(new int[] {2});
+		net.get(5).addExploits(new int[] {3});
+		net.get(6).addExploits(new int[] {4});
+
+		net.get(7).addExploits(new int[] {2});
+		net.get(8).addExploits(new int[] {3});
+		net.get(9).addExploits(new int[] {0});
+		net.get(10).addExploits(new int[] {1});
+		net.get(11).addExploits(new int[] {3});
+
+
+
+		net.get(12).addExploits(new int[] {4});
+		net.get(13).addExploits(new int[] {2});
 		
-		for(int i=0; i<nnodes; i++)
+		
+		
+		
+		/*for(int i=0; i<nnodes; i++)
 		{
-			int l = exploits.size()/2;
+			int l = 1;//exploits.size()/2;
 			int exlt = randInt(1, l);
 			
 			
@@ -423,7 +446,10 @@ public class Network {
 			
 			for(Integer eid: exploits.keySet())
 			{
-				explts.add(eid);
+				//if(eid != 3)
+				{
+					explts.add(eid);
+				}
 			}
 			
 			
@@ -439,7 +465,7 @@ public class Network {
 			
 			net.get(i).addExploits(extoadd);
 			
-		}
+		}*/
 
 
 		
@@ -765,10 +791,55 @@ public class Network {
 		
 		
 		
+		
+		
+		
+		
 
 			if(pickfromnet)
 			{
 				ArrayList<Node> left =new ArrayList<Node>();
+				
+				
+				/**
+				 * sort and pick
+				 */
+				
+				
+				int[][] srted = new int[net.size()-goals.length][2];
+				
+				for(int i=0; i<srted.length; i++)
+				{
+					
+					Node n = net.get(i);
+					int minexpltval = minExploit(n, exploits);
+					srted[n.id][0] = n.id;
+					srted[n.id][1] = minexpltval;
+				}
+				
+				
+				int[] swap = {0,0};
+
+				for (int k = 0; k < srted.length; k++) 
+				{
+					for (int d = 1; d < srted.length-k; d++) 
+					{
+						if (srted[d-1][1] > srted[d][1])    // ascending order
+						{
+							swap = srted[d];
+							srted[d]  = srted[d-1];
+							srted[d-1] = swap;
+						}
+					}
+				}
+				
+				for (int k = 0; k < srted.length; k++) 
+				{
+					left.add(net.get(srted[k][0]));
+				}
+				
+				
+				/*ArrayList<Node> left =new ArrayList<Node>();
 				
 				for(Node n: net.values())
 				{
@@ -788,15 +859,15 @@ public class Network {
 					{
 						left.add(n);
 					}
-				}
+				}*/
 				
 				for(int i=0; i<(nhoneypots); i++)
 				{
 					
-					int r = randInt(0, left.size()-1);
+					//int r = left.get(i);
 					
-					Node pn = left.get(r);
-					left.remove(r);
+					Node pn = left.get(i);
+					//left.remove(r);
 					
 					Node n = new Node(i+nnodes, pn.value, pn.cost);
 					n.ishoneypot = true;
@@ -848,6 +919,24 @@ public class Network {
 	}
 	
 	
+	private static int minExploit(Node n, HashMap<Integer,Exploits> exploits) {
+		
+		
+		int minval = 1000;
+		
+		
+		for(int e: n.exploits.values())
+		{
+			if(exploits.get(e).cost<minval)
+			{
+				minval = exploits.get(e).cost;
+			}
+		}
+		
+		
+		return minval;
+	}
+
 	public static void constructExploits(HashMap<Integer, Node> honeypots, HashMap<Integer, Exploits> exploits, 
 			int nhoneypots, int nnodes, int hpv, int hpc, boolean sameval, boolean allexploit, HashMap<Integer,Node> net, boolean pickfromnet, int[] goals) {
 		

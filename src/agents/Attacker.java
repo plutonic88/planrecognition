@@ -1036,7 +1036,7 @@ private double[] maxUtilityWithExploit(Node start, HashMap<Integer, Integer> att
 			return;
 
 		traversePolicy(node.parent, path);
-		System.out.print(node.id+"("+node.currentcost+")"+"->");
+		//System.out.print(node.id+"("+node.currentcost+")"+"->");
 		path.put(path.size(), node.id);
 
 

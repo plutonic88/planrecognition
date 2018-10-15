@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-
+import agents.Attacker;
 import ilog.concert.IloLinearNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.concert.IloRange;
@@ -2868,7 +2868,7 @@ public class Solver {
 	
 	
 	public static ArrayList<ArrayList<double[]>> attackerPolicyInItMILP(int[][][] p, int start, ArrayList<Integer> goals, int nexploits,
-			int nattackers, double[] priors, int[] mincost, int n) {
+			int nattackers, double[] priors, int[] mincost, int n, int chosenattacker) {
 
 		
 		int M = 10;
@@ -2901,7 +2901,7 @@ public class Solver {
 
 					edgeids.put(key, count);
 					
-					System.out.println("key "+ key+ ": "+ edgeids.get(key));
+					//System.out.println("key "+ key+ ": "+ edgeids.get(key));
 					//edgebackids.put(count, key);
 					count++;
 					//edgecost.put(count++, p[i][j]);
@@ -2956,7 +2956,11 @@ public class Solver {
 			{
 				for(int a2=0; a2<nattackers; a2++)
 				{
-					d_ij[a1][a2] = cplex.numVar(0, Double.MAX_VALUE);
+					//if(a2 != chosenattacker)
+					{
+					
+						d_ij[a1][a2] = cplex.numVar(0, Double.MAX_VALUE);
+					}
 				}
 			}
 
@@ -3026,14 +3030,14 @@ public class Solver {
 			IloLinearNumExpr obj = cplex.linearNumExpr();
 
 
-			for(int a1=0; a1<nattackers-1; a1++)
+			//for(int a1=0; a1<nattackers-1; a1++)
 			{
-				for(int a2=a1+1; a2<nattackers; a2++)
+				for(int a2=0; a2<nattackers; a2++)
 				{
-					if(a1 != a2)
+					if(chosenattacker != a2)
 					{
 
-						obj.addTerm(1, d_ij[a1][a2]);
+						obj.addTerm(1, d_ij[chosenattacker][a2]);
 
 
 					}
@@ -3456,15 +3460,15 @@ public class Solver {
 
 
 
-			for(int a1=0; a1<nattackers-1; a1++)
+			//for(int a1=0; a1<nattackers-1; a1++)
 			{
-				for(int a2=a1+1; a2<nattackers; a2++)
+				for(int a2=0; a2<nattackers; a2++)
 				{
-					if(a1 != a2)
+					if(chosenattacker != a2)
 					{
-						if(cplex.getValue(d_ij[a1][a2])>=0)
+						if(cplex.getValue(d_ij[chosenattacker][a2])>=0)
 						{
-							System.out.println("d_ij["+a1+"]["+a2+"] = "+cplex.getValue(d_ij[a1][a2]));
+							System.out.println("d_ij["+chosenattacker+"]["+a2+"] = "+cplex.getValue(d_ij[chosenattacker][a2]));
 						}
 
 					}
@@ -4396,7 +4400,8 @@ public class Solver {
 	
 	
 	public static ArrayList<ArrayList<double[]>> solveMaxExpOvelapMILPV2(int[][][] p, int start, ArrayList<Integer> goals, int nexploits,
-			int nattackers, HashMap<Integer,Double> priorsattackertype, HashMap<Integer,Integer> mincost, int n) {
+			int nattackers, HashMap<Integer,Double> priorsattackertype, HashMap<Integer,Integer> mincost, int n, HashMap<Integer,Integer> atmap,
+			HashMap<Integer,Integer> atmapback, double[][] overlap) {
 
 		
 		
@@ -4405,9 +4410,10 @@ public class Solver {
 		
 		int at = 0;
 		
-		for(Integer c: mincost.values())
+		for(Integer a: mincost.keySet())
 		{
-			minc[at++] = c;
+			
+			minc[atmap.get(a)] = mincost.get(a);
 		}
 		
 		
@@ -4566,13 +4572,13 @@ public class Solver {
 			IloLinearNumExpr obj = cplex.linearNumExpr();
 
 
-			for(int a1=0; a1<nattackers-1; a1++)
+			for(int a1=0; a1<nattackers; a1++)
 			{
-				for(int a2=a1+1; a2<nattackers; a2++)
+				for(int a2=0; a2<nattackers; a2++)
 				{
 					if(a1 != a2)
 					{
-						obj.addTerm(1.0/M, d_ij[a1][a2]);
+						obj.addTerm(1, d_ij[a1][a2]);
 					}
 				}
 			}
@@ -4993,28 +4999,31 @@ public class Solver {
 
 
 
-			/*for(int a1=0; a1<nattackers-1; a1++)
+			for(int a1=0; a1<nattackers; a1++)
 			{
-				for(int a2=a1+1; a2<nattackers; a2++)
+				for(int a2=0; a2<nattackers; a2++)
 				{
 					if(a1 != a2)
 					{
 						if(cplex.getValue(d_ij[a1][a2])>=0)
 						{
-							System.out.println("d_ij["+a1+"]["+a2+"] = "+cplex.getValue(d_ij[a1][a2]));
+							//System.out.println("d_ij["+a1+"]["+a2+"] = "+cplex.getValue(d_ij[a1][a2]));
+							
+							overlap[a1][a2] = cplex.getValue(d_ij[a1][a2]);
+							
 						}
 
 					}
 				}
 			}
 
-			System.out.println();
+		//	System.out.println();
 
 
 			
 
-			System.out.println();
-*/
+			//System.out.println();
+
 
 			/*for(int a1=0; a1<nattackers; a1++)
 			{
