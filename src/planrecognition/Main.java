@@ -28,6 +28,9 @@ public class Main {
 		//PlanRecognition.doFixedPolicyExp1();
 		
 		
+		
+		boolean randhp = false;
+		
 		boolean withdefense = true;
 		
 		
@@ -50,7 +53,7 @@ public class Main {
 		boolean expoverlap = !maxoverlap;
 		
 		
-		int chosenattacker = 0;
+		int chosenattacker = 1;
 		int chosenpolicy = 0;
 		
 		
@@ -61,14 +64,30 @@ public class Main {
 		//perm();
 		
 		
+		long startTime = System.currentTimeMillis();
+		
+		
+		
+		
+		 
+		
+		
+		
 		
 		PlanrecognitionExp.doFixedPolicyWithDefenseMILP(withdefense, chosenattacker, chosenpolicy, minentropy, 
-				maxoverlap, expoverlap, mincost, minmaxoverlap, honeyedge, minmaxexpectedoverlap, honeypot);
+				maxoverlap, expoverlap, mincost, minmaxoverlap, honeyedge, minmaxexpectedoverlap, honeypot, randhp);
 		
 		//PlanrecognitionExp.doFixedPolicyWithDefenseExp1(withdefense, chosenattacker, chosenpolicy, minentropy, maxoverlap, expoverlap, mincost, mincommonoverlap, honeyedge);
 		
 		//PlanrecognitionExp.doFixedExploitPolicyWithDefenseExp1(withdefense, chosenattacker, chosenpolicy, minentropy, maxoverlap, expoverlap);
 		
+		
+		
+
+		
+		long endTime   =  System.currentTimeMillis();
+		long runtime = endTime - startTime;
+		System.out.println("runtime: "+runtime);
 
 	}
 	

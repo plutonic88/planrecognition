@@ -2871,7 +2871,7 @@ public class Solver {
 			int nattackers, double[] priors, int[] mincost, int n, int chosenattacker) {
 
 		
-		int M = 10;
+		int M = 8;
 		/**
 		 * for every goal add self loop
 		 */
@@ -3597,7 +3597,8 @@ public class Solver {
 
 			
 			
-
+			cplex.clearModel();
+			cplex.end();
 			
 			
 			
@@ -4371,7 +4372,8 @@ public class Solver {
 			
 			
 			
-			
+			cplex.clearModel();
+			cplex.end();
 
 
 
@@ -5141,7 +5143,9 @@ public class Solver {
 			
 
 			
-			
+			cplex.clearModel();
+			cplex.end();
+
 			
 			
 

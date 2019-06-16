@@ -21,7 +21,7 @@ import solver.Solver;
 public class PlanRecognition {
 
 	
-	public static int ST_LIMIT = 100;
+	public static int ST_LIMIT = 1000;
 	
 	
 	public static void doFixedPolicyExp1() {
@@ -979,7 +979,7 @@ public class PlanRecognition {
 				//System.out.println("***********Determined attacker type "+ chosenattacker+"********************");
 				System.out.println("***********round "+ round+"********************");
 				printInfos(deceptionslots, hpsdeployments, atobservedactions, round);
-				//break;
+				return;
 			}
 
 			
@@ -1001,7 +1001,7 @@ public class PlanRecognition {
 				Node curnode = net.get(currentnodeid);
 				//System.out.println("*******Attacker current position node "+ curnode.id + " round "+ round);
 
-				printNetwork(net);
+				//printNetwork(net);
 
 				/**
 				 * first free the honeypots which are invalid because of the attacker actions
@@ -1010,7 +1010,7 @@ public class PlanRecognition {
 				if(currenthps.size()>0 && !honeyedge)
 				{
 					freeInvalidHoneypots(currenthps, curnode, net, honeypots, currentnodeid);
-					printNetwork(honeypots);
+					//printNetwork(honeypots);
 				}
 				else if(honeyedge)
 				{
@@ -1029,7 +1029,7 @@ public class PlanRecognition {
 				
 				doPosteriorPlan(oactions, attackers, net, priorforplang, posteriorplang, goals, priorsattackertype, posteriorattackertype);
 				
-				
+				writeBUpdatesForAttackerType(priorsattackertype);
 			}//end of else
 			
 			
@@ -1706,8 +1706,8 @@ public class PlanRecognition {
 		System.out.println("computing posterior on attacker plan given the priors");
 		posteriorplang = posteriorPlangWithHashMap(attackers, net, priorforplang, oactions, goals, priorsattackertype);
 
-		writeBUpdatesForAttackerType(posteriorattackertype);
-		writeBayesianUpdatesForPlan(posteriorplang);
+		//writeBUpdatesForAttackerType(posteriorattackertype);
+		//writeBayesianUpdatesForPlan(posteriorplang);
 
 
 
@@ -3847,7 +3847,18 @@ public class PlanRecognition {
 		freehps.add(15);
 		freehps.add(16);*/
 		
-
+		HashMap<Integer, Integer> netmap = new HashMap<Integer, Integer>();
+		HashMap<Integer, Integer> netmapback = new HashMap<Integer, Integer>();
+		
+		int ind = 0;
+		for(Node n: net.values())
+		{
+			netmap.put(n.id, ind);
+			netmapback.put(ind, n.id);
+			ind++;
+			
+		}
+		
 		
 		
 
@@ -3860,9 +3871,9 @@ public class PlanRecognition {
 
 		System.out.println("We can deploy "+ hplimit +" honeypots from "+ freehps.size() + " honeypots");
 
-		int [][][] w = PlanrecognitionExp.build3DCostMatrix(net, exploits);
+		int [][][] w = PlanrecognitionExp.build3DCostMatrixWMap(net, exploits, netmap, netmapback);
 		
-		if(hplimit<=0)
+		if(hplimit<=0 || placestoallocatehp.size()==0)
 		{
 			System.out.println("We can deploy no honeypots");
 			return w;
@@ -4736,7 +4747,7 @@ public class PlanRecognition {
 		System.out.println();
 		
 		
-		PlanRecognition.printNetwork(net);
+		//PlanRecognition.printNetwork(net);
 		
 		/**
 		 * 1. free HPS
@@ -4756,12 +4767,31 @@ public class PlanRecognition {
 		}
 		
 		
+		HashMap<Integer, Integer> netmap = new HashMap<Integer, Integer>();
+		HashMap<Integer, Integer> netmapback = new HashMap<Integer, Integer>();
+		
+		int ind = 0;
+		for(Node n: net.values())
+		{
+			netmap.put(n.id, ind);
+			netmapback.put(ind, n.id);
+			ind++;
+			
+		}
+		
+		
 		
 		
 		HashMap<Integer, int[]> placestoallocatehp = PlanRecognition.computePlacesToAllocateHP(reachablesnodes, net, gls, curnode);
 
 		
+		
 		PlanRecognition.printSlots(placestoallocatehp);
+		
+		if(placestoallocatehp.size()==0)
+		{
+			System.out.println("No HP slots....returning");
+		}
 
 		//HashMap<Integer, int[]> placestoallocatehp = computePlacesToAllocateHP(net, honeypots, currenthps, oactions);
 
@@ -4789,9 +4819,9 @@ public class PlanRecognition {
 
 		System.out.println("We can deploy "+ hplimit +" honeypots from "+ freehps.size() + " honeypots");
 
-		int [][][] w = PlanrecognitionExp.build3DCostMatrix(net, exploits);
+		int [][][] w = PlanrecognitionExp.build3DCostMatrixWMap(net, exploits, netmap, netmapback);
 		
-		if(hplimit<=0)
+		if(hplimit<=0 || placestoallocatehp.size()==0)
 		{
 			System.out.println("We can deploy no honeypots");
 			return w;
@@ -4855,11 +4885,11 @@ public class PlanRecognition {
 
 		HashMap<Integer, Integer> atmap = new HashMap<Integer, Integer>();
 		HashMap<Integer, Integer> atmapback = new HashMap<Integer, Integer>();
-		int ind = 0;
+		int index = 0;
 		for(Attacker a: attackers.values())
 		{
-			atmap.put(a.id, ind);
-			atmapback.put(ind++, a.id);
+			atmap.put(a.id, index);
+			atmapback.put(index++, a.id);
 		}
 
 
@@ -5722,6 +5752,19 @@ public class PlanRecognition {
 		}
 		
 		
+		HashMap<Integer, Integer> netmap = new HashMap<Integer, Integer>();
+		HashMap<Integer, Integer> netmapback = new HashMap<Integer, Integer>();
+		
+		int index = 0;
+		for(Node n: net.values())
+		{
+			netmap.put(n.id, index);
+			netmapback.put(index, n.id);
+			index++;
+			
+		}
+		
+		
 		
 		
 		HashMap<Integer, int[]> placestoallocatehp = PlanRecognition.computePlacesToAllocateHP(reachablesnodes, net, gls, curnode);
@@ -5756,10 +5799,10 @@ public class PlanRecognition {
 		System.out.println("We can deploy "+ hplimit +" honeypots from "+ freehps.size() + " honeypots");
 
 
-		int [][][] w = PlanrecognitionExp.build3DCostMatrix(net, exploits);
+		int [][][] w = PlanrecognitionExp.build3DCostMatrixWMap(net, exploits, netmap, netmapback);
 		
 		
-		if(hplimit<=0)
+		if(hplimit<=0 || placestoallocatehp.size()==0)
 		{
 			System.out.println("We can deploy no honeypots");
 			return w;
@@ -10140,7 +10183,7 @@ private static int commonLen(String p1, String p2) {
 
 			int i=0;
 			pw.append("\n");
-			for(int attid=0; attid<4; attid++)
+			for(int attid=0; attid<3; attid++)
 			{
 				if(priorsattackertype.containsKey(attid))
 				{
@@ -10726,9 +10769,9 @@ private static int commonLen(String p1, String p2) {
 		{
 			Attacker att = attackers.get(attindex);
 
-			Logger.logit("**********Attacker index "+ attindex +"*******\n");
+			/*Logger.logit("**********Attacker index "+ attindex +"*******\n");
 			Logger.logit("Attacker type "+ att.id +"\n");
-			Logger.logit("policy : ");
+			Logger.logit("policy : ");*/
 
 			//ArrayList<Integer> toberemovedpolicyies = new ArrayList<Integer>();
 
@@ -10742,7 +10785,7 @@ private static int commonLen(String p1, String p2) {
 				totalobservations.put(attindex, to+1);
 
 				//totalobservations[attindex]++;
-				for(int fp: policy.values())
+				/*for(int fp: policy.values())
 				{
 					Logger.logit(fp+" ");
 				}
@@ -10751,7 +10794,7 @@ private static int commonLen(String p1, String p2) {
 				{
 					Logger.logit(oa+" ");
 				}
-				Logger.logit("\n");
+				Logger.logit("\n");*/
 				boolean matches = true;
 				for(Integer round: observedactions.keySet())
 				{
@@ -10770,7 +10813,7 @@ private static int commonLen(String p1, String p2) {
 
 					if(oa != fp)
 					{
-						Logger.logit("does not matches...\n");
+						//Logger.logit("does not matches...\n");
 						//toberemovedpolicyies.add(policyindex);
 						matches = false;
 						break;
@@ -10779,7 +10822,7 @@ private static int commonLen(String p1, String p2) {
 				}
 				if(matches)
 				{
-					Logger.logit("matches...\n");
+					//Logger.logit("matches...\n");
 					//observationsgiventype[attindex]++;
 
 
@@ -10806,12 +10849,12 @@ private static int commonLen(String p1, String p2) {
 
 
 		double sumprobtotalobservations = 0;
-		Logger.logit("\n\nComputing likelihoods...\n\n");
+		//Logger.logit("\n\nComputing likelihoods...\n\n");
 		for(Attacker att: attackers.values())
 		{
 			if(totalobservations.get(att.id)>0)
 			{
-				Logger.logit("*******Attacker type "+ att.id +"*****\n");
+				//Logger.logit("*******Attacker type "+ att.id +"*****\n");
 				double tmplh = observationsgiventype.get(att.id)/totalobservations.get(att.id);
 				likelihoods.put(att.id, tmplh);
 			}
@@ -10827,11 +10870,11 @@ private static int commonLen(String p1, String p2) {
 			 */
 		}
 
-		Logger.logit("\nposteriors...\n\n");
+		//Logger.logit("\nposteriors...\n\n");
 
 		for(Attacker att: attackers.values())
 		{
-			Logger.logit("********Attacker type "+ att.id +"*********\n");
+			//Logger.logit("********Attacker type "+ att.id +"*********\n");
 			double d = probobservations.get(att.id)/ sumprobtotalobservations;
 			posteriors.put(att.id, d);
 			//Logger.logit("posterior "+ posteriors[att.id] + "\n");
@@ -11174,7 +11217,7 @@ private static int commonLen(String p1, String p2) {
 			System.out.println("value: "+ n.value);
 			//Logger.logit("value: "+ n.value+"\n");
 			System.out.println("cost: "+ n.cost);
-			
+			System.out.println("step: "+ n.step);
 			System.out.println("depth: "+ n.depth);
 			//Logger.logit("cost: "+ n.cost+"\n");
 			
@@ -11601,7 +11644,7 @@ private static int commonLen(String p1, String p2) {
 	
 	public static void constructAttackersMILP(int startnodeid, HashMap<Integer, Attacker> attackers, HashMap<Integer,Node> net, 
 			HashMap<Integer,Exploits> exploits, boolean singlepath, int npath, int chosenattacker, 
-			boolean maxoverlap, boolean expoverlap, int nattackers, int[] goals, HashMap<Integer,Node> honeypots) {
+			boolean maxoverlap, boolean expoverlap, int nattackers, int[] goals, HashMap<Integer,Node> honeypots, ArrayList<ArrayList<Integer>> exploitsector) {
 
 		
 		HashMap<Integer, Integer> mincosts = new HashMap<Integer, Integer>();
@@ -11614,10 +11657,15 @@ private static int commonLen(String p1, String p2) {
 			
 			a0.goals.put(0, goals[id]);
 			
-			for(Exploits e: exploits.values())
+			for(Integer e: exploitsector.get(id))
 			{
-				a0.addExploits(new int[] {e.id});
+				a0.addExploits(new int[] {e});
 			}
+			
+//			for(Exploits e: exploits.values())
+//			{
+//				a0.addExploits(new int[] {e.id});
+//			}
 			
 			
 			//a0.findFixedPolifyBFS(net, exploits, 23);
@@ -11855,10 +11903,26 @@ private static int commonLen(String p1, String p2) {
 	
 	
 	private static boolean constructAttackerPoliciesMILPRun(HashMap<Integer, Node> net, HashMap<Integer, Exploits> exploits,
-			HashMap<Integer, Node> honeypots, int chosenattacker, int[] goals, int nattackers, HashMap<Integer, Integer> mincosts, HashMap<Integer,Attacker> attackers, int start, int[][][] hpdepcosts) {
+			HashMap<Integer, Node> honeypots, int chosenattacker, int[] goals, int nattackers, HashMap<Integer, Integer> mincosts,
+			HashMap<Integer,Attacker> attackers, int start, int[][][] hpdepcosts) {
 		
 		int n= net.size();
 		int e = exploits.size();
+		
+		
+		HashMap<Integer, Integer> netmap = new HashMap<Integer, Integer>();
+		HashMap<Integer, Integer> netmapback = new HashMap<Integer, Integer>();
+		
+		int ind = 0;
+		for(Node nd: net.values())
+		{
+			netmap.put(nd.id, ind);
+			netmapback.put(ind, nd.id);
+			ind++;
+			
+		}
+		
+		int mappedstart = netmap.get(start);
 		
 		
 		int[] minc = new int[mincosts.size()];
@@ -11932,10 +11996,10 @@ private static int commonLen(String p1, String p2) {
 		
 		double[] priors = new double[nattackers];
 		
-		for(int a: attackers.keySet())
+		/*for(int a: attackers.keySet())
 		{
 			priors[a] = 1.0/ nattackers;
-		}
+		}*/
 		
 		
 		long startTime = System.currentTimeMillis();
@@ -11970,12 +12034,13 @@ private static int commonLen(String p1, String p2) {
 		
 		ArrayList<Integer> g = new ArrayList<Integer>();
 		
-		for(int a: goals)
+		for(Attacker a: attackers.values())
 		{
-			g.add(a);
+			
+			g.add(netmap.get(a.goals.get(0)));
 		}
 		
-		ArrayList<ArrayList<double[]>> paths = Solver.attackerPolicyInItMILP(w, start, g, exploits.size(), nattackers, priors, minc, net.size(), chosenattacker);
+		ArrayList<ArrayList<double[]>> paths = Solver.attackerPolicyInItMILP(w, mappedstart, g, exploits.size(), nattackers, priors, minc, net.size(), chosenattacker);
 		
 		
 		//ArrayList<ArrayList<double[]>> paths = Solver.solveHPDeploymentMultAttackerWorstCase(w, start, goals, exploits.size(), nattackers, hpdeploymentcost, totalconf, priors);
@@ -12260,7 +12325,27 @@ private static int commonLen(String p1, String p2) {
 		
 		
 		
+		HashMap<Integer, Integer> netmap = new HashMap<Integer, Integer>();
+		HashMap<Integer, Integer> netmapback = new HashMap<Integer, Integer>();
 		
+		int ind = 0;
+		for(Node nd: net.values())
+		{
+			netmap.put(nd.id, ind);
+			netmapback.put(ind, nd.id);
+			ind++;
+			
+		}
+		
+		int mappedstart = netmap.get(start);
+		
+		ArrayList<Integer> g = new ArrayList<Integer>();
+		
+		for(Attacker a: attackers.values())
+		{
+			
+			g.add(netmap.get(a.goals.get(0)));
+		}
 		
 		
 		
@@ -12273,12 +12358,7 @@ private static int commonLen(String p1, String p2) {
 		
 		long startTime = System.currentTimeMillis();
 		
-		ArrayList<Integer> g = new ArrayList<Integer>();
 		
-		for(int a: goals)
-		{
-			g.add(a);
-		}
 		
 		
 		
@@ -12316,7 +12396,7 @@ private static int commonLen(String p1, String p2) {
 		
 		
 		
-		ArrayList<ArrayList<double[]>> paths = Solver.solveMaxOvelapMILPV2(w, start, g, exploits.size(), nattackers, priorsattackertype, mincost, net.size());
+		ArrayList<ArrayList<double[]>> paths = Solver.solveMaxOvelapMILPV2(w, mappedstart, g, exploits.size(), nattackers, priorsattackertype, mincost, net.size());
 		
 		
 		//ArrayList<ArrayList<double[]>> paths = Solver.solveHPDeploymentMultAttackerWorstCase(w, start, goals, exploits.size(), nattackers, hpdeploymentcost, totalconf, priors);
@@ -12577,6 +12657,27 @@ private static int commonLen(String p1, String p2) {
 		 * create a map of nodes with exploits to id
 		 */
 		
+		HashMap<Integer, Integer> netmap = new HashMap<Integer, Integer>();
+		HashMap<Integer, Integer> netmapback = new HashMap<Integer, Integer>();
+		
+		int ind = 0;
+		for(Node nd: net.values())
+		{
+			netmap.put(nd.id, ind);
+			netmapback.put(ind, nd.id);
+			ind++;
+			
+		}
+		
+		int mappedstart = netmap.get(start);
+		
+		ArrayList<Integer> g = new ArrayList<Integer>();
+		
+		for(Attacker a: attackers.values())
+		{
+			
+			g.add(netmap.get(a.goals.get(0)));
+		}
 		
 		//int [][][] w = PlanrecognitionExp.build3DCostMatrix(net, exploits);
 		
@@ -12637,12 +12738,12 @@ private static int commonLen(String p1, String p2) {
 		
 		long startTime = System.currentTimeMillis();
 		
-		ArrayList<Integer> g = new ArrayList<Integer>();
+		/*ArrayList<Integer> g = new ArrayList<Integer>();
 		
 		for(int a: goals)
 		{
 			g.add(a);
-		}
+		}*/
 		
 		
 		
@@ -12680,7 +12781,7 @@ private static int commonLen(String p1, String p2) {
 		
 		
 		
-		ArrayList<ArrayList<double[]>> paths = Solver.solveMaxExpOvelapMILPV2(w, start, g, exploits.size(), nattackers, priorsattackertype, mincost, net.size(), atmap, atmapback, overlap);
+		ArrayList<ArrayList<double[]>> paths = Solver.solveMaxExpOvelapMILPV2(w, mappedstart, g, exploits.size(), nattackers, priorsattackertype, mincost, net.size(), atmap, atmapback, overlap);
 		
 		
 		//ArrayList<ArrayList<double[]>> paths = Solver.solveHPDeploymentMultAttackerWorstCase(w, start, goals, exploits.size(), nattackers, hpdeploymentcost, totalconf, priors);
@@ -14321,7 +14422,7 @@ private static HashMap<Integer,HashMap<Integer,HashMap<Integer,Integer>>> refine
 				int dif = bnode.depth - anode.depth;
 				
 				
-				if(a != b && a<b && !goals.contains(a) && (anode.depth != bnode.depth) && dif>1 && ((anode.depth-curnode.depth)==1))
+				if(a != b && a<b && !goals.contains(a) && (anode.depth != bnode.depth) && dif>1 && ((anode.depth-curnode.depth)>=1))
 				{
 					int pair [] = {a,b};
 					slots.put(slots.size(), pair);

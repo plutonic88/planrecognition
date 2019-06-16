@@ -8,6 +8,9 @@ public class Node {
 	public int id;
 	public int value;
 	public int cost;
+	
+	public int step;
+	public int sector;
 	public HashMap<Integer, Integer> nei = new HashMap<Integer, Integer>();
 	public HashMap<Integer, int[]> neiwithexploits = new HashMap<Integer, int[]>();
 	public HashMap<Integer, Integer> exploits = new HashMap<Integer, Integer>();
@@ -91,6 +94,18 @@ public class Node {
 	
 	
 	public void addExploits(int[] exploits)
+	{
+		//int count = this.exploits.size();
+		for(int id: exploits)
+		{
+			this.exploits.put(id, id);
+			//count++;
+		}
+		
+	}
+	
+	
+	public void addExploits(ArrayList<Integer> exploits)
 	{
 		//int count = this.exploits.size();
 		for(int id: exploits)

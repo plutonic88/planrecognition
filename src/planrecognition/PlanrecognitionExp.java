@@ -116,9 +116,11 @@ public class PlanrecognitionExp {
 		 * Imagine that attacker is naive
 		 */
 		
+		boolean uniqueexploithp = true;
+		
 		if(!honeyedge)
 		{
-			Network.constructHoneyPots(honeypots, exploits, nhoneypots, nnodes, hpv, hpc, samevalhp, allexphp, net, pickfromnet, goals);
+			Network.constructHoneyPots(honeypots, exploits, nhoneypots, nnodes, hpv, hpc, samevalhp, allexphp, net, pickfromnet, goals, true, uniqueexploithp);
 		}
 		
 		
@@ -171,7 +173,8 @@ public class PlanrecognitionExp {
 	
 	
 	public static void doFixedPolicyWithDefenseMILP(boolean withdefense, int chosenattacker, int chosenpolicy, boolean minentropy, 
-			boolean maxoverlap, boolean expoverlap, boolean mincost, boolean mincommonoverlap, boolean honeyedge, boolean minmaxexpectedoverlap, boolean honeypot) throws Exception {
+			boolean maxoverlap, boolean expoverlap, boolean mincost, boolean mincommonoverlap, boolean honeyedge, 
+			boolean minmaxexpectedoverlap, boolean honeypot, boolean randhp) throws Exception {
 
 
 
@@ -186,7 +189,7 @@ public class PlanrecognitionExp {
 		int nattackers = 3;
 		int startnode = 0;
 		int nnodes = 14;
-		int nhoneypots = 5;
+		
 		int hpdeploylimit = 2;
 		int hpv = 8;
 		int hpc = 2;
@@ -199,7 +202,8 @@ public class PlanrecognitionExp {
 		 * or how many there should be a limit on how many exploits we can start at a single round in how many nodes
 		 * can we repeatedly use an exploit to add in different nodes?
 		 */
-		int nexploits = 5;
+		int nexploits = 9;
+		int nhoneypots = nexploits;
 		int honeyedgelimit = 2;
 		
 
@@ -222,18 +226,75 @@ public class PlanrecognitionExp {
 		//Network.constructNetwork(net, exploits, nnodes, nexploits);
 		
 		
-		
-		
 		int[] goals = new int[nattackers];
+		
+		
+		
+		//Network.constructNetwork23(net, exploits, nnodes, nexploits);
+		
+		
+		//automated network genrator
+		//int nnet = 20;
+		int nstep = 6;
+		int nodeamin = 1;
+		int nodeamax = 1;
+		int minedge = 2;
+		//int maxedge = 
+		int ngoal = goals.length;
+		
+		
+		
+		
+		int stepsperstage = 1; // 1 stage per 1 step; most granular
+		
+		
+		
+		
+		boolean uniqueexploithp = true;
+		
+		
+		// network density
+		double density = .8;
+		
+		
+		//vulnerability density
+		// 0, 20, 50 100
+		double overlappingexploitspercentage = 0;
+		
+		//how do I add exploits???
+		Network.generateNetwork(net, nstep, nodeamin, nodeamax ,ngoal, minedge, density, nexploits, exploits);
+		
+		
+		/**
+		 * Automatic exploit assignment
+		 */
+		
+		nnodes = net.size();
+		
+		
+
 		
 		for(int i=0; i<nattackers; i++)
 		{
 			goals[i] = nnodes - nattackers + i;
 		}
 		
-		//Network.constructNetwork23(net, exploits, nnodes, nexploits);
 		
-		Network.constructNetwork13(net, exploits, nnodes, nexploits);
+		
+		ArrayList<ArrayList<Integer>> exploitsector = new ArrayList<>();
+		
+		Network.addExploits(net, exploits, nnodes, stepsperstage, nstep, nattackers, overlappingexploitspercentage, exploitsector);
+		
+		
+		//Network.constructNetwork13(net, exploits, nnodes, nexploits);
+		
+		
+		//Network.constructNetwork30(net, exploits, nnodes, nexploits);
+		
+		//Network.constructNetwork223(net, exploits, nnodes, nexploits);
+		
+		//Network.constructNetwork18(net, exploits, nnodes, nexploits);
+		
 		
 		
 		//Network.constructNetwork10(net, exploits, nnodes, nexploits);
@@ -256,7 +317,7 @@ public class PlanrecognitionExp {
 		
 		if(!honeyedge)
 		{
-			Network.constructHoneyPots(honeypots, exploits, nhoneypots, nnodes, hpv, hpc, samevalhp, allexphp, net, pickfromnet, goals);
+			Network.constructHoneyPots(honeypots, exploits, nhoneypots, nnodes, hpv, hpc, samevalhp, allexphp, net, pickfromnet, goals, randhp, uniqueexploithp);
 		}
 		
 		
@@ -279,7 +340,7 @@ public class PlanrecognitionExp {
 			
 			
 			
-			PlanRecognition.constructAttackersMILP(startnodeid ,attackers, net, exploits, singlepath, npath, chosenattacker, maxoverlap, expoverlap, nattackers, goals, honeypots);
+			PlanRecognition.constructAttackersMILP(startnodeid ,attackers, net, exploits, singlepath, npath, chosenattacker, maxoverlap, expoverlap, nattackers, goals, honeypots, exploitsector);
 
 			//PlanRecognition.constructAttackers(startnodeid ,attackers, net, exploits, singlepath, npath, chosenattacker, maxoverlap, expoverlap, nattackers, goals);
 			
@@ -1697,6 +1758,251 @@ public static void buildCostVar(int[][][][] hpdeploymentcost, HashMap<Integer, N
 }
 
 
+public static void buildCostVarMap(int[][][][] hpdeploymentcost, HashMap<Integer, Node> net, HashMap<Integer, Exploits> exploits,
+		int nattakers, int e, int[][][] w, HashMap<Integer,int[]> slotids, HashMap<Integer,int[]> hpids, 
+		HashMap<Integer,Node> honeypots, HashMap<Integer,int[]> placestoallocatehp, int hpdeploylimit, ArrayList<Integer> freehps, int hplimit, HashMap<Integer,Integer> netmap, HashMap<Integer,Integer> netmapback) {
+	
+	
+	/**
+	 * 1. for a configuration 
+	 * 2. set the usual costs for the oriignal network
+	 * 3. then add the extra cost for slots of that config: need slot ids and hps, for the hps use the exploit's costs
+	 * 
+	 */
+	
+	int confcount =0; 
+	
+	for(Integer slt: slotids.keySet())
+	{
+		int[] slid = slotids.get(slt);
+		
+		HashMap<Integer, int[]> slots = new HashMap<Integer, int[]>();
+		for(int i=0; i<slid.length; i++)
+		{
+			int[] slot1 = placestoallocatehp.get(slid[i]);
+			slots.put(slots.size(), slot1);
+		}
+		
+		for(Integer hid: hpids.keySet())
+		{
+			int[] hpid = hpids.get(hid);
+
+			int hp[] = new int[hpid.length];
+			for(int i=0; i<hpid.length; i++)
+			{
+				hp[i] = freehps.get(hpid[i]);
+			}
+			
+			
+			
+			/**
+			 * fillup the usual costs first
+			 */
+			
+			for(int i=0; i<w.length; i++)
+			{
+				for(int j=0; j<w[i].length; j++)
+				{
+					for(int k=0; k<w[i][j].length; k++)
+					{
+						hpdeploymentcost[confcount][i][j][k] = w[i][j][k];
+					}
+					
+				}
+				
+			}
+			
+			/**
+			 * fill up the costs for the hps to 100
+			 */
+			
+			int start = hpdeploymentcost[confcount].length- hplimit;
+			
+			for(int i=start; i<hpdeploymentcost[confcount].length; i++)
+			{
+				for(int j=0; j<hpdeploymentcost[confcount][i].length; j++)
+				{
+					for(int k=0; k<e; k++)
+					{
+						hpdeploymentcost[confcount][i][j][k] = 100;
+						hpdeploymentcost[confcount][j][i][k] = 100;
+					}
+					
+					
+				}
+			}
+			
+			
+			
+			
+			
+			/**
+			 * create hp map
+			 */
+			
+			HashMap<Integer, Integer> hpmap = new HashMap<Integer, Integer>();
+			HashMap<Integer, Integer> hpmapback = new HashMap<Integer, Integer>();
+			
+			int hpidstart = net.size();
+			
+			for(int h: hp)
+			{
+				hpmap.put(h, hpidstart);
+				hpmapback.put(hpidstart++, h);
+			}
+			
+			
+			
+			
+			/**
+			 * now add the new costs for adding hps
+			 * 1. for particular slot ids and hpids add the costs
+			 */
+			
+			for(int index: slots.keySet())
+			{
+			
+				int[] placehp = slots.get(index);
+				
+				int n1 = placehp[0];
+				int n2 = placehp[1];
+				
+				
+				
+				
+				
+				
+				int hdi =  hp[index];
+				
+				Node hpnode  = honeypots.get(hdi);
+				
+				int hd = hpmap.get(hdi);
+				
+				
+				
+				//System.out.println("putting hp " +hdi+" between node "+ n1 + " and "+ n2);
+				
+				/**
+				 * inserting hp into slots n1 -> hd , hd -> n2
+				 * 1. 
+				 */
+				
+				for(Integer exid: hpnode.exploits.values())
+				{
+					Exploits ex = exploits.get(exid);
+					//int[] explts = hpdeploymentcost[confcount][n1][n2];
+					
+					/**
+					 * only update if there is no existing exploit already
+					 */
+					
+					if(hpdeploymentcost[confcount][n1][hd][exid] == 100)
+					{
+						hpdeploymentcost[confcount][n1][hd][exid] += (ex.cost-100);
+					}
+					
+					//System.out.println("new value "+ hpdeploymentcost[confcount][n1][hd][exid]);
+					
+					
+				}
+				
+				Node n2node = net.get(n2);
+				
+				for(Integer exid: n2node.exploits.values())
+				{
+					Exploits ex = exploits.get(exid);
+					//int[] explts = hpdeploymentcost[confcount][n1][n2];
+					
+					/**
+					 * only update if there is no existing exploit already
+					 */
+					
+					if(hpdeploymentcost[confcount][hd][n2][exid] == 100)
+					{
+						hpdeploymentcost[confcount][hd][n2][exid] += (ex.cost-100);
+					}
+					
+					//System.out.println("new value "+ hpdeploymentcost[confcount][hd][n2][exid]);
+					
+					
+				}
+				
+				
+				/*if(n1==1 && n2 ==10 && hdi==12)
+				{
+					System.out.println("putting hp " +hdi+" between node "+ n1 + " and "+ n2);
+					
+					for(int x: hpdeploymentcost[confcount][1][hd])
+					{	
+						System.out.println(x );
+						if(x != 100)
+						{
+							//System.out.println(x );
+						}
+					}
+					for(int x: hpdeploymentcost[confcount][hd][10])
+					{	
+						System.out.println(x );
+						if(x != 100)
+						{
+							//System.out.println(x );
+						}
+					}
+				}*/
+				
+				
+				
+				
+				
+			
+			}
+			
+			
+			/*if(confcount==3210)
+			{
+				System.out.println("x");
+				
+				//for(int[][][] c: hpdeploymentcost[confcount])
+				{
+					
+					
+					for(int x: hpdeploymentcost[confcount][1][12])
+					{	
+						System.out.println(x );
+						if(x != 100)
+						{
+							System.out.println(x );
+						}
+					}
+					for(int x: hpdeploymentcost[confcount][12][10])
+					{	
+						System.out.println(x );
+						if(x != 100)
+						{
+							System.out.println(x );
+						}
+					}
+					
+					
+				}
+			}*/
+			
+			
+			confcount++;
+			
+		}
+		
+	}
+	
+	
+	
+	
+	
+	
+	
+}
+
+
 
 /**
  * see if incoming edges have cost to honey edge node
@@ -1750,6 +2056,52 @@ public static int[][][] build3DCostMatrix(HashMap<Integer, Node> net,
 
 	return w;
 }
+
+public static int[][][] build3DCostMatrixWMap(HashMap<Integer, Node> net,
+		HashMap<Integer, Exploits> exploits, HashMap<Integer,Integer> netmap, HashMap<Integer,Integer> netmapback) {
+
+
+	int[][][] w = new int[net.size()][net.size()][exploits.size()];
+
+
+	for(int i=0; i<w.length; i++)
+	{
+		for(int j=0; j<w[i].length; j++)
+		{
+			for(int k=0; k<w[i][j].length; k++)
+			{
+				Node a = net.get(netmapback.get(i));
+				Node b = net.get(netmapback.get(j));
+
+
+				/**
+				 * need to update the condition when the a node in edge a->b will have rules
+				 * right now we are allowing every exploits
+				 */
+				if(a.nei.containsValue(b.id) && b.exploits.containsValue(k))
+				{
+
+					Exploits ex2 = exploits.get(k);
+					w[i][j][k] = ex2.cost;
+
+				}
+				else
+				{
+					w[i][j][k] = 100;
+				}
+			}
+
+
+		}
+	}
+
+
+	//System.out.println(w[0][1][1]);
+
+	return w;
+}
+
+
 
 
 private static int[][] buildCostMatrix(HashMap<Integer, Node> net, HashMap<String, Integer> nodeexpltmap,
@@ -1902,8 +2254,14 @@ public static void doFixedExploitPolicyWithDefenseExp1(boolean withdefense, int 
 		/**
 		 * construct honeypots from real node configurations
 		 * Imagine that attacker is naive
+		 * 
+		 * 
+		 * 
 		 */
-		Network.constructHoneyPots(honeypots, exploits, nhoneypots, nnodes, hpv, hpc, samevalhp, allexphp, net, pickfromnet, goals);
+		
+		boolean uniqueexploithp = true;
+		
+		Network.constructHoneyPots(honeypots, exploits, nhoneypots, nnodes, hpv, hpc, samevalhp, allexphp, net, pickfromnet, goals, true, uniqueexploithp);
 
 		System.out.println("Network construction... \ndone");
 		
