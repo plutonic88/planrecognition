@@ -2037,8 +2037,8 @@ public class Solver {
 	}
 
 
-	public static ArrayList<ArrayList<double[]>> solveDummy2(int[][][] w, int start, ArrayList<Integer> goals, int nexploits,
-			int nattackers, int[][][][] hpdeploymentcosts, int totalconf, double[] priors) {
+	public static ArrayList<ArrayList<double[]>> solveDummy2(int[][][][] w, int start, ArrayList<Integer> goals, int nexploits,
+			int nattackers, int[][][][][] hpdeploymentcosts, int totalconf, double[] priors) {
 
 		int[] mincost = {5, 5, 5};
 
@@ -2867,19 +2867,23 @@ public class Solver {
 	}
 	
 	
-	public static ArrayList<ArrayList<double[]>> attackerPolicyInItMILP(int[][][] p, int start, ArrayList<Integer> goals, int nexploits,
-			int nattackers, double[] priors, int[] mincost, int n, int chosenattacker) {
+	public static ArrayList<ArrayList<double[]>> attackerPolicyInItMILP(int[][][][] p, int start, ArrayList<Integer> goals, int nexploits,
+			int nattackers, double[] priors, int[] mincost, int n, int chosenattacker, HashMap<Integer,Integer> atmap, HashMap<Integer,Integer> atmapback) {
 
 		
-		int M = 8;
+		int M = 6;
 		/**
 		 * for every goal add self loop
 		 */
 		
-		for(int g: goals)
+		for(int a=0; a<atmap.size(); a++)
 		{
-			p[g][g][0] = 0; 
 
+			for(int g: goals)
+			{
+				p[a][g][g][0] = 0; 
+
+			}
 		}
 		
 		HashMap<String, Integer> edgeids = new HashMap<String, Integer>();
@@ -3231,7 +3235,7 @@ public class Solver {
 							{
 								String key = i+","+j+","+e;
 								int id1 = edgeids.get(key);
-								expr.addTerm(p[i][j][e], e_tem[a][id1][k]);
+								expr.addTerm(p[a][i][j][e], e_tem[a][id1][k]);
 							}
 						}
 
@@ -3266,7 +3270,7 @@ public class Solver {
 							
 								String key = i+","+j+","+e;
 								int id1 = edgeids.get(key);
-								expr.addTerm(p[i][j][e], e_tem[a][id1][k]);
+								expr.addTerm(p[a][i][j][e], e_tem[a][id1][k]);
 							}
 						}
 
@@ -3630,8 +3634,9 @@ public class Solver {
 	}
 	
 	
-	public static ArrayList<ArrayList<double[]>> solveMaxOvelapMILPV2(int[][][] p, int start, ArrayList<Integer> goals, int nexploits,
-			int nattackers, HashMap<Integer,Double> priorsattackertype, HashMap<Integer,Integer> mincost, int n) {
+	public static ArrayList<ArrayList<double[]>> solveMaxOvelapMILPV2(int[][][][] p, int start, ArrayList<Integer> goals, int nexploits,
+			int nattackers, HashMap<Integer,Double> priorsattackertype, 
+			HashMap<Integer,Integer> mincost, int n, HashMap<Integer,Attacker> attackers, HashMap<Integer,Integer> attackermap, HashMap<Integer,Integer> attackermapback) {
 
 		
 		
@@ -3651,10 +3656,14 @@ public class Solver {
 		 * for every goal add self loop
 		 */
 		
-		for(int g: goals)
+		for(int a: attackers.keySet())
 		{
-			p[g][g][0] = 0; 
 
+			for(int g: goals)
+			{
+				p[attackermap.get(a)][g][g][0] = 0; 
+
+			}
 		}
 		
 		HashMap<String, Integer> edgeids = new HashMap<String, Integer>();
@@ -4002,7 +4011,7 @@ public class Solver {
 							{
 								String key = i+","+j+","+e;
 								int id1 = edgeids.get(key);
-								expr.addTerm(p[i][j][e], e_tem[a][id1][k]);
+								expr.addTerm(p[a][i][j][e], e_tem[a][id1][k]);
 							}
 						}
 
@@ -4037,7 +4046,7 @@ public class Solver {
 							
 								String key = i+","+j+","+e;
 								int id1 = edgeids.get(key);
-								expr.addTerm(p[i][j][e], e_tem[a][id1][k]);
+								expr.addTerm(p[a][i][j][e], e_tem[a][id1][k]);
 							}
 						}
 
@@ -4401,9 +4410,9 @@ public class Solver {
 	}
 	
 	
-	public static ArrayList<ArrayList<double[]>> solveMaxExpOvelapMILPV2(int[][][] p, int start, ArrayList<Integer> goals, int nexploits,
+	public static ArrayList<ArrayList<double[]>> solveMaxExpOvelapMILPV2(int[][][][] p, int start, ArrayList<Integer> goals, int nexploits,
 			int nattackers, HashMap<Integer,Double> priorsattackertype, HashMap<Integer,Integer> mincost, int n, HashMap<Integer,Integer> atmap,
-			HashMap<Integer,Integer> atmapback, double[][] overlap) {
+			HashMap<Integer,Integer> atmapback, double[][] overlap, HashMap<Integer,Integer> attackermap, HashMap<Integer,Integer> attackermapback, HashMap<Integer,Attacker> attackers) {
 
 		
 		
@@ -4424,10 +4433,13 @@ public class Solver {
 		 * for every goal add self loop
 		 */
 		
-		for(int g: goals)
+		for(int a=0; a<nattackers; a++)
 		{
-			p[g][g][0] = 0; 
+			for(int g: goals)
+			{
+				p[a][g][g][0] = 0; 
 
+			}
 		}
 		
 		HashMap<String, Integer> edgeids = new HashMap<String, Integer>();
@@ -4760,6 +4772,8 @@ public class Solver {
 			for(int a=0; a<nattackers; a++)
 			{
 				IloLinearNumExpr expr = cplex.linearNumExpr();
+				
+				//int atindex = attackermap.get(a);
 
 				for(int k=0; k<M; k++)
 				{
@@ -4772,7 +4786,7 @@ public class Solver {
 							{
 								String key = i+","+j+","+e;
 								int id1 = edgeids.get(key);
-								expr.addTerm(p[i][j][e], e_tem[a][id1][k]);
+								expr.addTerm(p[a][i][j][e], e_tem[a][id1][k]);
 							}
 						}
 
@@ -4791,9 +4805,9 @@ public class Solver {
 
 			for(int a=0; a<nattackers; a++)
 			{
-
-
 				IloLinearNumExpr expr = cplex.linearNumExpr();
+				
+				//int atindex = attackermap.get(a);
 
 				for(int k=0; k<M; k++)
 				{
@@ -4807,7 +4821,7 @@ public class Solver {
 							
 								String key = i+","+j+","+e;
 								int id1 = edgeids.get(key);
-								expr.addTerm(p[i][j][e], e_tem[a][id1][k]);
+								expr.addTerm(p[a][i][j][e], e_tem[a][id1][k]);
 							}
 						}
 

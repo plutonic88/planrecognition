@@ -3,6 +3,7 @@ package network;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.TreeMap;
@@ -1565,34 +1566,34 @@ public class Network {
 
 
 
-		
+
 		if(uniqueexploithp)
 		{
-			
+
 			int count = 0;
 			for(int i=0; i<(exploits.size()); i++)
 			{
 
-				
-				
+
+
 				//Node pn = left.get(i);
 
 				/**
 				 * check if there exists same conf honeypot
 				 */
-				
+
 				int v = randInt(5, 10);
 				int c = randInt(1,4);
-				
+
 				if(honeypots.size()==0)
 				{
-					
-					
+
+
 					Node n = new Node(count+nnodes, v, c);
 					n.ishoneypot = true;
 
-					
-						n.exploits.put(exploits.get(i).id, exploits.get(i).id);
+
+					n.exploits.put(exploits.get(i).id, exploits.get(i).id);
 					//}
 
 					honeypots.put(n.id, n);
@@ -1602,35 +1603,35 @@ public class Network {
 				{
 
 					//System.out.println(x);
-					
-//					boolean existssame = existsHoney(pn, honeypots);
-//					
-//					if(pn.exploits.size()==exploits.size())
-//					{
-//						continue;
-//					}
-//					else
-//					{
-//						existssame = false;
-//					}
-//					
-					
 
-					
-						//left.remove(r);
+					//					boolean existssame = existsHoney(pn, honeypots);
+					//					
+					//					if(pn.exploits.size()==exploits.size())
+					//					{
+					//						continue;
+					//					}
+					//					else
+					//					{
+					//						existssame = false;
+					//					}
+					//					
 
-						Node n = new Node(count+nnodes, v, c);
-						n.ishoneypot = true;
 
-						
 
-						
-						n.exploits.put(exploits.get(i).id, exploits.get(i).id);
-						
+					//left.remove(r);
 
-						count++;
-						honeypots.put(n.id, n);
-					
+					Node n = new Node(count+nnodes, v, c);
+					n.ishoneypot = true;
+
+
+
+
+					n.exploits.put(exploits.get(i).id, exploits.get(i).id);
+
+
+					count++;
+					honeypots.put(n.id, n);
+
 				}
 				if(honeypots.size()==nhoneypots)
 				{
@@ -1640,7 +1641,7 @@ public class Network {
 
 			}
 
-			
+
 		}
 		else if(pickfromnet)
 		{
@@ -1710,9 +1711,9 @@ public class Network {
 					}
 				}
 			}
-			
-			
-			
+
+
+
 
 
 
@@ -1723,14 +1724,14 @@ public class Network {
 
 				//int r = left.get(i);
 
-				
+
 				System.out.println(i);
-				
+
 				if(i==21)
 				{
 					System.out.println(i);
 				}
-				
+
 				Node pn = left.get(i);
 
 				/**
@@ -1753,9 +1754,9 @@ public class Network {
 				{
 
 					//System.out.println(x);
-					
+
 					boolean existssame = existsHoney(pn, honeypots);
-					
+
 					if(pn.exploits.size()==exploits.size())
 					{
 						continue;
@@ -1764,8 +1765,8 @@ public class Network {
 					{
 						existssame = false;
 					}
-					
-					
+
+
 
 					if(!existssame)
 					{
@@ -1973,7 +1974,7 @@ public class Network {
 
 	}
 
-	public static void generateNetwork(HashMap<Integer, Node> net, int nstep, int nodeamin, int nodeamax, int ngoal, int minedge, double density, int nexploits, HashMap<Integer,Exploits> exploits) 
+	public static void generateNetwork(HashMap<Integer, Node> net, int nstep, int nodeamin, int nodeamax, int ngoal, int minedge, double density, int nexploits, HashMap<Integer,Exploits> exploits, List<ArrayList<Integer>>[] stagesectornodes) 
 	{
 
 		int nnode = 0;
@@ -2101,8 +2102,228 @@ public class Network {
 
 	}
 
+
+	public static void generateNetworkWithSector(HashMap<Integer, Node> net, int nstep, int nodeamin, int nodeamax, int ngoal, 
+			int minedge, double density, int nexploits, HashMap<Integer,Exploits> exploits, 
+			List<ArrayList<Integer>>[] stagesectornodes, ArrayList<List<Integer>> stagenodes, int nattacker) 
+	{
+
+		int nnode = 0;
+		int[] nodeperstage = new int[nstep];
+		nodeperstage[0] = 1;
+		nodeperstage[nstep-1] = ngoal;
+		nnode = ngoal + 1;
+
+		ArrayList<ArrayList<Integer>> nodeassignment = new ArrayList<ArrayList<Integer>>();
+		for(int i=1; i<nstep-1; i++)
+		{
+			nodeperstage[i] = nodeperstage[i-1] + randInt(nodeamin, nodeamax);
+			nnode += nodeperstage[i];
+
+		}
+
+		for(int i=0; i<nstep; i++)
+		{
+			System.out.println("Step "+i + ", #nodes "+ nodeperstage[i]);
+		}
+		System.out.println("total #nodes "+ nnode);
+
+		for(int i=0; i<nnode; i++)
+		{
+			int v = randInt(5, 10);
+			int c = randInt(1,4);
+			Node n = new Node(i, v, c);
+			net.put(n.id, n);
+
+		}
+
+		int nodeindex = 0;
+
+		for(int i=0; i<nstep; i++)
+		{
+			int n = nodeperstage[i];
+			ArrayList<Integer> nodes = new ArrayList<Integer>();
+			for(int j=0; j<n; j++)
+			{
+				nodes.add(nodeindex++);
+			}
+			nodeassignment.add(nodes);
+
+		}
+
+		for(int i=0; i<nstep; i++)
+		{
+			System.out.print("Step "+i+": ");
+			ArrayList<Integer> nodes = nodeassignment.get(i);
+			for(int j: nodes)
+			{
+
+				System.out.print(" "+j);
+			}
+			System.out.println();
+
+		}
+
+		for(int i=0; i<nstep-1; i++)
+		{
+
+			/**
+			 * get each stage nodes 
+			 * get next stage nodes
+			 */
+
+
+
+
+
+
+			int y=0;
+
+
+			if(i<=1)
+			{
+				List<Integer> curnodes = stagenodes.get(i);
+				List<Integer> nextstagenodes = stagenodes.get(i+1);
+				
+				
+				
+				for(Integer id: curnodes)
+				{
+					Node nnn = net.get(id);
+					nnn.step=i;
+					
+				}
+				
+				for(Integer id: nextstagenodes)
+				{
+					Node nnn = net.get(id);
+					nnn.step=i+1;
+					
+				}
+				
+
+				for(Integer n: curnodes)
+				{
+					Node curnode = net.get(n);
+					curnode.addNeighbors(nextstagenodes);
+				}
+
+
+
+
+
+			}
+			else
+			{
+
+				List<ArrayList<Integer>> curstagenodes = stagesectornodes[i];
+				List<ArrayList<Integer>> nextstagenodes = stagesectornodes[i+1];
+				
+				
+				
+				for(int s=0; s<nattacker; s++)
+				{
+					
+					// add the next sector nodes for sure
+					ArrayList<Integer> cursecnodes = curstagenodes.get(s);
+					ArrayList<Integer> nextsecnodes = nextstagenodes.get(s);
+					
+					
+					for(Integer nodeid: cursecnodes)
+					{
+						Node node = net.get(nodeid);
+						node.step=i;
+						
+						
+						for(Integer nei: nextsecnodes)
+						{
+							net.get(nei).step = i+1;
+							node.nei.put(nei, nei);
+						}
+						
+						//node.addNeighbors(nextsecnodes);
+					
+						int othersectorlimit = -1;
+						
+						if(density>0 && density<=0.5)
+						{
+							othersectorlimit=1;
+						}
+						else if(density>0.5)
+						{
+							othersectorlimit=2;
+							
+						}
+						if(density==0)
+						{
+							othersectorlimit=0;
+						}
+					
+						
+					
+					for(int s1=0; s1<nattacker; s1++)
+					{
+						if(s1 != s && othersectorlimit>0)
+						{
+						
+							// determine how maney neighbors to add from other sectors
+							
+							
+							ArrayList<Integer> nextothersecnodes = nextstagenodes.get(s1);
+							double numneitoadd = Math.ceil(nextothersecnodes.size()*density);
+							
+							
+							
+							while(numneitoadd>0)
+							{
+								
+								int neiid = nextothersecnodes.get((int)numneitoadd-1);
+								Node neinode = net.get(nodeid);
+								//neinode.step = i+1;
+								node.nei.put(neiid, neiid);
+								numneitoadd--;
+							}
+							
+							
+							othersectorlimit--;
+							
+							
+						}
+					}
+					}
+					
+					
+					
+				}
+				
+				
+
+			}
+
+
+
+
+
+
+		}
+
+		System.out.print("");
+		for(int i=0; i<nexploits; i++)
+		{
+
+			int c = i+1;//randInt(1,i);
+			Exploits e = new Exploits(i, c);
+			exploits.put(i, e);
+			System.out.println("Exploit id "+ e.id +", c: "+e.cost);
+
+		}
+
+
+
+	}
+
 	public static void addExploits(HashMap<Integer, Node> net, HashMap<Integer, Exploits> exploits, int nnodes, int stepsperstage, int nstep, 
-			int nattacker, double overlappingexploitspercentage, ArrayList<ArrayList<Integer>> exploitsector) {
+			int nattacker, double overlappingexploitspercentage, ArrayList<ArrayList<Integer>> exploitsector, double density) {
 		// TODO Auto-generated method stub
 
 
@@ -2160,6 +2381,7 @@ public class Network {
 			{
 				stagenodes.add(new TreeMap<Integer, Node>());
 			}
+			//System.out.println(node.step);
 			stagenodes.get(node.step).put(node.id, node);
 		}
 
@@ -2175,7 +2397,7 @@ public class Network {
 		for(TreeMap<Integer, Node> step: stagenodes)
 		{
 			double sectorincrement = -1;
-			
+
 			if(stage<=3)
 			{
 				sectorincrement = Math.floor((1.0*step.size())/(1.0 *nattacker));
@@ -2184,8 +2406,8 @@ public class Network {
 			{
 				sectorincrement = Math.ceil((1.0*step.size())/(1.0 *nattacker));
 			}
-			
-			
+
+
 
 			if(stage==3)
 			{
@@ -2262,6 +2484,15 @@ public class Network {
 			double exploitstoadd = Math.ceil((exploits.size()/nattacker)*(overlappingexploitspercentage/100.0));
 
 
+			
+			/*else if(node.id == 1)
+			{
+				node.addExploits(new int[] {0, 3, 5});
+			}
+			else if(node.id == 2)
+			{
+				node.addExploits(new int[] {1, 2, 4});
+			}*/
 
 
 
@@ -2269,16 +2500,41 @@ public class Network {
 			{
 				for(Integer nd: sc)
 				{
+					
 					Node node = net.get(nd);
 
-					if(node.id <=2)
+					if(node.id == 0)
 					{
 						addAllAxploits(node, exploits, 0, exploits.size());
+					}
+					else if(node.id == 1)
+					{
+						node.addExploits(new int[] {0, 3, 5});
+					}
+					else if(node.id == 2)
+					{
+						node.addExploits(new int[] {1, 2, 4});
 					}
 					else
 					{
 
 						int sectr = node.sector;
+						
+						int othersectorlimit = -1;
+						
+						if(density>0 && density<=0.5)
+						{
+							othersectorlimit=1;
+						}
+						else if(density>0.5)
+						{
+							othersectorlimit=2;
+							
+						}
+						if(density==0)
+						{
+							othersectorlimit=0;
+						}
 
 
 
@@ -2286,7 +2542,7 @@ public class Network {
 
 						for(int s=0; s<exploitsector.size(); s++)
 						{
-							if(s != sectr)
+							if(s != sectr && othersectorlimit>0)
 							{
 								ArrayList<Integer> explts = exploitsector.get(s);
 								// now randomly pick exploits
@@ -2309,6 +2565,7 @@ public class Network {
 									explts.set(i, explts.get(index));
 									explts.set(index, tmp);
 								}
+								othersectorlimit--;
 							}
 							else if(s== sectr)
 							{

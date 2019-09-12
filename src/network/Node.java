@@ -2,6 +2,7 @@ package network;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class Node {
 	
@@ -64,6 +65,19 @@ public class Node {
 	}
 	
 	public void addNeighbors(int[] nodeids)
+	{
+		//int count = this.nei.size();
+		for(int id: nodeids)
+		{
+			this.nei.put(id, id);
+			//count++;
+		}
+		
+	}
+	
+	
+	
+	public void addNeighbors(List<Integer> nodeids)
 	{
 		//int count = this.nei.size();
 		for(int id: nodeids)

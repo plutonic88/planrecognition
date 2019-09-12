@@ -31,7 +31,7 @@ public class Main {
 		
 		boolean randhp = false;
 		
-		boolean withdefense = true;
+		boolean withdefense = false;
 		
 		
 		boolean honeyedge = false;
@@ -39,8 +39,22 @@ public class Main {
 		
 		
 		boolean minmaxoverlap = false;
-		boolean minmaxexpectedoverlap = false;
-		boolean minentropy = true;
+		boolean minmaxexpectedoverlap = true;
+		boolean minentropy = false;
+		
+		//boolean [][] setting = {{true, false, false}, {false, true, false}, {false, false, true}};
+		
+		boolean [][] setting = {{true, false, false}};
+		
+	//	int[] attacker = {0, 1, 2};
+		
+		int[] attacker = {0};
+		
+		
+		
+		
+		
+		
 		
 		boolean mincost = false;
 		
@@ -57,6 +71,27 @@ public class Main {
 		int chosenpolicy = 0;
 		
 		
+		for(boolean[] s: setting)
+		{
+			for(int a: attacker)
+			{
+				minmaxoverlap = s[0];
+				minmaxexpectedoverlap = s[1];
+				minentropy = s[2];
+				
+				chosenattacker = a;
+				
+				
+
+				
+				PlanrecognitionExp.doFixedPolicyWithDefenseMILP(withdefense, chosenattacker, chosenpolicy, minentropy, 
+						maxoverlap, expoverlap, mincost, minmaxoverlap, honeyedge, minmaxexpectedoverlap, honeypot, randhp);
+				
+				
+			}
+		}
+		
+		
 		//ArrayList<int[]> comb = new ArrayList<int[]>();
 		
 		//permute(new int[]{0,1,2}, comb);
@@ -71,11 +106,16 @@ public class Main {
 		
 		 
 		
-		
+		/*
 		
 		
 		PlanrecognitionExp.doFixedPolicyWithDefenseMILP(withdefense, chosenattacker, chosenpolicy, minentropy, 
 				maxoverlap, expoverlap, mincost, minmaxoverlap, honeyedge, minmaxexpectedoverlap, honeypot, randhp);
+		
+		*/
+		
+		
+		
 		
 		//PlanrecognitionExp.doFixedPolicyWithDefenseExp1(withdefense, chosenattacker, chosenpolicy, minentropy, maxoverlap, expoverlap, mincost, mincommonoverlap, honeyedge);
 		
