@@ -46,7 +46,7 @@ public class Main {
 		
 		boolean [][] setting = {{true, false, false}};
 		
-	//	int[] attacker = {0, 1, 2};
+		//int[] attacker = {0, 1, 2};
 		
 		int[] attacker = {0};
 		
@@ -70,6 +70,8 @@ public class Main {
 		int chosenattacker = 1;
 		int chosenpolicy = 0;
 		
+		long startTime = System.currentTimeMillis();
+		
 		
 		for(boolean[] s: setting)
 		{
@@ -88,6 +90,8 @@ public class Main {
 						maxoverlap, expoverlap, mincost, minmaxoverlap, honeyedge, minmaxexpectedoverlap, honeypot, randhp);
 				
 				
+				
+				
 			}
 		}
 		
@@ -99,7 +103,7 @@ public class Main {
 		//perm();
 		
 		
-		long startTime = System.currentTimeMillis();
+		
 		
 		
 		

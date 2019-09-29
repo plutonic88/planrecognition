@@ -9,6 +9,7 @@ import ilog.concert.IloLinearNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.concert.IloRange;
 import ilog.cplex.IloCplex;
+import planrecognition.PlanrecognitionExp;
 
 public class Solver {
 
@@ -2871,7 +2872,7 @@ public class Solver {
 			int nattackers, double[] priors, int[] mincost, int n, int chosenattacker, HashMap<Integer,Integer> atmap, HashMap<Integer,Integer> atmapback) {
 
 		
-		int M = 6;
+		int M = PlanrecognitionExp.NSTEP;
 		/**
 		 * for every goal add self loop
 		 */
@@ -3651,7 +3652,7 @@ public class Solver {
 		}
 		
 		
-		int M = 6;
+		int M = PlanrecognitionExp.NSTEP;
 		/**
 		 * for every goal add self loop
 		 */

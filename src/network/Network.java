@@ -2180,7 +2180,7 @@ public class Network {
 			int y=0;
 
 
-			if(i<=1)
+			if(i<=2)
 			{
 				List<Integer> curnodes = stagenodes.get(i);
 				List<Integer> nextstagenodes = stagenodes.get(i+1);
@@ -2225,8 +2225,21 @@ public class Network {
 				{
 					
 					// add the next sector nodes for sure
-					ArrayList<Integer> cursecnodes = curstagenodes.get(s);
-					ArrayList<Integer> nextsecnodes = nextstagenodes.get(s);
+					int p=s;
+					int q=s;
+					
+					if(p==curstagenodes.size())
+					{
+						p = curstagenodes.size()-1;
+					}
+					
+					if(q==nextstagenodes.size())
+					{
+						q = nextstagenodes.size()-1;
+					}
+					
+					ArrayList<Integer> cursecnodes = curstagenodes.get(p);
+					ArrayList<Integer> nextsecnodes = nextstagenodes.get(q);
 					
 					
 					for(Integer nodeid: cursecnodes)
@@ -2398,7 +2411,7 @@ public class Network {
 		{
 			double sectorincrement = -1;
 
-			if(stage<=3)
+			if(stage<=nattacker)
 			{
 				sectorincrement = Math.floor((1.0*step.size())/(1.0 *nattacker));
 			}

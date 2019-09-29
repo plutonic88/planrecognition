@@ -843,7 +843,8 @@ public class PlanRecognition {
 	public static void playGameWithNaiveDefenseMILP(int chosenattacker, int chosenpolicy, HashMap<Integer, Node> net, HashMap<Integer, Exploits> exploits,
 			HashMap<Integer, Attacker> attackers, int[] goals, HashMap<Integer,Node> honeypots, int hpdeploylimit, 
 			boolean singlepath, int npath, int startnode, boolean withdefense, boolean minentropy, boolean mincommonoverlap, 
-			boolean maxoverlap, boolean expoverlap, boolean mincost, boolean honeyedge, int honeyedgelimit, boolean minmaxexpectedoverlap, boolean honeypot) throws Exception {
+			boolean maxoverlap, boolean expoverlap, boolean mincost, boolean honeyedge,
+			int honeyedgelimit, boolean minmaxexpectedoverlap, boolean honeypot, int nstep) throws Exception {
 
 
 		/**
@@ -1288,7 +1289,7 @@ public class PlanRecognition {
 				
 
 				boolean attackerok = constructAttackerPoliciesMILPRun(net, exploits, honeypots, 
-						chosenattacker, goals, attackers.size(), mincosts, attackers, currentnodeid, hpdepcosts, attackermap, attackermapback);
+						chosenattacker, goals, attackers.size(), mincosts, attackers, currentnodeid, hpdepcosts, attackermap, attackermapback, nstep);
 				
 				
 				
@@ -7731,7 +7732,7 @@ public class PlanRecognition {
 
 	private static void freeInvalidHoneypots(ArrayList<Integer> currenthps, Node curnode, HashMap<Integer,Node> net, HashMap<Integer,Node> honeypots, int currentnodeid) throws Exception {
 
-		if(currenthps.size()>2)
+		if(currenthps.size()>3)
 		{
 			System.out.println("More than two HP existings ");
 			throw new Exception("More than two HP existings");
@@ -10211,7 +10212,7 @@ private static int commonLen(String p1, String p2) {
 
 			int i=0;
 			pw.append("\n");
-			for(int attid=0; attid<3; attid++)
+			for(int attid=0; attid<PlanrecognitionExp.NATTACKERS; attid++)
 			{
 				if(priorsattackertype.containsKey(attid))
 				{
@@ -11695,26 +11696,29 @@ private static int commonLen(String p1, String p2) {
 				a0.addExploits(new int[] {e.id});
 			}*/
 			
-			if(a0.id==0)
+			
+			
+
+		/*	if(a0.id==0)
 			{
-				a0.addExploits(new int[] {0, 1, 2, 3, 4, 5});
+				a0.addExploits(new int[] {0, 1});
 				
 			}
 			else if(a0.id==1)
 			{
-				a0.addExploits(new int[] {0, 1, 2, 3, 4, 5});
+				a0.addExploits(new int[] {2, 3});
 				
 			}
 			else if(a0.id==2)
 			{
-				a0.addExploits(new int[] {0, 1, 2, 3, 4, 5});
+				a0.addExploits(new int[] {4, 5});
 				
-			}
+			}*/
 			
 			
 			
 			
-			/*if(a0.id==0)
+			if(a0.id==0)
 			{
 				a0.addExploits(new int[] {0, 1, 2});
 				
@@ -11727,6 +11731,34 @@ private static int commonLen(String p1, String p2) {
 			else if(a0.id==2)
 			{
 				a0.addExploits(new int[] {4, 5, 2});
+				
+			}
+			else if(a0.id==3)
+			{
+				a0.addExploits(new int[] {6, 7, 2});
+				
+			}
+			else if(a0.id==4)
+			{
+				a0.addExploits(new int[] {0, 6, 4});
+				
+			}
+			
+			
+			
+			/*if(a0.id==0)
+			{
+				a0.addExploits(new int[] {0, 1, 2, 3, 4, 5});
+				
+			}
+			else if(a0.id==1)
+			{
+				a0.addExploits(new int[] {0, 1, 2, 3, 4, 5});
+				
+			}
+			else if(a0.id==2)
+			{
+				a0.addExploits(new int[] {0, 1, 2, 3, 4, 5});
 				
 			}*/
 			
@@ -11788,6 +11820,8 @@ private static int commonLen(String p1, String p2) {
 		
 
 	}
+	
+	
 	
 	
 	private static boolean constructAttackerPoliciesMILP(HashMap<Integer, Node> net, HashMap<Integer, Exploits> exploits,
@@ -11927,7 +11961,8 @@ private static int commonLen(String p1, String p2) {
 			g.add(a);
 		}
 		
-		ArrayList<ArrayList<double[]>> paths = Solver.attackerPolicyInItMILP(w, start, g, exploits.size(), nattackers, priors, minc, net.size(), chosenattacker, atmap, atmapback);
+		ArrayList<ArrayList<double[]>> paths = Solver.attackerPolicyInItMILP(w, start, g, exploits.size(), 
+				nattackers, priors, minc, net.size(), chosenattacker, atmap, atmapback);
 		
 		
 		//ArrayList<ArrayList<double[]>> paths = Solver.solveHPDeploymentMultAttackerWorstCase(w, start, goals, exploits.size(), nattackers, hpdeploymentcost, totalconf, priors);
@@ -11983,9 +12018,13 @@ private static int commonLen(String p1, String p2) {
 	}
 	
 	
+	
+	
+	
+	
 	private static boolean constructAttackerPoliciesMILPRun(HashMap<Integer, Node> net, HashMap<Integer, Exploits> exploits,
 			HashMap<Integer, Node> honeypots, int chosenattacker, int[] goals, int nattackers, HashMap<Integer, Integer> mincosts,
-			HashMap<Integer,Attacker> attackers, int start, int[][][][] hpdepcosts, HashMap<Integer,Integer> attackermap, HashMap<Integer,Integer> attackermapback) {
+			HashMap<Integer,Attacker> attackers, int start, int[][][][] hpdepcosts, HashMap<Integer,Integer> attackermap, HashMap<Integer,Integer> attackermapback, int nstep) {
 		
 		int n= net.size();
 		int e = exploits.size();
@@ -12133,7 +12172,8 @@ private static int commonLen(String p1, String p2) {
 		}*/
 		
 		
-		ArrayList<ArrayList<double[]>> paths = Solver.attackerPolicyInItMILP(w, mappedstart, g, exploits.size(), nattackers, priors, minc, net.size(), chosenattacker, attackermap, attackermapback);
+		ArrayList<ArrayList<double[]>> paths = Solver.attackerPolicyInItMILP(w, mappedstart, g, exploits.size(), 
+				nattackers, priors, minc, net.size(), chosenattacker, attackermap, attackermapback);
 		
 		
 		//ArrayList<ArrayList<double[]>> paths = Solver.solveHPDeploymentMultAttackerWorstCase(w, start, goals, exploits.size(), nattackers, hpdeploymentcost, totalconf, priors);
@@ -14517,6 +14557,9 @@ private static HashMap<Integer,HashMap<Integer,HashMap<Integer,Integer>>> refine
 				int dif = bnode.depth - anode.depth;
 				
 				
+				
+				// dif>=1 && ((anode.depth-curnode.depth)>=1 for all possible allocation
+				// dif==2 && ((anode.depth-curnode.depth)==1 for heuristics
 				if(a != b && a<b && !goals.contains(a) && (anode.depth != bnode.depth) && dif==2 && ((anode.depth-curnode.depth)==1))
 				{
 					int pair [] = {a,b};

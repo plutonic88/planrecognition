@@ -16,6 +16,12 @@ import network.Node;
 import solver.Solver;
 
 public class PlanrecognitionExp {
+	
+	
+	
+	public static int NSTEP = 6;
+	public static int NATTACKERS = 3;
+	
 
 	public static void doFixedPolicyWithDefenseExp1(boolean withdefense, int chosenattacker, int chosenpolicy, boolean minentropy, 
 			boolean maxoverlap, boolean expoverlap, boolean mincost, boolean mincommonoverlap, boolean honeyedge) throws Exception {
@@ -190,9 +196,9 @@ public class PlanrecognitionExp {
 
 
 		//int[] goals = {10, 11};
-		int nattackers = 3;
+		int nattackers = PlanrecognitionExp.NATTACKERS;
 		int startnode = 0;
-		int nnodes = 18;
+		int nnodes = -1;
 
 		int hpdeploylimit = 2;
 		int hpv = 8;
@@ -213,7 +219,7 @@ public class PlanrecognitionExp {
 
 
 
-		boolean singlegoal = false;
+		boolean singlegoal = true;
 		boolean singlepath = false;
 		int startnodeid = 0;
 		int npath = 1;
@@ -229,7 +235,11 @@ public class PlanrecognitionExp {
 
 		//Network.constructNetwork(net, exploits, nnodes, nexploits);
 
+		
+		
 
+		int ngoal = nattackers;
+		
 		int[] goals = new int[nattackers];
 
 
@@ -239,12 +249,12 @@ public class PlanrecognitionExp {
 
 		//automated network genrator
 		//int nnet = 20;
-		int nstep = 6;
+		int nstep = PlanrecognitionExp.NSTEP;
 		int nodeamin = 1;
 		int nodeamax = 1;
 		int minedge = 2;
 		//int maxedge = 
-		int ngoal = goals.length;
+		
 
 
 
@@ -257,27 +267,62 @@ public class PlanrecognitionExp {
 		boolean uniqueexploithp = true;
 
 
-		// network density 0, .4  .8
+		// single goal network density 0, .4  .8 
+		
 		double density = .4;
 
 
-		//vulnerability density 0 , .4 1
+		//single goal vulnerability density 0 , .4 1
 		
-		double exploitdensity = .4;
+		double exploitdensity = .4; // from how many sectors to add exploits
 		
 		// 0, 40, 80
-		double overlappingexploitspercentage = 40;
+		double overlappingexploitspercentage = 40; // how many exploits to add
 
 
 		
 		ArrayList<List<Integer>> stagenodes = new ArrayList<>();
 		
-		stagenodes.add(Arrays.asList(new Integer[] {0}));
+		/*stagenodes.add(Arrays.asList(new Integer[] {0}));
 		stagenodes.add(Arrays.asList(new Integer[] {1,2}));
 		stagenodes.add(Arrays.asList(new Integer[] {3,4,5}));
 		stagenodes.add(Arrays.asList(new Integer[] {6,7,8,9}));
 		stagenodes.add(Arrays.asList(new Integer[] {10,11,12,13,14}));
-		stagenodes.add(Arrays.asList(new Integer[] {15,16,17}));
+		stagenodes.add(Arrays.asList(new Integer[] {15, 16, 17}));*/
+		
+		
+		
+		
+		
+		/*stagenodes.add(Arrays.asList(new Integer[] {0}));
+		stagenodes.add(Arrays.asList(new Integer[] {1,2}));
+		stagenodes.add(Arrays.asList(new Integer[] {3,4,5}));
+		stagenodes.add(Arrays.asList(new Integer[] {6,7,8,9}));
+		stagenodes.add(Arrays.asList(new Integer[] {10,11,12,13,14}));
+		stagenodes.add(Arrays.asList(new Integer[] {15, 16, 17, 18, 19, 20}));
+		stagenodes.add(Arrays.asList(new Integer[] {21, 22, 23, 24, 25, 26, 27}));
+		stagenodes.add(Arrays.asList(new Integer[] {28, 29, 30}));*/
+		
+		
+		int nodelimit=0;
+		int nodestartid=0;
+		for(int s=0; s<PlanrecognitionExp.NSTEP; s++)
+		{
+			nodelimit+=1;
+			List<Integer> l = new ArrayList<>();
+			if(s==PlanrecognitionExp.NSTEP-1)
+			{
+				nodelimit = nattackers;
+			}
+			for(int i=0; i<nodelimit; i++)
+			{
+				l.add(nodestartid++);
+			}
+			stagenodes.add(l);
+			
+		}
+		
+		
 		
 		List<ArrayList<Integer>>[]  stagesectornodes = constructSectorNodes(stagenodes, nattackers, nstep);
 
@@ -295,9 +340,19 @@ public class PlanrecognitionExp {
 		 */
 
 		nnodes = net.size();
+		
+		/*HashMap<Integer, int[]> multigoal = new HashMap<>();
+		
+		int[] a0goal = {15, 16};
+		int[] a1goal = {16, 17};
+		int[] a2goal = {15, 17};
+		
+		multigoal.put(0, a0goal);
+		multigoal.put(1, a1goal);
+		multigoal.put(2, a2goal);
+		*/
 
-
-
+		
 
 		for(int i=0; i<nattackers; i++)
 		{
@@ -365,7 +420,8 @@ public class PlanrecognitionExp {
 
 
 
-			PlanRecognition.constructAttackersMILP(startnodeid ,attackers, net, exploits, singlepath, npath, chosenattacker, maxoverlap, expoverlap, nattackers, goals, honeypots, exploitsector);
+			PlanRecognition.constructAttackersMILP(startnodeid ,attackers, net, exploits, singlepath, npath, 
+					chosenattacker, maxoverlap, expoverlap, nattackers, goals, honeypots, exploitsector);
 
 			//PlanRecognition.constructAttackers(startnodeid ,attackers, net, exploits, singlepath, npath, chosenattacker, maxoverlap, expoverlap, nattackers, goals);
 
@@ -375,9 +431,10 @@ public class PlanrecognitionExp {
 		else
 		{
 			
-			
-			
-			PlanRecognition.constructAttackersMultGoal(attackers, net, exploits, singlepath, npath);
+			/*PlanRecognition.constructAttackersMultiGoalMILP(startnodeid ,attackers, net, exploits, singlepath, npath, 
+					chosenattacker, maxoverlap, expoverlap, nattackers, goals, honeypots, exploitsector, multigoal);
+			*/
+			//PlanRecognition.constructAttackersMultGoal(attackers, net, exploits, singlepath, npath);
 		}
 
 
@@ -410,7 +467,7 @@ public class PlanrecognitionExp {
 
 		PlanRecognition.playGameWithNaiveDefenseMILP(chosenattacker, chosenpolicy, net, exploits, attackers, goals, 
 				honeypots, hpdeploylimit, singlepath, npath, startnode, withdefense, minentropy, mincommonoverlap, 
-				maxoverlap, expoverlap, mincost, honeyedge, honeyedgelimit, minmaxexpectedoverlap, honeypot);
+				maxoverlap, expoverlap, mincost, honeyedge, honeyedgelimit, minmaxexpectedoverlap, honeypot, nstep);
 
 
 
@@ -435,7 +492,7 @@ public class PlanrecognitionExp {
 			
 			double sectorincrement = -1;
 			
-			if(stage<=3)
+			if(stage<=nattacker)
 			{
 				sectorincrement = Math.floor((1.0*step.size())/(1.0 *nattacker));
 			}
